@@ -208,7 +208,7 @@ function DischargeButton({ blocked, onDischarge }: { blocked: string | null; onD
       onClick={onDischarge}
       disabled={blocked !== null}
       aria-describedby={describedBy}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-focus px-3 py-1.5 text-xs font-medium text-focus transition-colors hover:bg-focus hover:text-hero disabled:cursor-not-allowed disabled:border-subtle disabled:text-muted disabled:hover:bg-transparent"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-focus bg-focus px-3.5 py-1.5 text-xs font-semibold text-hero shadow-sm transition-colors hover:bg-focus/90 disabled:cursor-not-allowed disabled:border-subtle disabled:bg-transparent disabled:text-muted disabled:shadow-none"
     >
       <Droplets className="size-3.5" aria-hidden />
       Discharge FWM PFE

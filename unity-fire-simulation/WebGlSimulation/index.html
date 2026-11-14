@@ -119,13 +119,23 @@
               unityInstance.SetFullscreen(1);
             };
           }
+          var lastChamberPhase = null;
           window.addEventListener("message", function(event) {
             if (!event.data) return;
             if (event.data.type === "APPLY_FIRE_PAYLOAD" && event.data.payload) {
               var jsonStr = typeof event.data.payload === "string"
                 ? event.data.payload
                 : JSON.stringify(event.data.payload);
+              lastChamberPhase = null;
               unityInstance.SendMessage("FireSimulation", "ApplyJson", jsonStr);
+            } else if (event.data.type === "APPLY_CHAMBER_STATE") {
+              var nextPhase = event.data.phase || null;
+              if (nextPhase === "suppressing" && lastChamberPhase !== "suppressing") {
+                unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
+              } else if (nextPhase === "burning" && lastChamberPhase === "extinguished") {
+                unityInstance.SendMessage("FireSimulation", "ResetSuppression");
+              }
+              lastChamberPhase = nextPhase;
             } else if (event.data.type === "TOGGLE_TELEMETRY" && typeof unityInstance.SetShowTelemetry === "function") {
               unityInstance.SetShowTelemetry(Boolean(event.data.show));
             }

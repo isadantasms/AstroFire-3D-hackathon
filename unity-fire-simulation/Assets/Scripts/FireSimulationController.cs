@@ -21,8 +21,27 @@ namespace FireSimulation
         public Material flameMaterial;
         public Light flameLight;
         public Transform materialSample;
-        public bool showTelemetry = true;
+        public MaterialSampleView specimen;
         public float BurnFrontMillimeters { get; private set; }
+        public float Suppression { get; private set; }
+        public int Revision { get; private set; }
+        public bool HasVisibleFire => IsValid(payload) && Evaluate(payload,airflowDirection,enforceReceivedOxygenLimit).burning && Suppression<.999f;
+
+        public void SetSuppression(float amount)
+        {
+            Suppression=Mathf.Clamp01(amount);
+            if(Suppression>=1 && flame!=null)
+            {
+                flame.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
+                if(flameLight!=null) flameLight.intensity=0;
+            }
+        }
+
+        public void ResetSuppression()
+        {
+            Suppression=0;
+            if(flame!=null && !flame.isPlaying) flame.Play(false);
+        }
 
         ParticleSystem flame;
         Material ownedMaterial;
@@ -32,8 +51,7 @@ namespace FireSimulation
         readonly GradientColorKey[] colorKeys = new GradientColorKey[2];
         readonly GradientAlphaKey[] alphaKeys = new GradientAlphaKey[3];
         Vector3 sampleInitialScale;
-        Vector2 telemetryScroll;
-        GUIStyle panelStyle, titleStyle, bodyStyle;
+        string activeMaterial;
 
         // Artistic response only: the payload remains the source of combustion results.
         public struct VisualResponse
@@ -67,6 +85,7 @@ namespace FireSimulation
 
         void Awake()
         {
+            if (specimen == null) specimen = GetComponent<MaterialSampleView>();
             if (materialSample == null)
                 materialSample = GameObject.Find("Material sample")?.transform;
             if (materialSample != null) sampleInitialScale = materialSample.localScale;
@@ -128,6 +147,8 @@ namespace FireSimulation
         {
             if (!IsValid(value)) throw new ArgumentException("Invalid geometry, color, or numeric range.");
             payload = value;
+            Revision++;
+            ResetSuppression();
             BurnFrontMillimeters = 0;
         }
 
@@ -150,7 +171,26 @@ namespace FireSimulation
         {
             if (flame == null || !IsValid(payload)) return;
             var s = payload.simulation_3d; var i = payload.inputs;
+            bool hasSpecimen = specimen != null && specimen.isActiveAndEnabled && specimen.sampleShader != null;
+            if (hasSpecimen)
+            {
+                specimen.Refresh();
+                string id = MaterialSampleView.NormalizeId(i.material_id);
+                if (activeMaterial != id)
+                {
+                    flame.Clear();
+                    BurnFrontMillimeters = 0;
+                    activeMaterial = id;
+                    Revision++;
+                    ResetSuppression();
+                }
+                flame.transform.position = specimen.FlameOrigin;
+                if (flameLight != null) flameLight.transform.position = specimen.FlameOrigin;
+            }
             var response = Evaluate(payload, airflowDirection, enforceReceivedOxygenLimit);
+            response.oxygen*=1-Suppression;
+            response.emission*=1-Suppression;
+            response.burning &= Suppression<.999f;
             bool burning = response.burning;
             float t = 1 - Mathf.Exp(-Time.deltaTime / Mathf.Max(.01f, transitionSeconds));
             intensity = Mathf.Lerp(intensity, response.oxygen, t);
@@ -163,6 +203,7 @@ namespace FireSimulation
             main.startLifetime = response.lifetime;
             main.startSpeed = scale * (.08f + rate * .22f);
             main.startSize = scale * (.10f + rate * .16f) * Mathf.Lerp(.6f, 1.4f, intensity);
+            if (hasSpecimen && specimen.IsCandle) main.startSizeMultiplier *= .55f;
             main.startColor = new Color(color.r, color.g, color.b, intensity * .7f);
             var emission = flame.emission;
             emission.rateOverTime = response.emission;
@@ -174,6 +215,25 @@ namespace FireSimulation
             shape.scale = new Vector3(1, 1 + elongation * .8f, 1);
             Vector3 axis = response.drift.sqrMagnitude > .0001f ? response.drift.normalized : Vector3.up;
             shape.rotation = Quaternion.FromToRotation(Vector3.up, axis).eulerAngles;
+            if (hasSpecimen)
+            {
+                if (specimen.IsCandle)
+                {
+                    shape.radius = .018f;
+                    shape.scale = Vector3.one;
+                }
+                else if (s.flame_geometry == "elongated")
+                {
+                    shape.shapeType = ParticleSystemShapeType.Box;
+                    shape.scale = specimen.EmitterSize;
+                    shape.rotation = Vector3.zero;
+                }
+                else
+                {
+                    // Keep spherical flames centered around the active specimen, not the old cube.
+                    shape.radius = Mathf.Min(shape.radius, specimen.EmitterSize.x * .5f);
+                }
+            }
             var velocity = flame.velocityOverLifetime;
             velocity.enabled = true;
             velocity.space = ParticleSystemSimulationSpace.Local;
@@ -186,12 +246,12 @@ namespace FireSimulation
             colorKeys[0] = new GradientColorKey(Color.white, 0);
             colorKeys[1] = new GradientColorKey(color, 1);
             alphaKeys[0] = new GradientAlphaKey(0, 0);
-            alphaKeys[1] = new GradientAlphaKey(1, .15f);
+            alphaKeys[1] = new GradientAlphaKey(1-Suppression, .15f);
             alphaKeys[2] = new GradientAlphaKey(0, 1);
             particleGradient.SetKeys(colorKeys, alphaKeys);
             fade.color = particleGradient;
             if (flameLight != null) { flameLight.color = color; flameLight.intensity = intensity * (1 + rate); }
-            if (materialSample != null)
+            if (!hasSpecimen && materialSample != null)
             {
                 // Display magnification: 5 mm corresponds to the original sample thickness.
                 var sampleScale = sampleInitialScale;
@@ -201,62 +261,6 @@ namespace FireSimulation
             if (burning) BurnFrontMillimeters += s.burn_rate_mm_s * Time.deltaTime;
         }
 
-        void OnGUI()
-        {
-            if (!showTelemetry || payload == null) return;
-            if (panelStyle == null)
-            {
-                panelStyle = new GUIStyle(GUI.skin.box) { padding = new RectOffset(18, 18, 18, 18) };
-                titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 20, fontStyle = FontStyle.Bold, wordWrap = true };
-                titleStyle.normal.textColor = new Color(.35f, .88f, 1);
-                bodyStyle = new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = true, richText = false };
-                bodyStyle.normal.textColor = new Color(.78f, .85f, .92f);
-            }
-            float width = Mathf.Min(360, Screen.width * .32f);
-            var previousColor = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(.04f, .09f, .14f, .96f);
-            GUILayout.BeginArea(new Rect(16, 16, width - 24, Screen.height - 72), panelStyle);
-            GUI.backgroundColor = previousColor;
-            GUILayout.Label("COMBUSTION LAB", titleStyle);
-            GUILayout.Label("LIVE EXPERIMENT / VISUAL PREVIEW", bodyStyle);
-            GUILayout.Space(14);
-            telemetryScroll = GUILayout.BeginScrollView(telemetryScroll);
-            // Apply readable wrapping to the existing payload readout.
-            var oldLabel = GUI.skin.label;
-            GUI.skin.label = bodyStyle;
-            GUILayout.Label(payload.scenario_id + " | " + payload.grounding_status);
-            if (!IsValid(payload)) GUILayout.Label("Invalid payload: check geometry, color and numeric ranges.");
-            var i = payload.inputs;
-            if (i != null)
-            {
-                GUILayout.Label(i.material_name + " | " + i.material_id);
-                GUILayout.Label(i.environment_label);
-                GUILayout.Label($"Thickness {i.thickness_mm:0.##} mm | Gravity {i.gravity_g:0.##} g");
-                GUILayout.Label($"O2 {i.o2_pct:0.##}% | Airflow {i.airflow_cm_s:0.##} cm/s");
-            }
-            var telemetry = payload.telemetry;
-            if (telemetry != null)
-            {
-                GUILayout.Label($"Risk {telemetry.flammability_score}/100 | {telemetry.risk_label}");
-                GUILayout.Label($"CO {telemetry.co_ppm:0.##} ppm | CO2 {telemetry.co2_pct:0.##}% | O2 limit {telemetry.oxygen_limit_pct:0.##}%");
-            }
-            GUILayout.Label($"Burn front (integrated input): {BurnFrontMillimeters:0.##} mm");
-            if (payload.safety_copilot != null)
-            {
-                GUILayout.Label(payload.safety_copilot.diagnosis);
-                GUILayout.Label(payload.safety_copilot.suppression_action);
-                GUILayout.Label(payload.safety_copilot.scientific_limitations);
-                GUILayout.Label(payload.safety_copilot.terrestrial_spinoff);
-            }
-            if (payload.nasa_citations != null)
-                foreach (var citation in payload.nasa_citations)
-                    if (citation != null) GUILayout.Label(citation.id + " | " + citation.title + "\n" + citation.url + "\n" + citation.finding);
-            GUI.skin.label = oldLabel;
-            GUILayout.EndScrollView();
-            GUILayout.EndArea();
-            GUI.Label(new Rect(width + 16, Screen.height - 40, Screen.width - width - 24, 28),
-                "RMB  ORBIT     MMB  PAN     WHEEL  ZOOM     F  RESET", bodyStyle);
-        }
 
         void OnDestroy() { if (ownedMaterial != null) Destroy(ownedMaterial); }
     }

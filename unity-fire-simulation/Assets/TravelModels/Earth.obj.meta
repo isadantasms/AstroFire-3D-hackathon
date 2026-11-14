@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: eb017f744d784bb39f29e85f05fae1e2
+ModelImporter:
+  isReadable: 1
+  serializedVersion: 24200
+  materials:
+    materialImportMode: 0
+  meshes:
+    globalScale: 1
+    addColliders: 0
+    useFileUnits: 1
+    indexFormat: 1
+  tangentSpace:
+    normalSmoothAngle: 0
+    normalImportMode: 1
