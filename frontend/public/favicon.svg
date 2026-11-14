@@ -1,7 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#080D17"/>
-  <circle cx="16" cy="16" r="12" fill="none" stroke="#1F2C47" stroke-width="1.5"/>
-  <path d="M5.5 21 A12 12 0 0 1 25.8 8.2" fill="none" stroke="#F28C28" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="16" cy="16" r="6" fill="none" stroke="#4C8DFF" stroke-width="1.5"/>
-  <circle cx="16" cy="16" r="3" fill="#4C8DFF"/>
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AstroFire">
+  <path d="M16 3C19 8 25 11 25 19A9 9 0 1 1 7 19C7 13 11 10 13 6C13.5 9 15 10.5 16.5 11C16 8 16 5 16 3Z" fill="#F28C28"/>
+  <circle cx="16" cy="20" r="4.5" fill="#0A101C"/>
+  <circle cx="16" cy="20" r="2.2" fill="#4C8DFF"/>
 </svg>

@@ -7,14 +7,11 @@
 export const VIEW_W = 1440
 export const VIEW_H = 640
 
-/** The rocket must stay right of the centered title and buttons at every viewport. */
-export const ROCKET_SAFE_MIN_X = 1120
-
-export const ASCENT_MS = 5200
-export const TRAIL_SEGMENTS = 56
-export const FIRST_LAUNCH_DELAY_MS = 1300
-export const CYCLE_MIN_MS = 12000
-export const CYCLE_MAX_MS = 15000
+export const FLIGHT_MS = 7000
+export const TRAIL_SEGMENTS = 64
+export const FIRST_FLIGHT_DELAY_MS = 2200
+export const CYCLE_MIN_MS = 15000
+export const CYCLE_MAX_MS = 20000
 export const SHOOTING_MIN_MS = 6000
 export const SHOOTING_MAX_MS = 10000
 
@@ -90,21 +87,45 @@ export interface FlightPath {
   p3: Point
 }
 
+export type FlightKind = 'rise-right' | 'diagonal-left-to-right' | 'diagonal-right-to-left' | 'edge-left'
+
+export const FLIGHT_KINDS: readonly FlightKind[] = ['rise-right', 'diagonal-left-to-right', 'diagonal-right-to-left', 'edge-left']
+
 /**
- * A curved climb starting below the horizon on the right and leaving through the
- * top-right corner. Control points only move rightwards, so x never drops below p0.x.
+ * A curved crossing of a w x h viewport, different each time: rising from the bottom,
+ * diagonals in either direction, or hugging the left edge. Every path starts and ends
+ * outside the viewport and climbs (ends higher than it starts).
  */
-export function makeFlightPath(rand: () => number): FlightPath {
-  const sx = between(rand, 1150, 1260)
-  return {
-    p0: { x: sx, y: 700 },
-    p1: { x: sx + between(rand, 0, 20), y: 440 },
-    p2: { x: sx + between(rand, 60, 100), y: between(rand, 190, 230) },
-    p3: { x: between(rand, 1500, 1560), y: -100 },
+export function makeSkyFlight(rand: () => number, w: number, h: number, kind?: FlightKind): FlightPath & { kind: FlightKind } {
+  const k = kind ?? FLIGHT_KINDS[Math.floor(rand() * FLIGHT_KINDS.length) % FLIGHT_KINDS.length]
+  const r = () => rand()
+  switch (k) {
+    case 'rise-right': {
+      const x0 = w * (0.78 + 0.15 * r())
+      return { kind: k, p0: { x: x0, y: h + 70 }, p1: { x: x0 + 20, y: h * 0.55 }, p2: { x: x0 + 80 + 40 * r(), y: h * 0.25 }, p3: { x: w + 90, y: -90 } }
+    }
+    case 'diagonal-left-to-right':
+      return {
+        kind: k,
+        p0: { x: -70, y: h * (0.75 + 0.2 * r()) },
+        p1: { x: w * 0.3, y: h * (0.55 + 0.15 * r()) },
+        p2: { x: w * 0.65, y: h * (0.25 + 0.1 * r()) },
+        p3: { x: w + 90, y: h * (0.05 + 0.2 * r()) - 60 },
+      }
+    case 'diagonal-right-to-left':
+      return {
+        kind: k,
+        p0: { x: w + 70, y: h * (0.75 + 0.2 * r()) },
+        p1: { x: w * 0.7, y: h * (0.55 + 0.15 * r()) },
+        p2: { x: w * 0.35, y: h * (0.25 + 0.1 * r()) },
+        p3: { x: -90, y: h * (0.05 + 0.2 * r()) - 60 },
+      }
+    case 'edge-left': {
+      const x0 = w * (0.04 + 0.08 * r())
+      return { kind: k, p0: { x: x0, y: h + 70 }, p1: { x: w * 0.02, y: h * 0.5 }, p2: { x: w * 0.08, y: h * 0.15 }, p3: { x: w * (0.2 + 0.1 * r()), y: -90 } }
+    }
   }
 }
-
-export const DEFAULT_FLIGHT: FlightPath = makeFlightPath(mulberry32(2026))
 
 /** Position on the cubic path and the rocket rotation (the rocket is drawn pointing up). */
 export function pointAt(path: FlightPath, t: number): Point & { angle: number } {

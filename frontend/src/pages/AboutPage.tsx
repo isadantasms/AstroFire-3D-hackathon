@@ -95,7 +95,7 @@ export function AboutPage() {
       <PageHeader
         eyebrow="Project documentation"
         title="About & SI Usage"
-        lead="AstroFire 3D is an open-source microgravity combustion explorer and Super Intelligence (SI) fire-safety copilot built for the 2026 NASA Space Apps Challenge (Flame in Freefall)."
+        lead="AstroFire is an open-source microgravity combustion explorer and Super Intelligence (SI) fire-safety copilot built for the 2026 NASA Space Apps Challenge (Flame in Freefall)."
       />
 
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6">

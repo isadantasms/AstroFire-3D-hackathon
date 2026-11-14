@@ -1,22 +1,20 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { Link } from 'react-router'
-import { BrandMark } from '../components/BrandMark'
+import { BrandMark, Wordmark } from '../components/BrandMark'
 import { LINKS } from './routes'
 
 export function Footer() {
   return (
-    <footer className="border-t border-subtle bg-hero">
+    <footer className="relative border-t border-subtle bg-hero">
       <div className="mx-auto grid max-w-[1920px] gap-8 px-4 py-8 sm:px-6 md:grid-cols-[1fr_auto]">
         <div className="max-w-3xl space-y-3">
           <div className="flex items-center gap-2">
             <BrandMark size={18} />
-            <span className="text-sm font-semibold text-primary">
-              AstroFire <span className="text-brand">3D</span>
-            </span>
+            <Wordmark className="text-sm" />
           </div>
           <p className="text-sm leading-relaxed text-secondary" data-testid="footer-disclaimer">
             <strong className="font-medium text-primary">For research and education only.</strong>{' '}
-            AstroFire 3D outputs are not certified safety assessments, and suppression guidance is
+            AstroFire outputs are not certified safety assessments, and suppression guidance is
             not an approved operational procedure. The 3D chamber is a parameter-driven
             illustration, not a validated CFD simulation.
           </p>

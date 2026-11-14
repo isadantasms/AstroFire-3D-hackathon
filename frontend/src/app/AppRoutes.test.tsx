@@ -51,7 +51,8 @@ describe('site structure', () => {
 
   it('home hero exposes the brand, headline and the three calls to action', () => {
     renderAt('/')
-    expect(screen.getByRole('link', { name: 'AstroFire 3D home' })).toHaveTextContent('AstroFire 3D')
+    expect(screen.getByRole('link', { name: 'AstroFire home' })).toHaveTextContent('AstroFire')
+    expect(document.title === '' || !document.title.includes('3D')).toBe(true)
     expect(
       screen.getByRole('heading', { level: 1, name: 'Make the next giant leap safer.' }),
     ).toBeInTheDocument()
@@ -95,11 +96,27 @@ describe('site structure', () => {
 
   it('home hero backdrop is decorative and holds still without motion support', () => {
     renderAt('/')
-    const backdrop = screen.getByTestId('hero-backdrop')
-    expect(backdrop).toHaveAttribute('aria-hidden', 'true')
-    // jsdom has no matchMedia: treated as reduced motion, so no shooting star is scheduled.
-    expect(backdrop.querySelector('.shooting-star')).toBeNull()
+    for (const id of ['home-sky', 'planet-horizon', 'hero-backdrop']) {
+      expect(screen.getByTestId(id)).toHaveAttribute('aria-hidden', 'true')
+    }
+    const sky = screen.getByTestId('home-sky')
+    expect(sky.className).toMatch(/fixed/)
+    expect(sky.className).toMatch(/pointer-events-none/)
+    // jsdom has no matchMedia: treated as reduced motion, so no rocket and no shooting star.
+    expect(screen.queryByTestId('sky-rocket')).toBeNull()
+    expect(sky.querySelector('.shooting-star')).toBeNull()
+    // The scroll trail and its markers are gone.
+    expect(screen.queryByTestId('scroll-trail')).toBeNull()
+    expect(document.querySelector('.trail-marker')).toBeNull()
     expect(screen.getByText('safer.', { selector: 'span.safer-in' })).toBeInTheDocument()
+  })
+
+  it('every Home section follows the hero pattern with a mono label', () => {
+    renderAt('/')
+    for (const label of ['The science', 'How it works', 'Why AstroFire', 'Back on Earth']) {
+      const el = screen.getByText(label, { selector: 'p' })
+      expect(el.className).toMatch(/font-mono/)
+    }
   })
 
   it('home keeps NASA out of the hero title and buttons', () => {

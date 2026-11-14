@@ -3,8 +3,8 @@ import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { AlarmSmoke, ArrowRight, Droplets, Gauge, HardHat, Play, SlidersHorizontal } from 'lucide-react'
 import { RocketHeroBackdrop } from '../components/RocketHeroBackdrop'
-import { HomeAtmosphere } from '../components/home/HomeAtmosphere'
-import { ScrollRocketTrail } from '../components/home/ScrollRocketTrail'
+import { SkyLayer } from '../components/home/SkyLayer'
+import { PlanetHorizon } from '../components/home/PlanetHorizon'
 import { useReveal } from '../components/home/useReveal'
 import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences'
 import { LINKS } from '../app/routes'
@@ -17,16 +17,19 @@ function stagger(step: number): CSSProperties {
   return { '--d': `${step * 80}ms` } as CSSProperties
 }
 
+/** Same translucent card on every section: #0F1728 at ~85%, #1F2C47 border, 12px corners. */
+const CARD = 'rounded-xl border border-subtle bg-panel/85'
+
 export function HomePage() {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const reduced = usePrefersReducedMotion()
   useReveal(rootRef, reduced)
 
   return (
-    // One continuous background for the whole Home: hero color fading into the page color.
+    // One continuous background for the whole Home; the fixed sky sits behind everything.
     <div ref={rootRef} className="relative isolate overflow-x-clip bg-linear-to-b from-hero to-void">
-      <HomeAtmosphere />
-      <ScrollRocketTrail rootRef={rootRef} />
+      <SkyLayer />
+      <PlanetHorizon />
       <Hero />
       <ProblemSection />
       <HowItWorksSection />
@@ -56,7 +59,7 @@ function LaunchSimulatorButton() {
 
 function Hero() {
   return (
-    <section className="relative isolate overflow-hidden" aria-labelledby="hero-title" data-trail-start>
+    <section className="relative isolate" aria-labelledby="hero-title">
       <RocketHeroBackdrop />
       <div className="relative mx-auto flex min-h-[560px] max-w-4xl flex-col items-center justify-center px-4 py-20 text-center sm:min-h-[640px] sm:px-6">
         <p className="hero-rise font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase" style={stagger(0)}>
@@ -108,32 +111,46 @@ function Hero() {
 
 /* ------------------------------------------------------------------ */
 
-function ProblemSection() {
+/** Shared section pattern: mono label, centered title, centered content, same width and spacing. */
+function HomeSection({ id, label, title, children }: { id: string; label: string; title: string; children: ReactNode }) {
   return (
-    <section className="relative" aria-labelledby="problem-title">
-      <div className="mx-auto max-w-6xl px-4 pt-16 pb-20 sm:px-6 sm:pt-20 sm:pb-24">
+    <section className="relative" aria-labelledby={`${id}-title`}>
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center sm:px-6 sm:py-24">
+        <p data-reveal className="reveal font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
+          <span className="text-brand" aria-hidden>
+            ●
+          </span>{' '}
+          {label}
+        </p>
         <h2
-          id="problem-title"
-          data-trail-marker
+          id={`${id}-title`}
           data-reveal
-          className="reveal mx-auto max-w-2xl text-center text-2xl font-semibold tracking-tight text-primary sm:text-3xl"
+          style={stagger(1)}
+          className="reveal mx-auto mt-4 max-w-2xl text-2xl font-semibold tracking-tight text-primary sm:text-3xl"
         >
-          Fire in space doesn’t behave like on Earth.
+          {title}
         </h2>
-
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          <ProblemCard step={0} index="01" channel="Gravity" title="It turns into a ball." diagram={<BallDiagram />}>
-            Without gravity, hot air doesn’t rise, so flames become slow, round and hard to see.
-          </ProblemCard>
-          <ProblemCard step={1} index="02" channel="Airflow" title="Air vents spread it." diagram={<FlowDiagram />}>
-            Cabin airflow pushes the flame and helps it grow.
-          </ProblemCard>
-          <ProblemCard step={2} index="03" channel="Oxygen" title="More oxygen, more danger." diagram={<OxygenDiagram />}>
-            Future Moon bases will have oxygen-richer air, so materials burn more easily.
-          </ProblemCard>
-        </div>
+        <div className="mt-12">{children}</div>
       </div>
     </section>
+  )
+}
+
+function ProblemSection() {
+  return (
+    <HomeSection id="problem" label="The science" title="Fire in space doesn’t behave like on Earth.">
+      <div className="grid gap-4 md:grid-cols-3">
+        <ProblemCard step={2} index="01" channel="Gravity" title="It turns into a ball." diagram={<BallDiagram />}>
+          Without gravity, hot air doesn’t rise, so flames become slow, round and hard to see.
+        </ProblemCard>
+        <ProblemCard step={3} index="02" channel="Airflow" title="Air vents spread it." diagram={<FlowDiagram />}>
+          Cabin airflow pushes the flame and helps it grow.
+        </ProblemCard>
+        <ProblemCard step={4} index="03" channel="Oxygen" title="More oxygen, more danger." diagram={<OxygenDiagram />}>
+          Future Moon bases will have oxygen-richer air, so materials burn more easily.
+        </ProblemCard>
+      </div>
+    </HomeSection>
   )
 }
 
@@ -153,11 +170,7 @@ function ProblemCard({
   children: ReactNode
 }) {
   return (
-    <article
-      data-reveal
-      style={stagger(step + 1)}
-      className="reveal flex flex-col rounded-xl border border-subtle bg-panel/90 p-6 text-center sm:p-7"
-    >
+    <article data-reveal style={stagger(step)} className={`reveal flex flex-col p-6 sm:p-7 ${CARD}`}>
       <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-muted uppercase">
         <span className="text-brand">{index}</span> · {channel}
       </p>
@@ -246,30 +259,20 @@ const STEPS = [
 
 function HowItWorksSection() {
   return (
-    <section className="relative" aria-labelledby="how-title">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
-        <h2 id="how-title" data-trail-marker data-reveal className="reveal text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
-          How it works
-        </h2>
-
-        <ol className="relative mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
-          {/* Thin connector behind the step markers (desktop). */}
-          <span aria-hidden="true" className="absolute top-5 right-[16%] left-[16%] hidden h-px bg-subtle md:block" />
-          {STEPS.map(({ icon: Icon, title, body }, i) => (
-            <li key={title} data-reveal style={stagger(i + 1)} className="reveal relative">
-              <div className="flex items-center gap-3 md:flex-col md:items-start">
-                <span className="relative inline-flex size-10 items-center justify-center rounded-[10px] border border-subtle bg-panel text-brand">
-                  <Icon className="size-[18px]" aria-hidden />
-                </span>
-                <span className="font-mono text-xs tracking-[0.14em] text-muted">STEP {String(i + 1).padStart(2, '0')}</span>
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-primary">{title}</h3>
-              <p className="mt-2 max-w-xs text-sm leading-relaxed text-secondary">{body}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
+    <HomeSection id="how" label="How it works" title="How it works">
+      <ol className="grid gap-4 md:grid-cols-3">
+        {STEPS.map(({ icon: Icon, title, body }, i) => (
+          <li key={title} data-reveal style={stagger(i + 2)} className={`reveal flex flex-col items-center p-6 sm:p-7 ${CARD}`}>
+            <span className="inline-flex size-10 items-center justify-center rounded-[10px] border border-subtle bg-void/60 text-brand">
+              <Icon className="size-[18px]" aria-hidden />
+            </span>
+            <span className="mt-4 font-mono text-[0.6875rem] tracking-[0.14em] text-muted">STEP {String(i + 1).padStart(2, '0')}</span>
+            <h3 className="mt-3 text-lg font-semibold text-primary">{title}</h3>
+            <p className="mt-2 max-w-xs text-sm leading-relaxed text-secondary">{body}</p>
+          </li>
+        ))}
+      </ol>
+    </HomeSection>
   )
 }
 
@@ -294,29 +297,17 @@ const DIFFERENTIATORS = [
 
 function DifferentSection() {
   return (
-    <section className="relative" aria-labelledby="different-title">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-16">
-        <h2
-          id="different-title"
-          data-trail-marker
-          data-reveal
-          className="reveal text-2xl font-semibold tracking-tight text-primary sm:text-3xl lg:max-w-xs"
-        >
-          What makes AstroFire different
-        </h2>
-        <ul className="divide-y divide-subtle border-y border-subtle">
-          {DIFFERENTIATORS.map((item, i) => (
-            <li key={item.title} data-reveal style={stagger(i + 1)} className="reveal grid gap-2 py-7 sm:grid-cols-[2.5rem_1fr]">
-              <span className="font-mono text-sm text-brand">{String(i + 1).padStart(2, '0')}</span>
-              <div>
-                <h3 className="text-lg font-semibold text-primary">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-secondary">{item.body}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    <HomeSection id="different" label="Why AstroFire" title="What makes AstroFire different">
+      <ul className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
+        {DIFFERENTIATORS.map((item, i) => (
+          <li key={item.title} data-reveal style={stagger(i + 2)} className={`reveal p-6 sm:p-7 ${CARD}`}>
+            <span className="font-mono text-sm text-brand">{String(i + 1).padStart(2, '0')}</span>
+            <h3 className="mt-3 text-lg font-semibold text-primary">{item.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-secondary">{item.body}</p>
+          </li>
+        ))}
+      </ul>
+    </HomeSection>
   )
 }
 
@@ -330,28 +321,23 @@ const EARTH_USES = [
 
 function EarthSection() {
   return (
-    <section className="relative" aria-labelledby="earth-title">
-      <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 sm:py-20">
-        <h2 id="earth-title" data-trail-marker data-reveal className="reveal text-xl font-semibold tracking-tight text-primary sm:text-2xl">
-          Space research protects us on Earth too
-        </h2>
-        <ul data-reveal style={stagger(1)} className="reveal mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-          {EARTH_USES.map(({ icon: Icon, label }) => (
-            <li key={label} className="inline-flex items-center gap-2.5 text-sm text-secondary">
-              <Icon className="size-4 text-label" aria-hidden />
-              {label}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    <HomeSection id="earth" label="Back on Earth" title="Space research protects us on Earth too">
+      <ul data-reveal style={stagger(2)} className={`reveal mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-8 gap-y-4 px-6 py-5 ${CARD}`}>
+        {EARTH_USES.map(({ icon: Icon, label }) => (
+          <li key={label} className="inline-flex items-center gap-2.5 text-sm text-secondary">
+            <Icon className="size-4 text-label" aria-hidden />
+            {label}
+          </li>
+        ))}
+      </ul>
+    </HomeSection>
   )
 }
 
 function FinalCta() {
   return (
     <section className="relative" aria-label="Launch the simulator">
-      <div data-trail-marker data-reveal className="reveal mx-auto flex max-w-6xl justify-center px-4 pt-8 pb-28 sm:px-6">
+      <div data-reveal className="reveal mx-auto flex max-w-5xl justify-center px-4 pb-24 sm:px-6">
         <LaunchSimulatorButton />
       </div>
     </section>
