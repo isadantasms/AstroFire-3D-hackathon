@@ -8,11 +8,27 @@ export const DEV_TOOLS = [
   { tool: '[VOICE TOOL]', use: 'narration of the demo video' },
 ]
 
-export const TEAM = [
-  { name: 'Elias', role: 'Data & physics engine' },
-  { name: 'Pina', role: 'Backend & API' },
-  { name: 'Dantas', role: 'Data analysis & model accuracy' },
-  { name: 'Celina', role: 'Science & SI validation' },
-  { name: 'Esquivel', role: '3D flame chamber' },
-  { name: 'Rocha', role: 'Front-end & product' },
+export interface TeamMember {
+  name: string
+  role: string
+  /**
+   * Optional photo: put a square image (at least 256 x 256 px) in frontend/public/team/
+   * and set e.g. photo: '/team/leandro-pina.jpg'. Without a photo the initials are shown.
+   */
+  photo?: string
+}
+
+export const TEAM: TeamMember[] = [
+  { name: 'Leandro Elias', role: 'Data & physics engine' },
+  { name: 'Leandro Pina', role: 'Backend & API' },
+  { name: 'Isabela Dantas', role: 'Data analysis & model accuracy' },
+  { name: 'Celina Vieira', role: 'Science & SI validation' },
+  { name: 'Gabriel Esquivel', role: '3D flame chamber' },
+  { name: 'Isabela Rocha', role: 'Front-end & product' },
 ]
+
+/** "Leandro Pina" -> "LP" */
+export function initials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase()
+}

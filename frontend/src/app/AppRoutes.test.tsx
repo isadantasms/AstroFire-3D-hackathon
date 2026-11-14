@@ -163,15 +163,17 @@ describe('site structure', () => {
     const team = document.getElementById('team')!
     expect(team).toHaveTextContent('Uberlândia, Brazil · NASA Space Apps Challenge 2026')
     for (const [name, role] of [
-      ['Elias', 'Data & physics engine'],
-      ['Pina', 'Backend & API'],
-      ['Dantas', 'Data analysis & model accuracy'],
-      ['Celina', 'Science & SI validation'],
-      ['Esquivel', '3D flame chamber'],
-      ['Rocha', 'Front-end & product'],
+      ['Leandro Elias', 'Data & physics engine'],
+      ['Leandro Pina', 'Backend & API'],
+      ['Isabela Dantas', 'Data analysis & model accuracy'],
+      ['Celina Vieira', 'Science & SI validation'],
+      ['Gabriel Esquivel', '3D flame chamber'],
+      ['Isabela Rocha', 'Front-end & product'],
     ]) {
       expect(within(team).getByText(name).nextElementSibling).toHaveTextContent(role)
     }
+    // Photo slots show initials until photos are added.
+    expect(within(team).getAllByTestId('team-photo').map((p) => p.textContent)).toEqual(['LE', 'LP', 'ID', 'CV', 'GE', 'IR'])
     expect(document.body.textContent).not.toMatch(/\bzero\b|100%|guaranteed/i)
   })
 

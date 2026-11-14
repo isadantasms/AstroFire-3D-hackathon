@@ -8,7 +8,7 @@ import { PlanetHorizon } from '../components/home/PlanetHorizon'
 import { useReveal } from '../components/home/useReveal'
 import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences'
 import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
-import { DEV_TOOLS, TEAM } from '../content/project'
+import { DEV_TOOLS, initials, TEAM } from '../content/project'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
@@ -335,11 +335,16 @@ function TeamSection() {
         <ul data-reveal style={stagger(2)} className={`reveal mt-10 grid grid-cols-2 gap-x-4 gap-y-8 p-6 sm:grid-cols-3 sm:p-8 lg:grid-cols-6 lg:p-10 ${PANEL}`}>
           {TEAM.map((m) => (
             <li key={m.name} className="flex flex-col items-center text-center">
+              {/* Photo slot: initials until a photo is set in src/content/project.ts. */}
               <span
-                aria-hidden="true"
-                className="inline-flex size-14 items-center justify-center rounded-full border border-[#1F2C47] bg-[#0F1728] font-mono text-lg font-semibold text-[#F28C28]"
+                data-testid="team-photo"
+                className="inline-flex size-20 items-center justify-center overflow-hidden rounded-full border border-[#1F2C47] bg-[#0F1728] font-mono text-xl font-semibold text-[#F28C28]"
               >
-                {m.name[0]}
+                {m.photo ? (
+                  <img src={m.photo} alt={`Photo of ${m.name}`} className="size-full object-cover" loading="lazy" />
+                ) : (
+                  <span aria-hidden="true">{initials(m.name)}</span>
+                )}
               </span>
               <span className="mt-3 text-sm font-medium text-primary">{m.name}</span>
               <span className="mt-0.5 text-xs leading-snug text-muted">{m.role}</span>
