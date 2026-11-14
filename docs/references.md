@@ -21,5 +21,6 @@
 | Vitest | Library | MIT License | https://vitest.dev | `frontend/` unit and route tests |
 | Testing Library (`@testing-library/react`, `@testing-library/jest-dom`) | Library | MIT License | https://testing-library.com | `frontend/` tests |
 | ESLint & typescript-eslint | Library | MIT License | https://eslint.org | `frontend/` linting |
+| Ajv (JSON Schema validator) | Library | MIT License | https://ajv.js.org | `frontend/src/services/api/validate.ts` (runtime validation against `contracts/simulation_schema.json`) |
 | Playwright | Library | Apache-2.0 | https://playwright.dev | Visual & functional UI verification |
 | Gemini / Claude / GPT Coding Assistants | SI model | Provider API Terms | https://ai.google.dev | Development code assistance (`# SI-assisted` tagged & team reviewed) |

@@ -5,8 +5,8 @@ import { NAV_ITEMS } from './routes'
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-subtle bg-panel/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-[1920px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-subtle bg-panel/95 backdrop-blur-sm lg:h-14">
+      <div className="mx-auto flex max-w-[1920px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-6 lg:h-full lg:py-0">
         <Link to="/" className="flex items-center gap-2.5" aria-label="AstroFire 3D home">
           <BrandMark size={26} />
           <span className="font-mono text-sm font-medium tracking-[0.14em] text-primary uppercase">

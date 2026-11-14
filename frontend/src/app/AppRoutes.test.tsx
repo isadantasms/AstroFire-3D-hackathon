@@ -64,8 +64,8 @@ describe('site structure', () => {
     ['/research', 'Research & Data'],
     ['/about', 'About & SI Usage'],
     ['/does-not-exist', 'Page not found'],
-  ])('route %s renders its page title', (path, title) => {
+  ])('route %s renders its page title', async (path, title) => {
     renderAt(path)
-    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument()
   })
 })
