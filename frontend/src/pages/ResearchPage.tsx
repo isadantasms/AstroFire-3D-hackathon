@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { ExternalLink, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { ConsolePanel, Tag } from '../components/ConsolePanel'
+import { FlameGeometryFigure } from '../components/FlameGeometryFigure'
 import pinnMetrics from '../../../backend/data/pinn_validation_metrics.json'
 
 type TargetEnvKey = 'lunar_base_30o2' | 'iss_space_station' | 'martian_habitat' | 'spacecraft_cabin_rover'
@@ -172,6 +173,9 @@ export function ResearchPage() {
             </p>
           </div>
         </div>
+
+        {/* Fig. 01: flame geometry (moved here from the Home page) */}
+        <FlameGeometryFigure />
 
         {/* PINN Training & Validation Pipeline */}
         <ConsolePanel

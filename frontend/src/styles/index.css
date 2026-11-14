@@ -264,6 +264,29 @@
   animation-delay: calc(var(--d, 0ms) + 220ms);
 }
 
+/* Home sections: fade + slight rise when they first enter the viewport. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--d, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Scroll trail markers light up in orange when the rocket reaches them. */
+.trail-marker-light {
+  opacity: 0;
+  transition: opacity 450ms ease-out;
+}
+.trail-marker[data-lit='true'] .trail-marker-light {
+  opacity: 1;
+}
+
 /* Pause every hero animation while the tab is hidden. */
 .hero-motion[data-paused='true'],
 .hero-motion[data-paused='true'] * {
@@ -279,6 +302,11 @@
   }
   .safer-glow {
     opacity: 0;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
   .parallax-layer {
     transform: none;

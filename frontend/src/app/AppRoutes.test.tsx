@@ -55,10 +55,42 @@ describe('site structure', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Make the next giant leap safer.' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
-    expect(screen.getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/about')
-    expect(screen.getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute('href', '#')
-    expect(screen.getByText('For research and education. Not a certified safety assessment.')).toBeInTheDocument()
+    const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
+    expect(within(hero).getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
+    expect(within(hero).getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/about')
+    expect(within(hero).getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute('href', '#')
+    // The research disclaimer lives only in the footer now.
+    expect(within(hero).queryByText(/Not a certified safety assessment/)).toBeNull()
+    expect(screen.getByTestId('footer-disclaimer')).toHaveTextContent('For research and education only.')
+  })
+
+  it('home uses plain-language sections and a final call to action', () => {
+    renderAt('/')
+    for (const name of [
+      'Fire in space doesn’t behave like on Earth.',
+      'How it works',
+      'What makes AstroFire different',
+      'Space research protects us on Earth too',
+    ]) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument()
+    }
+    for (const title of [
+      'It turns into a ball.',
+      'Air vents spread it.',
+      'More oxygen, more danger.',
+      'Pick a scenario.',
+      'See the fire and its risk.',
+      'Put it out.',
+      'From fire to extinguisher.',
+      'Every answer has a source.',
+    ]) {
+      expect(screen.getByRole('heading', { level: 3, name: title })).toBeInTheDocument()
+    }
+    expect(screen.getAllByRole('link', { name: /Launch Simulator/ })).toHaveLength(2)
+    // The UFSC (VSB-30) item stays hidden until its reference is in docs/references.md.
+    expect(screen.queryByText(/UFSC/)).toBeNull()
+    const main = screen.getByRole('main')
+    expect(main.textContent).not.toMatch(/buoyancy|quiescent|regimes/i)
   })
 
   it('home hero backdrop is decorative and holds still without motion support', () => {
@@ -74,8 +106,16 @@ describe('site structure', () => {
     renderAt('/')
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
     expect(within(hero).queryByText(/NASA/)).toBeNull()
-    expect(screen.getByText('Illustrative schematic. Not simulation output or measured data.')).toBeInTheDocument()
     expect(screen.getByTestId('footer-data-source')).toHaveTextContent('BASS-II (PSI-25)')
+  })
+
+  it('the Fig. 01 flame figure moved from the Home to Research & Data', async () => {
+    renderAt('/')
+    expect(screen.queryByText('Two regimes, one console')).toBeNull()
+    cleanup()
+    renderAt('/research')
+    expect(await screen.findByRole('heading', { level: 2, name: 'Two regimes, one console' })).toBeInTheDocument()
+    expect(screen.getByText('Illustrative schematic. Not simulation output or measured data.')).toBeInTheDocument()
   })
 
   it.each([

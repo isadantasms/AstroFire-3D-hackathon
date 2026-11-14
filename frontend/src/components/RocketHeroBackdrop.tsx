@@ -63,14 +63,8 @@ export function RocketHeroBackdrop() {
             <stop offset="0" stopColor="var(--brand-blue)" stopOpacity="0.2" />
             <stop offset="1" stopColor="var(--brand-blue)" stopOpacity="0" />
           </radialGradient>
-          <radialGradient id="hero-glow-orange" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(720 700) scale(820 300)">
-            <stop offset="0" stopColor="var(--brand-orange)" stopOpacity="0.24" />
-            <stop offset="1" stopColor="var(--brand-orange)" stopOpacity="0" />
-          </radialGradient>
         </defs>
-        <rect width="1440" height="640" fill="var(--bg-hero)" />
         <rect width="1440" height="640" fill="url(#hero-glow-blue)" />
-        <rect width="1440" height="640" fill="url(#hero-glow-orange)" />
       </svg>
 
       {LAYERS.map((layer) => (
@@ -105,7 +99,7 @@ export function RocketHeroBackdrop() {
           </linearGradient>
           <linearGradient id="hero-planet-fill" x1="0" y1="560" x2="0" y2="640" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="#111a2e" />
-            <stop offset="1" stopColor="var(--bg-hero)" />
+            <stop offset="1" stopColor="#111a2e" stopOpacity="0" />
           </linearGradient>
         </defs>
         <RocketFlight motion={motion} />
