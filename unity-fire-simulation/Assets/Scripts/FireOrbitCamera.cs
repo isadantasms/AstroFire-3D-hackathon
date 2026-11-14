@@ -31,12 +31,10 @@ namespace FireSimulation
             Vector2 delta = Vector2.zero;
             float scroll = 0;
             bool orbit = false, pan = false, reset = false;
-            bool overPanel=false;
 #if ENABLE_INPUT_SYSTEM
             var mouse = Mouse.current;
             if (mouse != null)
             {
-                overPanel=SimulationTestPanel.BlocksPointer(mouse.position.ReadValue());
                 delta = mouse.delta.ReadValue();
                 scroll = mouse.scroll.ReadValue().y;
                 orbit = mouse.rightButton.isPressed; pan = mouse.middleButton.isPressed;
@@ -44,16 +42,12 @@ namespace FireSimulation
             reset = Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
 #elif ENABLE_LEGACY_INPUT_MANAGER
             delta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")) * 10;
-            overPanel=SimulationTestPanel.BlocksPointer(Input.mousePosition);
             scroll = Input.mouseScrollDelta.y;
             orbit = Input.GetMouseButton(1); pan = Input.GetMouseButton(2); reset = Input.GetKeyDown(KeyCode.F);
 #endif
-            if(!overPanel)
-            {
-                if (orbit) { yaw += delta.x * .22f; pitch = Mathf.Clamp(pitch - delta.y * .22f, -15, 85); }
-                if (pan) focus += (-transform.right * delta.x - transform.up * delta.y) * distance * .0012f;
-                distance = Mathf.Clamp(distance * Mathf.Exp(-scroll * .12f), minimumDistance, maximumDistance);
-            }
+            if (orbit) { yaw += delta.x * .22f; pitch = Mathf.Clamp(pitch - delta.y * .22f, -15, 85); }
+            if (pan) focus += (-transform.right * delta.x - transform.up * delta.y) * distance * .0012f;
+            distance = Mathf.Clamp(distance * Mathf.Exp(-scroll * .12f), minimumDistance, maximumDistance);
             if (reset) { focus = initialFocus; distance = initialDistance; yaw = initialYaw; pitch = initialPitch; }
             PositionCamera();
         }
