@@ -113,6 +113,179 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * Home hero motion. Only transform and opacity are animated.
+ * ------------------------------------------------------------------------- */
+
+/* Mouse parallax: --px/--py in [-1, 1] are set on .hero-motion by script. */
+.parallax-layer {
+  transform: translate3d(
+    calc(var(--px, 0) * var(--depth, 0) * -1px),
+    calc(var(--py, 0) * var(--depth, 0) * -1px),
+    0
+  );
+  transition: transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes star-drift {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.star-drift {
+  animation: star-drift linear infinite;
+}
+
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+.star-twinkle {
+  animation: star-twinkle ease-in-out infinite;
+}
+
+@keyframes shooting-star {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle, 155deg)) translateX(0);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle, 155deg)) translateX(280px);
+  }
+}
+.shooting-star {
+  position: absolute;
+  width: 120px;
+  height: 1px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgb(230 236 245 / 0), rgb(230 236 245 / 0.85));
+  animation: shooting-star 850ms cubic-bezier(0.3, 0.6, 0.4, 1) forwards;
+}
+
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.orbit-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orbit-spin 360s linear infinite;
+}
+
+@keyframes horizon-breathe {
+  from {
+    opacity: 0.12;
+  }
+  to {
+    opacity: 0.42;
+  }
+}
+.horizon-breathe {
+  /* Base opacity also applies when the animation is disabled (reduced motion). */
+  opacity: 0.22;
+  animation: horizon-breathe 3s ease-in-out infinite alternate;
+}
+
+@keyframes rocket-flame {
+  0% {
+    transform: scaleY(0.78);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scaleY(1.15);
+    opacity: 1;
+  }
+}
+.rocket-flame {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: rocket-flame 110ms ease-in-out infinite alternate;
+}
+
+.rocket-trail {
+  transition: opacity 2600ms ease-out;
+}
+
+/* Entrance sequence: label, title, subtitle, buttons, disclaimer, then "safer." */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-rise {
+  animation: hero-rise 720ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes safer-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes safer-glow {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.safer-in {
+  animation: safer-in 760ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+.safer-glow {
+  color: transparent;
+  text-shadow: 0 0 22px rgb(242 140 40 / 0.55);
+  animation: safer-glow 1500ms ease-out both;
+  animation-delay: calc(var(--d, 0ms) + 220ms);
+}
+
+/* Pause every hero animation while the tab is hidden. */
+.hero-motion[data-paused='true'],
+.hero-motion[data-paused='true'] * {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-anim,
+  .hero-rise,
+  .safer-in,
+  .safer-glow {
+    animation: none !important;
+  }
+  .safer-glow {
+    opacity: 0;
+  }
+  .parallax-layer {
+    transform: none;
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

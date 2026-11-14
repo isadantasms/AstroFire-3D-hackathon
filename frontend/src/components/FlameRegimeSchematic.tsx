@@ -6,7 +6,7 @@
  */
 export function FlameRegimeSchematic() {
   return (
-    <figure className="border border-subtle bg-panel">
+    <figure className="overflow-hidden rounded-xl border border-subtle bg-panel">
       <div className="grid grid-cols-2 divide-x divide-subtle">
         <div className="p-4">
           <p className="label-mono">0 g · quiescent · spherical</p>

@@ -1,5 +1,5 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ArrowRight, Play } from 'lucide-react'
 import { FlameRegimeSchematic } from '../components/FlameRegimeSchematic'
@@ -8,6 +8,11 @@ import { LINKS } from '../app/routes'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
+
+/** Entrance order: 80 ms between hero elements ("safer." comes last). */
+function stagger(step: number): CSSProperties {
+  return { '--d': `${step * 80}ms` } as CSSProperties
+}
 
 export function HomePage() {
   return (
@@ -24,7 +29,7 @@ function Hero() {
     <section className="relative isolate overflow-hidden border-b border-subtle bg-hero" aria-labelledby="hero-title">
       <RocketHeroBackdrop />
       <div className="relative mx-auto flex min-h-[560px] max-w-4xl flex-col items-center justify-center px-4 py-20 text-center sm:min-h-[640px] sm:px-6">
-        <p className="font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
+        <p className="hero-rise font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase" style={stagger(0)}>
           <span className="text-brand" aria-hidden>
             ●
           </span>{' '}
@@ -33,40 +38,55 @@ function Hero() {
 
         <h1
           id="hero-title"
-          className="mt-6 text-[2.5rem] leading-[1.05] font-semibold tracking-[-0.02em] text-primary sm:text-6xl lg:text-[4.25rem]"
+          className="hero-rise mt-6 text-[2.5rem] leading-[1.05] font-semibold tracking-[-0.02em] text-primary sm:text-6xl lg:text-[4.25rem]"
+          style={stagger(1)}
         >
-          Make the next giant leap <span className="text-brand">safer.</span>
+          Make the next giant leap{' '}
+          <span className="safer-in relative inline-block text-brand" style={stagger(5)}>
+            safer.
+            <span className="safer-glow absolute inset-0" style={stagger(5)} aria-hidden="true">
+              safer.
+            </span>
+          </span>
         </h1>
 
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-secondary sm:text-lg">
+        <p className="hero-rise mt-6 max-w-2xl text-base leading-relaxed text-secondary sm:text-lg" style={stagger(2)}>
           Turn complex space fire research into clear answers: simulate scenarios, compare
           investigations and get cited safety guidance in seconds.
         </p>
 
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div className="hero-rise mt-10 flex flex-wrap items-center justify-center gap-3" style={stagger(3)}>
           <Link
             to={LINKS.simulator}
-            className="inline-flex items-center gap-2 border border-brand bg-brand px-5 py-3 text-sm font-semibold text-hero transition-colors hover:bg-transparent hover:text-brand"
+            className="group relative inline-flex items-center gap-2 rounded-[10px] border border-brand bg-brand px-5 py-3 text-sm font-semibold text-hero transition-transform duration-200 ease-out hover:-translate-y-0.5"
           >
-            Launch Simulator
-            <ArrowRight className="size-4" aria-hidden />
+            {/* Orange glow: only its opacity changes on hover. */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 rounded-[10px] opacity-40 shadow-[0_10px_30px_-8px_rgb(242_140_40/0.75)] transition-opacity duration-300 group-hover:opacity-100"
+            />
+            <span className="relative">Launch Simulator</span>
+            <ArrowRight
+              className="relative size-4 transition-transform duration-200 ease-out group-hover:translate-x-1"
+              aria-hidden
+            />
           </Link>
           <Link
             to={LINKS.about}
-            className="inline-flex items-center gap-2 border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-colors hover:border-label"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label"
           >
             Documentation
           </Link>
           <a
             href={PITCH_VIDEO_URL}
-            className="inline-flex items-center gap-2 px-3 py-3 text-sm text-secondary transition-colors hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-[10px] px-3 py-3 text-sm text-secondary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:text-primary"
           >
             <Play className="size-3.5 fill-current" aria-hidden />
             Watch the 30s pitch
           </a>
         </div>
 
-        <p className="mt-8 font-mono text-[0.6875rem] tracking-[0.04em] text-muted">
+        <p className="hero-rise mt-8 font-mono text-[0.6875rem] tracking-[0.04em] text-muted" style={stagger(4)}>
           For research and education. Not a certified safety assessment.
         </p>
       </div>
@@ -85,7 +105,7 @@ function ProblemSection() {
           </h2>
         </div>
 
-        <div className="mt-12 grid gap-px border border-subtle bg-subtle md:grid-cols-3">
+        <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-subtle bg-subtle md:grid-cols-3">
           <ProblemCard index="01" channel="Buoyancy" title="No rising plume" diagram={<PlumeDiagram />}>
             In quiescent microgravity there is no buoyant flow to carry hot gases upward, so a flame
             can form a spherical diffusion flame ball around the burning sample.

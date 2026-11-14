@@ -61,6 +61,15 @@ describe('site structure', () => {
     expect(screen.getByText('For research and education. Not a certified safety assessment.')).toBeInTheDocument()
   })
 
+  it('home hero backdrop is decorative and holds still without motion support', () => {
+    renderAt('/')
+    const backdrop = screen.getByTestId('hero-backdrop')
+    expect(backdrop).toHaveAttribute('aria-hidden', 'true')
+    // jsdom has no matchMedia: treated as reduced motion, so no shooting star is scheduled.
+    expect(backdrop.querySelector('.shooting-star')).toBeNull()
+    expect(screen.getByText('safer.', { selector: 'span.safer-in' })).toBeInTheDocument()
+  })
+
   it('home keeps NASA out of the hero title and buttons', () => {
     renderAt('/')
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
