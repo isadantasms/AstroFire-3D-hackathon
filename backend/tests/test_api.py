@@ -7,7 +7,15 @@ Verifies 1:1 compliance with contracts/simulation_schema.json and NASA/TM-202100
 """
 import json
 import pathlib
-from backend.app.main import get_experiments, get_health, get_materials, get_model_metrics, post_simulate
+from backend.app.main import (
+    get_experiments,
+    get_health,
+    get_investigations,
+    get_materials,
+    get_model_metrics,
+    get_presets,
+    post_simulate,
+)
 from backend.app.schemas import SimulationRequest
 
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent.parent / "contracts" / "simulation_schema.json"
@@ -94,6 +102,23 @@ def test_pinn_model_metrics() -> None:
     assert len(metrics["pinn_loss_curve"]) >= 20
 
 
+def test_presets_and_investigations() -> None:
+    presets_payload = get_presets()
+    assert presets_payload["count"] == 5
+    for preset in presets_payload["presets"]:
+        validate_against_contract_keys(preset["simulation"])
+
+    inv_lunar = get_investigations(target_environment="lunar_base_30o2")
+    assert inv_lunar["count"] == 6
+    assert inv_lunar["investigations"][0]["investigation_id"] == "SAFFIRE"
+    inv_ids = {item["investigation_id"] for item in inv_lunar["investigations"]}
+    assert "PSI-10" not in inv_ids
+    assert "BASS-II" in inv_ids
+
+    inv_iss = get_investigations(target_environment="iss_space_station")
+    assert inv_iss["investigations"][0]["investigation_id"] == "BASS-II"
+
+
 if __name__ == "__main__":
     test_health_and_experiments()
     test_quiescent_0g_spherical_blue_flame()
@@ -101,5 +126,6 @@ if __name__ == "__main__":
     test_hypoxia_extinction_below_loi()
     test_direct_empirical_bass2_match()
     test_pinn_model_metrics()
-    print("ALL BACKEND CONTRACT, PHYSICS & PINN TRAINING TESTS PASSED!")
+    test_presets_and_investigations()
+    print("ALL BACKEND CONTRACT, PHYSICS, PRESETS, INVESTIGATIONS & PINN TESTS PASSED!")
 

@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
+from .investigations_presets import get_investigations, get_presets
 from .ml_pipeline import METRICS_OUTPUT_PATH, run_training_pipeline
 from .physics_engine import EMPIRICAL_CACHE, MATERIAL_CATALOG, run_simulation
 from .schemas import SimulationContractResponse, SimulationRequest
@@ -104,6 +105,19 @@ if HAS_FASTAPI:
     def api_model_metrics() -> dict[str, object]:
         return get_model_metrics()
 
+    @app.get("/api/presets")
+    def api_presets() -> dict[str, object]:
+        return get_presets()
+
+    @app.get("/api/investigations")
+    def api_investigations(
+        target_environment: Optional[str] = Query(
+            default=None,
+            description="Target habitat environment (iss_space_station, lunar_base_30o2, martian_habitat, spacecraft_cabin_rover)",
+        ),
+    ) -> dict[str, object]:
+        return get_investigations(target_environment=target_environment)
+
 
 class FallbackHTTPHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: object) -> None:
@@ -133,6 +147,11 @@ class FallbackHTTPHandler(BaseHTTPRequestHandler):
             self._send_json(200, get_experiments(material_id=mat, pi_group=pi))
         elif parsed.path == "/api/model-metrics":
             self._send_json(200, get_model_metrics())
+        elif parsed.path == "/api/presets":
+            self._send_json(200, get_presets())
+        elif parsed.path == "/api/investigations":
+            env = qs.get("target_environment", [None])[0]
+            self._send_json(200, get_investigations(target_environment=env))
         else:
             self._send_json(404, {"error": "Not found"})
 
