@@ -23,11 +23,14 @@ SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent.parent / "contracts
 
 def validate_against_contract_keys(payload: dict) -> None:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    assert set(payload.keys()) == set(schema["required"])
+    assert set(schema["required"]).issubset(payload.keys())
+    assert set(payload.keys()).issubset(schema["properties"].keys())
     assert set(payload["inputs"].keys()) == set(schema["properties"]["inputs"]["required"])
     assert set(payload["simulation_3d"].keys()) == set(schema["properties"]["simulation_3d"]["required"])
     assert set(payload["telemetry"].keys()) == set(schema["properties"]["telemetry"]["required"])
     assert set(payload["safety_copilot"].keys()) == set(schema["properties"]["safety_copilot"]["required"])
+    if payload.get("suppression_estimate") is not None:
+        assert set(payload["suppression_estimate"].keys()) == set(schema["properties"]["suppression_estimate"]["required"])
 
 
 def test_health_and_experiments() -> None:

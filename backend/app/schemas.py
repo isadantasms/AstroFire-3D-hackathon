@@ -69,6 +69,14 @@ if HAS_PYDANTIC:
         url: str
         finding: str
 
+    class SuppressionEstimate(StrictModel):
+        cooling_efficiency_pct: float = Field(..., ge=0.0, le=100.0)
+        estimated_flame_power_kw: float = Field(..., ge=0.0)
+        estimated_mist_volume_ml: float = Field(..., ge=0.0)
+        tank_capacity_used_pct: float = Field(..., ge=0.0, le=100.0)
+        estimated_discharge_seconds: float = Field(..., ge=0.0)
+        confined_rack_note: str
+
     class SimulationContractResponse(StrictModel):
         scenario_id: str
         grounding_status: Literal[
@@ -81,6 +89,7 @@ if HAS_PYDANTIC:
         telemetry: Telemetry
         safety_copilot: SafetyCopilot
         nasa_citations: list[NasaCitation] = Field(..., min_length=1)
+        suppression_estimate: Optional[SuppressionEstimate] = None
 
 else:
 
@@ -145,6 +154,15 @@ else:
         finding: str
 
     @dataclass
+    class SuppressionEstimate(StrictDataclassMixin):
+        cooling_efficiency_pct: float
+        estimated_flame_power_kw: float
+        estimated_mist_volume_ml: float
+        tank_capacity_used_pct: float
+        estimated_discharge_seconds: float
+        confined_rack_note: str
+
+    @dataclass
     class SimulationContractResponse(StrictDataclassMixin):
         scenario_id: str
         grounding_status: str
@@ -153,3 +171,4 @@ else:
         telemetry: Telemetry
         safety_copilot: SafetyCopilot
         nasa_citations: list[NasaCitation]
+        suppression_estimate: Optional[SuppressionEstimate] = None

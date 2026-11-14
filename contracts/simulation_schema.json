@@ -184,6 +184,52 @@
           }
         }
       }
+    },
+    "suppression_estimate": {
+      "type": "object",
+      "description": "Optional first-order engineering estimate for ISS Fine Water Mist Portable Fire Extinguisher (FWM PFE) sizing and gravity-bounded thermal cooling efficiency (0g-1g).",
+      "additionalProperties": false,
+      "required": [
+        "cooling_efficiency_pct",
+        "estimated_flame_power_kw",
+        "estimated_mist_volume_ml",
+        "tank_capacity_used_pct",
+        "estimated_discharge_seconds",
+        "confined_rack_note"
+      ],
+      "properties": {
+        "cooling_efficiency_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "Gravity-bounded thermal cooling efficiency (%) interpolated via sqrt(g) between 0g vapor-barrier penalty (68%, UFSC/VSB-30 & NTRS-20030003652) and 1g terrestrial baseline (100%)."
+        },
+        "estimated_flame_power_kw": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "First-order estimated heat release rate (kW) scaled from BASS-II burn_rate_mm_s and material heat of combustion."
+        },
+        "estimated_mist_volume_ml": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated fine water mist volume (mL) required to absorb the reaction heat at 2450 J/mL divided by gravity cooling efficiency."
+        },
+        "tank_capacity_used_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "Percentage of the 2720 mL ISS FWM PFE tank capacity (NTRS-20130011664)."
+        },
+        "estimated_discharge_seconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated open-cabin discharge duration (seconds) anchored to NASA FWM PFE 55 kW / 1.0 s qualification."
+        },
+        "confined_rack_note": {
+          "type": "string",
+          "description": "Operational disclosure noting that confined electronics racks require up to 60 s in 0g because mist cannot curve around obstacles without natural convection."
+        }
+      }
     }
   }
 }

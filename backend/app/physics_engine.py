@@ -20,6 +20,7 @@ from .schemas import (
     SimulationContractResponse,
     SimulationInputs,
     SimulationRequest,
+    SuppressionEstimate,
     Telemetry,
 )
 
@@ -163,6 +164,80 @@ def compute_oxygen_limit_pct(material: dict[str, Any], airflow_cm_s: float, grav
     quench_term = 3.2 * math.exp(-0.35 * stretch_a)
     blowoff_term = 0.0167 * max(0.0, stretch_a - 8.0)
     return round(min(40.0, max(12.0, loi_min + quench_term + blowoff_term)), 2)
+
+
+# Standard polymer heats of combustion (kJ/g) & solid densities (g/cm^3) for first-order thermal sizing
+HEAT_OF_COMBUSTION_KJ_G: dict[str, tuple[float, float]] = {
+    "pmma_clear_slab": (25.0, 1.18),
+    "pmma_thin_film": (25.0, 1.18),
+    "pmma_rod": (25.0, 1.18),
+    "pmma_black_rod": (25.0, 1.18),
+    "cotton_fiberglass_sibal": (16.5, 0.95),
+    "nomex_iii_fabric": (18.0, 1.38),
+    "japan_wax_candle": (42.0, 0.90),
+}
+FWM_PFE_TANK_ML = 2720.0  # ISS Fine Water Mist Portable Fire Extinguisher tank volume (NTRS 20130011664)
+WATER_COOLING_J_PER_ML = 2450.0  # Sensible + latent heat of vaporization (~2450 J/mL)
+
+
+def compute_suppression_estimate(
+    material_id: str,
+    burn_rate_mm_s: float,
+    thickness_mm: float,
+    gravity_g: float,
+    o2_pct: float,
+    is_extinguished: bool,
+) -> SuppressionEstimate:
+    """
+    First-order ISS FWM PFE suppression sizing and gravity-bounded cooling efficiency (0g-1g).
+    Uses sqrt(g) interpolation between 0g vapor-barrier penalty (0.68, UFSC/VSB-30 & NTRS 20030003652)
+    and 1g terrestrial nucleate boiling baseline (1.00).
+    """
+    eta_0g = 0.68
+    g_clamped = min(1.0, max(0.0, gravity_g))
+    cooling_eff = eta_0g + (1.0 - eta_0g) * math.sqrt(g_clamped)
+    cooling_efficiency_pct = round(cooling_eff * 100.0, 1)
+
+    rack_note = (
+        "Open-cabin estimate anchored to NASA FWM PFE (2720 mL tank; 55 kW PMMA fire extinguished in ~1.0 s). "
+        "Confined electronics racks in 0g can require up to 60 s because mist cannot curve around obstacles without convection."
+    )
+
+    if is_extinguished or burn_rate_mm_s <= 0.0:
+        return SuppressionEstimate(
+            cooling_efficiency_pct=cooling_efficiency_pct,
+            estimated_flame_power_kw=0.0,
+            estimated_mist_volume_ml=0.0,
+            tank_capacity_used_pct=0.0,
+            estimated_discharge_seconds=0.0,
+            confined_rack_note=rack_note,
+        )
+
+    dh_kj_g, density_g_cm3 = HEAT_OF_COMBUSTION_KJ_G.get(material_id, (25.0, 1.18))
+    # Characteristic 10 cm (100 mm) sample width heat release rate: Q_dot (kW) = rho * width * tau * Vf * dH
+    sample_width_cm = 10.0
+    mass_rate_g_s = density_g_cm3 * sample_width_cm * (thickness_mm / 10.0) * (burn_rate_mm_s / 10.0)
+    o2_scale = max(0.5, o2_pct / 21.0)
+    flame_power_kw = round(max(0.25, mass_rate_g_s * dh_kj_g * o2_scale), 2)
+
+    # Required water mist volume (mL) for a 3-second thermal quench window adjusted by gravity cooling efficiency
+    quench_energy_j = flame_power_kw * 1000.0 * 3.0
+    mist_volume_ml = round(
+        min(FWM_PFE_TANK_ML, max(1.0, quench_energy_j / (WATER_COOLING_J_PER_ML * cooling_eff))),
+        1,
+    )
+    tank_used_pct = round(min(100.0, (mist_volume_ml / FWM_PFE_TANK_ML) * 100.0), 2)
+    # Open-cabin discharge time scaled from NASA 55 kW -> 1.0 s qualification baseline divided by cooling_eff
+    discharge_s = round(max(0.3, (flame_power_kw / 55.0) * (1.0 / cooling_eff) * 1.5), 2)
+
+    return SuppressionEstimate(
+        cooling_efficiency_pct=cooling_efficiency_pct,
+        estimated_flame_power_kw=flame_power_kw,
+        estimated_mist_volume_ml=mist_volume_ml,
+        tank_capacity_used_pct=tank_used_pct,
+        estimated_discharge_seconds=discharge_s,
+        confined_rack_note=rack_note,
+    )
 
 
 def run_simulation(req: SimulationRequest) -> SimulationContractResponse:
@@ -322,7 +397,34 @@ def run_simulation(req: SimulationRequest) -> SimulationContractResponse:
             url="https://ntrs.nasa.gov/citations/20170000230",
             finding="Validates large-scale spacecraft cabin fire spread and ventilation-driven O2 transport limits.",
         ),
+        NasaCitation(
+            id="NTRS-20130011664",
+            title="Development of the International Space Station Fine Water Mist Portable Fire Extinguisher (Rodriquez & Young, 2013)",
+            url="https://ntrs.nasa.gov/citations/20130011664",
+            finding="Documents the 2,720 mL ISS FWM PFE qualified on PMMA fires (~1 s open-cabin vs. up to 60 s in confined racks).",
+        ),
+        NasaCitation(
+            id="NTRS-20030003652",
+            title="Length Scale and Gravity Effects on Microgravity Boiling Heat Transfer (Kim et al., NASA Glenn)",
+            url="https://ntrs.nasa.gov/citations/20030003652",
+            finding="Demonstrates that microgravity vapor coalescence forms an insulating barrier, lowering critical heat flux relative to 1g.",
+        ),
+        NasaCitation(
+            id="UFSC-LEPTEN-VSB30",
+            title="Microgravity Boiling & Heat Transfer Aboard Brazilian Suborbital Rocket VSB-30 (Souza & Passos, UFSC/AEB/INPE)",
+            url="https://lepten.ufsc.br/publicacoes/boiling/eventos/2011/COBEM/souza_passos.pdf",
+            finding="Confirms reduced boiling heat transfer efficiency in 0g vs. 1g due to vapor bubble retention on heated surfaces.",
+        ),
     ]
+
+    suppression_estimate = compute_suppression_estimate(
+        material_id=material["material_id"],
+        burn_rate_mm_s=burn_rate_mm_s,
+        thickness_mm=thickness_mm,
+        gravity_g=gravity_g,
+        o2_pct=o2_pct,
+        is_extinguished=is_extinguished,
+    )
 
     return SimulationContractResponse(
         scenario_id=scenario_id,
@@ -356,5 +458,6 @@ def run_simulation(req: SimulationRequest) -> SimulationContractResponse:
             scientific_limitations=limitations,
         ),
         nasa_citations=citations,
+        suppression_estimate=suppression_estimate,
     )
 

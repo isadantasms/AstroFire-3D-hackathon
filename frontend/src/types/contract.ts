@@ -53,6 +53,15 @@ export interface NasaCitation {
   finding: string
 }
 
+export interface SuppressionEstimate {
+  cooling_efficiency_pct: number
+  estimated_flame_power_kw: number
+  estimated_mist_volume_ml: number
+  tank_capacity_used_pct: number
+  estimated_discharge_seconds: number
+  confined_rack_note: string
+}
+
 export interface SimulationResponse {
   scenario_id: string
   grounding_status: GroundingStatus
@@ -61,6 +70,7 @@ export interface SimulationResponse {
   telemetry: Telemetry
   safety_copilot: SafetyCopilot
   nasa_citations: NasaCitation[]
+  suppression_estimate?: SuppressionEstimate
 }
 
 /**

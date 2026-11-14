@@ -95,6 +95,41 @@ function ResultPanels({ result, mock }: { result: SimulationResponse; mock: bool
         </p>
       </ConsolePanel>
 
+      {/* ISS FWM PFE Suppression Sizing & Gravity Cooling Efficiency */}
+      {result.suppression_estimate ? (
+        <ConsolePanel
+          title="ISS FWM PFE suppression sizing"
+          aside={<Tag>{fmt(result.suppression_estimate.cooling_efficiency_pct, 1)}% cooling eff.</Tag>}
+        >
+          <dl className="grid grid-cols-2 gap-px border border-subtle bg-subtle">
+            <Metric
+              label="Cooling efficiency"
+              value={fmt(result.suppression_estimate.cooling_efficiency_pct, 1)}
+              unit="% (0g–1g)"
+            />
+            <Metric
+              label="Water mist needed"
+              value={fmt(result.suppression_estimate.estimated_mist_volume_ml, 1)}
+              unit="mL"
+            />
+            <Metric
+              label="Open-cabin discharge"
+              value={fmt(result.suppression_estimate.estimated_discharge_seconds, 2)}
+              unit="s"
+            />
+            <Metric
+              label="FWM PFE tank used"
+              value={fmt(result.suppression_estimate.tank_capacity_used_pct, 2)}
+              unit="% of 2.72 L"
+            />
+          </dl>
+          <p className="mt-2 text-[0.6875rem] leading-snug text-muted">
+            Est. flame power: {fmt(result.suppression_estimate.estimated_flame_power_kw, 2)} kW.{' '}
+            {result.suppression_estimate.confined_rack_note}
+          </p>
+        </ConsolePanel>
+      ) : null}
+
       {/* Copilot */}
       <ConsolePanel title="SI diagnosis" aside={mockTag}>
         <p className="text-sm leading-relaxed text-primary">{copilot.diagnosis}</p>
