@@ -3,48 +3,34 @@ import { Link } from 'react-router'
 import { BrandMark, Wordmark } from '../components/BrandMark'
 import { LINKS } from './routes'
 
+const LINK = 'transition-colors hover:text-primary'
+
+/**
+ * One discreet line. Sources and licenses live in Research & Data and Credits,
+ * SI usage in About & SI Usage, and research disclaimers next to the content they qualify.
+ */
 export function Footer() {
   return (
-    <footer className="relative border-t border-subtle bg-hero">
-      <div className="mx-auto grid max-w-[1920px] gap-8 px-4 py-8 sm:px-6 md:grid-cols-[1fr_auto]">
-        <div className="max-w-3xl space-y-3">
-          <div className="flex items-center gap-2">
-            <BrandMark size={18} />
-            <Wordmark className="text-sm" />
-          </div>
-          <p className="text-sm leading-relaxed text-secondary" data-testid="footer-disclaimer">
-            <strong className="font-medium text-primary">For research and education only.</strong>{' '}
-            AstroFire 3D outputs are not certified safety assessments, and suppression guidance is
-            not an approved operational procedure. The 3D chamber is a parameter-driven
-            illustration, not a validated CFD simulation.
-          </p>
-          <p className="font-mono text-xs leading-relaxed text-muted" data-testid="footer-data-source">
-            Data: NASA Physical Sciences Informatics, BASS-II (PSI-25), DOI 10.60555/4qc4-de67,
-            CC0-1.0 · NASA/TM-20210011385.
-          </p>
-        </div>
-
-        <nav aria-label="Footer" className="flex flex-col gap-2 text-sm md:items-end">
-          <Link to={LINKS.siUsage} className="text-secondary hover:text-primary">
-            SI Usage
-          </Link>
-          <Link to={LINKS.credits} className="text-secondary hover:text-primary">
-            Credits &amp; Licenses
-          </Link>
-          <Link to={LINKS.research} className="text-secondary hover:text-primary">
+    <footer className="relative bg-hero">
+      <div className="mx-auto flex max-w-[1920px] flex-col gap-2 px-4 py-4 text-xs text-[#7D8BA1] sm:px-6 md:flex-row md:items-center md:justify-between md:gap-6">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="inline-flex items-center gap-1.5">
+            <BrandMark size={14} />
+            <Wordmark className="text-xs" />
+          </span>
+          <span data-testid="footer-credit">© 2026 21 Pyro Rangers · Built for NASA Space Apps Challenge 2026</span>
+        </p>
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link to={LINKS.research} className={LINK}>
             Research &amp; Data
           </Link>
+          <Link to={LINKS.siUsage} className={LINK}>
+            SI Usage
+          </Link>
+          <Link to={LINKS.credits} className={LINK}>
+            Credits
+          </Link>
         </nav>
-      </div>
-
-      <div className="border-t border-subtle">
-        <div className="mx-auto flex max-w-[1920px] flex-col gap-1 px-4 py-4 text-xs text-muted sm:flex-row sm:justify-between sm:px-6">
-          <p>
-            Built for the NASA Space Apps Challenge 2026 · Challenge: Flame in Freefall. Not
-            affiliated with or endorsed by NASA; no NASA insignia are used.
-          </p>
-          <p>Open source under the MIT License.</p>
-        </div>
       </div>
     </footer>
   )

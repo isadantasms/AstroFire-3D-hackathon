@@ -33,20 +33,29 @@ describe('site structure', () => {
     ])
   })
 
-  it('renders the footer disclaimer and SI / Credits links', () => {
+  it('renders a one-line footer with the team credit and three links', () => {
     renderAt('/')
-    expect(screen.getByTestId('footer-disclaimer')).toHaveTextContent(
-      'For research and education only.',
+    const footer = screen.getByRole('contentinfo')
+    expect(screen.getByTestId('footer-credit')).toHaveTextContent(
+      '© 2026 21 Pyro Rangers · Built for NASA Space Apps Challenge 2026',
     )
+    expect(within(footer).getByText('Fire')).toBeInTheDocument()
     const footerNav = screen.getByRole('navigation', { name: 'Footer' })
-    expect(within(footerNav).getByRole('link', { name: 'SI Usage' })).toHaveAttribute(
-      'href',
-      '/about#si-usage',
-    )
-    expect(within(footerNav).getByRole('link', { name: /Credits/ })).toHaveAttribute(
-      'href',
-      '/about#credits',
-    )
+    expect(within(footerNav).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
+      ['Research & Data', '/research'],
+      ['SI Usage', '/about#si-usage'],
+      ['Credits', '/about#credits'],
+    ])
+    for (const removed of [
+      /For research and education only/,
+      /CFD/,
+      /10\.60555/,
+      /Not affiliated/,
+      /NASA insignia/,
+      /MIT License/,
+    ]) {
+      expect(within(footer).queryByText(removed)).toBeNull()
+    }
   })
 
   it('home hero exposes the brand, headline and the three calls to action', () => {
@@ -60,9 +69,7 @@ describe('site structure', () => {
     expect(within(hero).getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
     expect(within(hero).getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/about')
     expect(within(hero).getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute('href', '#')
-    // The research disclaimer lives only in the footer now.
     expect(within(hero).queryByText(/Not a certified safety assessment/)).toBeNull()
-    expect(screen.getByTestId('footer-disclaimer')).toHaveTextContent('For research and education only.')
   })
 
   it('home follows problem -> approach -> solution, then a closing panel', () => {
@@ -130,14 +137,23 @@ describe('site structure', () => {
     const brand = screen.getByRole('link', { name: 'AstroFire 3D home' })
     expect(brand).toHaveTextContent('AstroFire3D')
     expect(within(brand).getByText('3D').className).toMatch(/9AA8BD/)
-    expect(screen.getByTestId('footer-disclaimer')).toHaveTextContent('AstroFire 3D outputs')
+    expect(within(screen.getByRole('contentinfo')).getByText('3D').className).toMatch(/9AA8BD/)
   })
 
   it('home keeps NASA out of the hero title and buttons', () => {
     renderAt('/')
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
     expect(within(hero).queryByText(/NASA/)).toBeNull()
-    expect(screen.getByTestId('footer-data-source')).toHaveTextContent('BASS-II (PSI-25)')
+  })
+
+  it('sources, licenses and SI usage stay on Research & Data and About after the footer cut', async () => {
+    renderAt('/research')
+    expect(await screen.findByText('BASS-II (PSI-25, DOI: 10.60555/4qc4-de67)')).toBeInTheDocument()
+    cleanup()
+    const { container } = renderAt('/about')
+    await screen.findByRole('heading', { level: 1, name: 'About & SI Usage' }, { timeout: 5000 })
+    expect(container.querySelector('#si-usage')).not.toBeNull()
+    expect(container.querySelector('#credits')).toHaveTextContent('CC0-1.0')
   })
 
   it('the Fig. 01 flame figure moved from the Home to Research & Data', async () => {
