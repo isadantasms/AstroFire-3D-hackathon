@@ -1,5 +1,5 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-/** Primary site navigation. SI usage and the team live on the Home; credits on Research & Data. */
+/** Primary site navigation. SI usage lives on the Home; credits on Research & Data. */
 export const NAV_ITEMS = [
   { to: '/', label: 'Home', end: true },
   { to: '/simulator', label: 'Simulator', end: false },
@@ -11,7 +11,6 @@ export const LINKS = {
   simulator: '/simulator',
   research: '/research',
   siUsage: '/#si-usage',
-  team: '/#team',
   credits: '/research#credits',
 } as const
 

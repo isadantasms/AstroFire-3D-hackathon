@@ -8,7 +8,7 @@ import { PlanetHorizon } from '../components/home/PlanetHorizon'
 import { useReveal } from '../components/home/useReveal'
 import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences'
 import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
-import { DEV_TOOLS, initials, TEAM } from '../content/project'
+import { DEV_TOOLS } from '../content/project'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
@@ -33,7 +33,6 @@ export function HomePage() {
       <Hero />
       <HelpsSection />
       <SiUsageSection />
-      <TeamSection />
       <ClosingSection />
     </div>
   )
@@ -319,38 +318,6 @@ function SiUsageSection() {
             ))}
           </div>
         </div>
-      </div>
-    </section>
-  )
-}
-
-function TeamSection() {
-  return (
-    <section id="team" className="relative scroll-mt-16" aria-labelledby="team-title">
-      <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
-        <SectionHeader id="team" label="Team" title="21 Pyro Rangers" />
-        <p data-reveal style={stagger(1)} className="reveal mt-3 text-center text-sm text-secondary">
-          Uberlândia, Brazil · NASA Space Apps Challenge 2026
-        </p>
-        <ul data-reveal style={stagger(2)} className={`reveal mt-10 grid grid-cols-2 gap-x-4 gap-y-8 p-6 sm:grid-cols-3 sm:p-8 lg:grid-cols-6 lg:p-10 ${PANEL}`}>
-          {TEAM.map((m) => (
-            <li key={m.name} className="flex flex-col items-center text-center">
-              {/* Photo slot: initials until a photo is set in src/content/project.ts. */}
-              <span
-                data-testid="team-photo"
-                className="inline-flex size-20 items-center justify-center overflow-hidden rounded-full border border-[#1F2C47] bg-[#0F1728] font-mono text-xl font-semibold text-[#F28C28]"
-              >
-                {m.photo ? (
-                  <img src={m.photo} alt={`Photo of ${m.name}`} className="size-full object-cover" loading="lazy" />
-                ) : (
-                  <span aria-hidden="true">{initials(m.name)}</span>
-                )}
-              </span>
-              <span className="mt-3 text-sm font-medium text-primary">{m.name}</span>
-              <span className="mt-0.5 text-xs leading-snug text-muted">{m.role}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   )

@@ -144,11 +144,11 @@ describe('site structure', () => {
     expect(within(hero).queryByText(/NASA/)).toBeNull()
   })
 
-  it('the About page is gone: SI usage and team close the Home, before the final call to action', () => {
+  it('the About page is gone: SI usage closes the Home, before the final call to action', () => {
     renderAt('/')
     expect(screen.queryByRole('link', { name: 'About & SI Usage' })).toBeNull()
     const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
-    expect(h2s).toEqual(['How AstroFire 3D helps', 'How we use SI', '21 Pyro Rangers', 'Ready to test a scenario?'])
+    expect(h2s).toEqual(['How AstroFire 3D helps', 'How we use SI', 'Ready to test a scenario?'])
 
     const si = within(document.getElementById('si-usage')!)
     for (const name of ['In the product', 'In development', 'Human review']) {
@@ -160,20 +160,8 @@ describe('site structure', () => {
     expect(tools).toHaveTextContent('Gemini: code assistance and test data generation')
     expect(tools).toHaveTextContent('[VOICE TOOL]: narration of the demo video')
 
-    const team = document.getElementById('team')!
-    expect(team).toHaveTextContent('Uberlândia, Brazil · NASA Space Apps Challenge 2026')
-    for (const [name, role] of [
-      ['Leandro Elias', 'Data & physics engine'],
-      ['Leandro Pina', 'Backend & API'],
-      ['Isabela Dantas', 'Data analysis & model accuracy'],
-      ['Celina Vieira', 'Science & SI validation'],
-      ['Gabriel Esquivel', '3D flame chamber'],
-      ['Isabela Rocha', 'Front-end & product'],
-    ]) {
-      expect(within(team).getByText(name).nextElementSibling).toHaveTextContent(role)
-    }
-    // Photo slots show initials until photos are added.
-    expect(within(team).getAllByTestId('team-photo').map((p) => p.textContent)).toEqual(['LE', 'LP', 'ID', 'CV', 'GE', 'IR'])
+    // The team section was removed.
+    expect(document.getElementById('team')).toBeNull()
     expect(document.body.textContent).not.toMatch(/\bzero\b|100%|guaranteed/i)
   })
 
