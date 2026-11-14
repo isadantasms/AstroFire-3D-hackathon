@@ -44,6 +44,8 @@ coverage/
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
+!unity-fire-simulation/WebGlSimulation/Build/
+!unity-fire-simulation/WebGlSimulation/Build/**
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 MemoryCaptures/
