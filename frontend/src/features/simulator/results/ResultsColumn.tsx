@@ -1,11 +1,11 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { AlertOctagon, AlertTriangle, BadgeCheck, ExternalLink, Info, RotateCcw, ShieldCheck } from 'lucide-react'
-import { Link } from 'react-router'
-import { ConsolePanel, Tag } from '../../../components/ConsolePanel'
+import { useState, type ReactNode } from 'react'
+import { AlertTriangle, ChevronRight, ExternalLink, Info, RotateCcw } from 'lucide-react'
+import { Tooltip } from '../../../components/Tooltip'
 import { GROUNDING } from '../../../content/grounding'
-import { LINKS } from '../../../app/routes'
 import { fmt } from '../../../lib/format'
-import type { RiskLabel, SimulationResponse } from '../../../types/contract'
+import type { SimulationResponse } from '../../../types/contract'
+import { isCitationShown, MOCK_TOOLTIP, riskBand, shortCitationId } from './resultHelpers'
 import type { SimulationState } from '../state/simulationReducer'
 
 interface ResultsColumnProps {
@@ -19,210 +19,182 @@ export function ResultsColumn({ state, stale, mock, onRun }: ResultsColumnProps)
   const { status, result, error } = state
 
   return (
-    <div className="flex flex-col gap-3" aria-live="polite">
-      {status === 'error' && error ? <ErrorPanel message={error.message} details={error.details} onRetry={onRun} /> : null}
+    <div className="flex h-full min-h-0 flex-col">
+      <header className="flex items-center gap-2 px-1 pb-3">
+        <h2 className="text-base font-semibold text-primary">Results</h2>
+        {mock ? (
+          <Tooltip label={MOCK_TOOLTIP} align="start" side="bottom" focusable>
+            {(id) => (
+              <span
+                data-testid="mock-badge"
+                aria-describedby={id}
+                className="rounded-md border border-warning/70 px-1.5 py-0.5 font-mono text-[0.625rem] tracking-[0.1em] text-warning"
+              >
+                MOCK DATA
+              </span>
+            )}
+          </Tooltip>
+        ) : null}
+      </header>
 
-      {status === 'loading' && !result ? <LoadingPanel /> : null}
+      <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1 pb-2" aria-live="polite">
+        {status === 'error' && error ? <ErrorPanel message={error.message} details={error.details} onRetry={onRun} /> : null}
+        {status === 'loading' && !result ? <LoadingPanel /> : null}
+        {status === 'idle' && !result ? <EmptyState /> : null}
 
-      {status === 'idle' && !result ? <EmptyPanel /> : null}
-
-      {result ? (
-        <>
-          {stale ? <StaleBanner onRun={onRun} /> : null}
-          {status === 'loading' ? (
-            <p role="status" className="border border-subtle bg-panel px-3 py-2 font-mono text-xs text-secondary">
-              Running simulation…
-            </p>
-          ) : null}
-          <div
-            data-testid="results"
-            className={`flex flex-col gap-3 transition-opacity ${stale || status === 'loading' ? 'opacity-50' : ''}`}
-          >
-            {mock ? <MockNotice /> : null}
-            <ResultPanels result={result} mock={mock} />
-          </div>
-        </>
-      ) : null}
+        {result ? (
+          <>
+            {stale ? <StaleBanner onRun={onRun} /> : null}
+            <div
+              data-testid="results"
+              className={`flex flex-col gap-3 transition-opacity ${stale || status === 'loading' ? 'opacity-50' : ''}`}
+            >
+              <ResultPanels result={result} />
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   )
 }
 
-function ResultPanels({ result, mock }: { result: SimulationResponse; mock: boolean }) {
-  const grounding = GROUNDING[result.grounding_status]
-  const { telemetry, safety_copilot: copilot, inputs } = result
-  const mockTag = mock ? <Tag tone="warning">Mock data</Tag> : null
+function Card({ title, aside, children, testId }: { title: string; aside?: ReactNode; children: ReactNode; testId?: string }) {
+  const id = `card-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+  return (
+    <section aria-labelledby={id} data-testid={testId} className="rounded-xl border border-subtle bg-panel/88 p-4">
+      <header className="mb-3 flex items-center justify-between gap-2">
+        <h3 id={id} className="text-sm font-semibold text-primary">
+          {title}
+        </h3>
+        {aside}
+      </header>
+      {children}
+    </section>
+  )
+}
+
+function ResultPanels({ result }: { result: SimulationResponse }) {
+  const { telemetry, safety_copilot: copilot } = result
+  const estimate = result.suppression_estimate
+  const citations = result.nasa_citations.filter(isCitationShown)
 
   return (
     <>
-      {/* Grounding */}
-      <ConsolePanel title="Scientific grounding" aside={mockTag}>
-        <span
-          data-testid="grounding-badge"
-          className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[0.6875rem] tracking-[0.1em] uppercase ${grounding.tone}`}
-        >
-          <BadgeCheck className="size-3.5" aria-hidden />
-          {grounding.label}
-        </span>
-        <p className="mt-3 text-xs leading-relaxed text-secondary">{copilot.scientific_limitations}</p>
-        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 border-t border-subtle pt-3 text-xs">
-          <dt className="text-muted">Scenario</dt>
-          <dd className="truncate text-right font-mono text-secondary" title={result.scenario_id}>
-            {result.scenario_id}
-          </dd>
-          <dt className="text-muted">Environment</dt>
-          <dd className="text-right text-secondary">{inputs.environment_label}</dd>
-          <dt className="text-muted">Run inputs</dt>
-          <dd className="text-right font-mono text-secondary">
-            {fmt(inputs.gravity_g, 2)} g · {fmt(inputs.o2_pct)} % O2 · {fmt(inputs.airflow_cm_s)} cm/s ·{' '}
-            {fmt(inputs.thickness_mm, 2)} mm
-          </dd>
-        </dl>
-      </ConsolePanel>
-
-      {/* Risk + metrics */}
-      <ConsolePanel title="Flammability telemetry" aside={mockTag}>
+      <Card title="Risk" aside={<GroundingBadge status={result.grounding_status} />}>
         <RiskGauge score={telemetry.flammability_score} label={telemetry.risk_label} />
-        <dl className="mt-4 grid grid-cols-2 gap-px border border-subtle bg-subtle">
-          <Metric label="Burn rate" value={fmt(result.simulation_3d.burn_rate_mm_s, 3)} unit="mm/s" />
-          <Metric label="O2 limit (LOI)" value={fmt(telemetry.oxygen_limit_pct, 1)} unit="% O2" />
+      </Card>
+
+      <Card title="Telemetry">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <Metric label="Burn rate" value={fmt(result.simulation_3d.burn_rate_mm_s, 2)} unit="mm/s" />
+          <Metric label="O₂ limit" value={fmt(telemetry.oxygen_limit_pct, 1)} unit="%" />
           <Metric label="CO" value={fmt(telemetry.co_ppm, 0)} unit="ppm" />
-          <Metric label="CO2" value={fmt(telemetry.co2_pct, 2)} unit="% CO2" />
+          <Metric label="CO₂" value={fmt(telemetry.co2_pct, 1)} unit="%" />
         </dl>
-        <p className="mt-2 text-[0.6875rem] leading-snug text-muted">
-          Cabin O2 {fmt(inputs.o2_pct)} % vs. limit {fmt(telemetry.oxygen_limit_pct)} %. Provenance follows the
-          grounding status above. Risk indicators are for research and education, not certified safety
-          assessments.
-        </p>
-      </ConsolePanel>
+      </Card>
 
-      {/* ISS FWM PFE Suppression Sizing & Gravity Cooling Efficiency */}
-      {result.suppression_estimate ? (
-        <ConsolePanel
-          id="suppression-sizing"
-          title="ISS FWM PFE suppression sizing"
-          aside={
-            <span className="flex gap-1.5">
-              {mockTag}
-              <Tag tone="focus">Estimated</Tag>
-            </span>
-          }
-        >
-          <p className="flex gap-2 border border-warning/50 bg-warning/5 px-3 py-2 text-[0.6875rem] leading-snug text-warning">
-            <AlertTriangle className="mt-px size-3.5 shrink-0" aria-hidden />
-            Research guidance from a first-order estimate, not an approved operational procedure.
+      <Card
+        title="ISS FWM PFE suppression sizing"
+        testId="suppression-card"
+        aside={<span className="rounded-md border border-focus/70 px-1.5 py-0.5 text-[0.6875rem] text-focus">Estimated</span>}
+      >
+        {estimate ? null : (
+          <p className="mb-3 flex items-center gap-2 text-xs text-secondary" data-testid="suppression-awaiting">
+            <Info className="size-3.5 shrink-0 text-muted" aria-hidden />
+            Awaiting suppression estimate from engine
           </p>
-          <dl className="mt-3 grid grid-cols-2 gap-px border border-subtle bg-subtle">
-            <Metric
-              label="Est. mist volume"
-              value={fmt(result.suppression_estimate.estimated_mist_volume_ml, 1)}
-              unit="mL"
-            />
-            <Metric
-              label="Est. discharge time"
-              value={fmt(result.suppression_estimate.estimated_discharge_seconds, 2)}
-              unit="s"
-            />
-            <Metric
-              label="Est. extinguisher tank"
-              value={fmt(result.suppression_estimate.tank_capacity_used_pct, 2)}
-              unit="% used"
-            />
-            <Metric
-              label="Est. cooling eff."
-              value={fmt(result.suppression_estimate.cooling_efficiency_pct, 1)}
-              unit={`% at ${fmt(inputs.gravity_g, 2)} g`}
-            />
-          </dl>
-          <p className="mt-2 text-[0.6875rem] leading-snug text-muted">
-            Est. flame power {fmt(result.suppression_estimate.estimated_flame_power_kw, 2)} kW. Tank % refers
-            to the ISS Fine Water Mist Portable Fire Extinguisher (FWM PFE).{' '}
-            {result.suppression_estimate.confined_rack_note}
-          </p>
-          <p className="mt-2 flex items-center gap-1.5 text-[0.6875rem] text-muted">
-            <Tag tone="warning">Sources to verify</Tag>
-            <span>The references behind these estimates are not yet in the project reference ledger.</span>
-          </p>
-        </ConsolePanel>
-      ) : null}
+        )}
+        <dl className={`grid grid-cols-2 gap-x-4 gap-y-3 ${estimate ? '' : 'opacity-60'}`}>
+          <Metric label="Mist volume" value={fmt(estimate?.estimated_mist_volume_ml, 0)} unit="mL" />
+          <Metric label="Discharge time" value={fmt(estimate?.estimated_discharge_seconds, 1)} unit="s" />
+          <Metric label="Tank used" value={fmt(estimate?.tank_capacity_used_pct, 1)} unit="%" />
+          <Metric label="Cooling efficiency" value={fmt(estimate?.cooling_efficiency_pct, 0)} unit="%" />
+        </dl>
+        {estimate ? <p className="mt-3 text-xs leading-relaxed text-muted">{estimate.confined_rack_note}</p> : null}
+      </Card>
 
-      {/* Copilot */}
-      <ConsolePanel title="SI diagnosis" aside={mockTag}>
-        <p className="text-sm leading-relaxed text-primary">{copilot.diagnosis}</p>
-      </ConsolePanel>
+      <Card title="SI copilot">
+        <Diagnosis text={copilot.diagnosis} />
+        <div className="mt-4 rounded-lg border-l-2 border-warning/80 bg-void/60 px-3 py-2.5" data-testid="suppression-guidance">
+          <p className="text-[0.6875rem] text-warning">Research guidance, not an operational procedure</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-primary">{copilot.suppression_action}</p>
+        </div>
+        <details className="group mt-3">
+          <summary className="flex cursor-pointer list-none items-center gap-1 text-xs text-secondary hover:text-primary">
+            <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden />
+            Scientific limitations
+          </summary>
+          <p className="mt-2 text-xs leading-relaxed text-secondary">{copilot.scientific_limitations}</p>
+        </details>
+      </Card>
 
-      <ConsolePanel title="Suppression guidance" aside={mockTag}>
-        <p className="flex gap-2 border border-warning/50 bg-warning/5 px-3 py-2 text-[0.6875rem] leading-snug text-warning">
-          <AlertTriangle className="mt-px size-3.5 shrink-0" aria-hidden />
-          Research guidance derived from published experiments, not an approved operational procedure.
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-primary">{copilot.suppression_action}</p>
-      </ConsolePanel>
+      <OnEarth text={copilot.terrestrial_spinoff} />
 
-      <ConsolePanel title="Applications on Earth" aside={mockTag}>
-        <p className="text-sm leading-relaxed text-primary">{copilot.terrestrial_spinoff}</p>
-      </ConsolePanel>
-
-      <ConsolePanel title="NASA citations" aside={<span className="font-mono text-xs text-muted">{result.nasa_citations.length}</span>}>
-        <ul className="flex flex-col gap-2">
-          {result.nasa_citations.map((c) => (
+      <section aria-labelledby="sources-title" className="px-1">
+        <h3 id="sources-title" className="flex items-baseline gap-2 text-sm font-semibold text-primary">
+          Sources
+          <span className="font-mono text-xs font-normal text-muted tabular-nums">{citations.length}</span>
+        </h3>
+        <ul className="mt-2 divide-y divide-subtle">
+          {citations.map((c) => (
             <li key={c.id}>
-              <a
-                href={c.url}
-                target="_blank"
-                rel="noreferrer"
-                className="group block border border-subtle bg-void p-3 transition-colors hover:border-focus"
-              >
-                <span className="flex items-start justify-between gap-2">
-                  <span className="font-mono text-xs text-focus">{c.id}</span>
-                  <ExternalLink className="size-3.5 shrink-0 text-muted group-hover:text-focus" aria-hidden />
-                </span>
-                <span className="mt-1 block text-xs font-medium text-primary">{c.title}</span>
-                <span className="mt-1 block text-[0.6875rem] leading-snug text-secondary">{c.finding}</span>
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
+              <details className="group py-2">
+                <summary className="flex cursor-pointer list-none items-start gap-2 text-xs">
+                  <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-muted transition-transform group-open:rotate-90" aria-hidden />
+                  <span className="shrink-0 font-mono text-focus">{shortCitationId(c.id)}</span>
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="min-w-0 flex-1 text-secondary underline-offset-2 hover:text-primary hover:underline"
+                  >
+                    {c.title}
+                    <ExternalLink className="ml-1 inline size-3 align-[-1px] text-muted" aria-hidden />
+                    <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                </summary>
+                <p className="mt-1.5 pl-5.5 text-xs leading-relaxed text-muted">{c.finding}</p>
+              </details>
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-[0.6875rem] text-muted">
-          SI output is grounded in these sources; see{' '}
-          <Link to={LINKS.siUsage} className="text-secondary underline underline-offset-2 hover:text-primary">
-            how SI is used
-          </Link>
-          .
-        </p>
-      </ConsolePanel>
+      </section>
     </>
   )
 }
 
-/** Badge color follows risk_label; the scale shows the DESIGN.md score bands. */
-const RISK_TONE: Record<RiskLabel, { text: string; bar: string; icon: typeof ShieldCheck }> = {
-  'Safe (Extinguished Below LOI)': { text: 'text-nominal border-nominal', bar: 'bg-nominal', icon: ShieldCheck },
-  'Moderate Alert': { text: 'text-warning border-warning', bar: 'bg-warning', icon: AlertTriangle },
-  'High Risk': { text: 'text-critical border-critical', bar: 'bg-critical', icon: AlertOctagon },
-  'Critical Flashover Risk': { text: 'text-critical border-critical', bar: 'bg-critical', icon: AlertOctagon },
+function GroundingBadge({ status }: { status: SimulationResponse['grounding_status'] }) {
+  const g = GROUNDING[status]
+  return (
+    <span
+      data-testid="grounding-badge"
+      title={g.summary}
+      className={`rounded-md border px-1.5 py-0.5 text-[0.6875rem] whitespace-nowrap ${g.tone}`}
+    >
+      {g.badge}
+    </span>
+  )
 }
 
-function RiskGauge({ score, label }: { score: number; label: RiskLabel }) {
-  const tone = RISK_TONE[label]
-  const RiskIcon = tone.icon
+const BAND_TONE = {
+  nominal: { text: 'text-nominal', bar: 'bg-nominal' },
+  warning: { text: 'text-warning', bar: 'bg-warning' },
+  critical: { text: 'text-critical', bar: 'bg-critical' },
+}
+
+function RiskGauge({ score, label }: { score: number; label: string }) {
+  const tone = BAND_TONE[riskBand(score)]
   return (
     <div data-testid="risk-gauge">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="label-mono">Flammability score</p>
-          <p className="mt-1 font-mono text-4xl leading-none text-primary">
-            {score}
-            <span className="ml-1 text-sm text-secondary">/ 100</span>
-          </p>
-        </div>
-        <span className={`inline-flex items-center gap-1.5 border px-2 py-1 text-right font-mono text-[0.6875rem] tracking-[0.08em] uppercase ${tone.text}`}>
-          <RiskIcon className="size-3.5 shrink-0" aria-hidden />
-          {label}
-        </span>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="font-mono text-4xl leading-none text-primary tabular-nums">
+          {score}
+          <span className="ml-1 text-sm text-muted">/100</span>
+        </p>
+        <p className={`text-right text-sm font-medium ${tone.text}`}>{label}</p>
       </div>
       <div
-        className="relative mt-3 h-2 w-full"
+        className="relative mt-3 h-1.5 w-full overflow-hidden rounded-full"
         role="meter"
         aria-label="Flammability score"
         aria-valuemin={0}
@@ -230,28 +202,29 @@ function RiskGauge({ score, label }: { score: number; label: RiskLabel }) {
         aria-valuenow={score}
         aria-valuetext={`${score} of 100, ${label}`}
       >
-        <div className="absolute inset-0 flex gap-px opacity-30">
+        <div className="absolute inset-0 flex gap-px opacity-25">
           <span className="h-full bg-nominal" style={{ width: '35%' }} />
           <span className="h-full bg-warning" style={{ width: '35%' }} />
           <span className="h-full flex-1 bg-critical" />
         </div>
-        <span className={`absolute inset-y-0 left-0 ${tone.bar}`} style={{ width: `${score}%` }} />
+        <span className={`absolute inset-y-0 left-0 rounded-full ${tone.bar}`} style={{ width: `${score}%` }} />
       </div>
-      <div className="mt-1 flex justify-between font-mono text-[0.625rem] text-muted">
+      <div className="mt-1 flex justify-between font-mono text-[0.625rem] text-muted tabular-nums">
         <span>0</span>
         <span>35</span>
         <span>70</span>
         <span>100</span>
       </div>
+      <p className="mt-2 text-[0.6875rem] text-muted">Flammability score. Research indicator, not a certified safety assessment.</p>
     </div>
   )
 }
 
 function Metric({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
-    <div className="bg-panel px-3 py-2.5">
-      <dt className="label-mono">{label}</dt>
-      <dd className="mt-1 font-mono text-xl text-primary">
+    <div>
+      <dt className="text-xs text-muted">{label}</dt>
+      <dd className="mt-0.5 font-mono text-lg text-primary tabular-nums">
         {value}
         <span className="ml-1 text-xs text-secondary">{unit}</span>
       </dd>
@@ -259,35 +232,58 @@ function Metric({ label, value, unit }: { label: string; value: string; unit: st
   )
 }
 
-function MockNotice() {
+function Diagnosis({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  const long = text.length > 140
   return (
-    <p
-      data-testid="mock-notice"
-      className="flex gap-2 border border-warning bg-warning/10 px-3 py-2 text-xs leading-snug text-warning"
-    >
-      <AlertTriangle className="mt-px size-3.5 shrink-0" aria-hidden />
-      <span>
-        <strong className="font-semibold">MOCK DATA.</strong> These results are placeholders for interface
-        development. They are not engine output and not NASA evidence.
-      </span>
-    </p>
+    <div>
+      <p className="text-xs text-muted">Diagnosis</p>
+      <p data-testid="diagnosis" className={`mt-1 text-sm leading-relaxed text-primary ${open || !long ? '' : 'line-clamp-3'}`}>
+        {text}
+      </p>
+      {long ? (
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+          className="mt-1 text-xs text-focus hover:underline"
+        >
+          {open ? 'Show less' : 'Read more'}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function OnEarth({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="flex items-start gap-2 px-1 text-xs" data-testid="on-earth">
+      <span className="shrink-0 font-medium text-primary">On Earth</span>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        title={open ? undefined : text}
+        className={`min-w-0 flex-1 text-left text-secondary hover:text-primary ${open ? '' : 'truncate'}`}
+      >
+        {text}
+      </button>
+    </div>
   )
 }
 
 function StaleBanner({ onRun }: { onRun: () => void }) {
   return (
-    <div
-      data-testid="stale-banner"
-      className="flex items-center justify-between gap-3 border border-warning bg-panel px-3 py-2"
-    >
+    <div data-testid="stale-banner" className="flex items-center justify-between gap-3 rounded-lg border border-warning/60 px-3 py-2">
       <p className="flex gap-2 text-xs text-warning">
         <Info className="mt-px size-3.5 shrink-0" aria-hidden />
-        Parameters changed. Results below reflect the previous run.
+        Controls changed. Results reflect the previous run.
       </p>
       <button
         type="button"
         onClick={onRun}
-        className="shrink-0 border border-warning px-2 py-1 font-mono text-[0.6875rem] text-warning uppercase hover:bg-warning hover:text-void"
+        className="shrink-0 rounded-md border border-warning/80 px-2 py-0.5 text-xs text-warning hover:bg-warning hover:text-void"
       >
         Re-run
       </button>
@@ -295,36 +291,39 @@ function StaleBanner({ onRun }: { onRun: () => void }) {
   )
 }
 
-function EmptyPanel() {
+function EmptyState() {
+  const steps = ['Pick a scenario', 'Run', 'Discharge the extinguisher']
   return (
-    <ConsolePanel title="Results">
-      <div data-testid="results-empty" className="py-6 text-center">
-        <p className="text-sm text-primary">No simulation yet.</p>
-        <p className="mt-2 text-xs leading-relaxed text-secondary">
-          Choose a preset or select a BASS-II record, then press Run Simulation to see grounding,
-          telemetry, SI diagnosis and NASA citations.
-        </p>
-      </div>
-    </ConsolePanel>
+    <div data-testid="results-empty" className="rounded-xl border border-dashed border-subtle p-5">
+      <p className="text-sm text-primary">No results yet.</p>
+      <ol className="mt-4 space-y-3">
+        {steps.map((step, i) => (
+          <li key={step} className="flex items-center gap-3 text-sm text-secondary">
+            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-subtle font-mono text-[0.6875rem] text-muted">
+              {i + 1}
+            </span>
+            {step}
+          </li>
+        ))}
+      </ol>
+    </div>
   )
 }
 
 function LoadingPanel() {
   return (
-    <ConsolePanel title="Results">
-      <div role="status" data-testid="results-loading" className="flex flex-col gap-3">
-        <p className="font-mono text-xs text-secondary">Running simulation…</p>
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-16 animate-pulse bg-elevated" />
-        ))}
-      </div>
-    </ConsolePanel>
+    <div role="status" data-testid="results-loading" className="flex flex-col gap-3">
+      <p className="px-1 text-xs text-secondary">Running simulation…</p>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="h-20 animate-pulse rounded-xl bg-panel" />
+      ))}
+    </div>
   )
 }
 
 function ErrorPanel({ message, details, onRetry }: { message: string; details: string[]; onRetry: () => void }) {
   return (
-    <div role="alert" data-testid="results-error" className="border border-critical bg-panel p-4">
+    <div role="alert" data-testid="results-error" className="rounded-xl border border-critical/70 bg-panel p-4">
       <p className="flex items-center gap-2 text-sm font-medium text-critical">
         <AlertTriangle className="size-4" aria-hidden />
         Simulation failed
@@ -340,7 +339,7 @@ function ErrorPanel({ message, details, onRetry }: { message: string; details: s
       <button
         type="button"
         onClick={onRetry}
-        className="mt-3 inline-flex items-center gap-1.5 border border-subtle px-3 py-1.5 text-xs text-primary hover:border-secondary"
+        className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-subtle px-3 py-1.5 text-xs text-primary hover:border-secondary"
       >
         <RotateCcw className="size-3.5" aria-hidden />
         Retry

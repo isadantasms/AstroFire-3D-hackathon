@@ -10,6 +10,8 @@ export type GroundingStatus =
 
 export interface GroundingInfo {
   label: string
+  /** Short badge text for the Simulator results. */
+  badge: string
   summary: string
   /** Tailwind classes for the badge accent. */
   tone: string
@@ -18,17 +20,20 @@ export interface GroundingInfo {
 export const GROUNDING: Record<GroundingStatus, GroundingInfo> = {
   empirical_bass2: {
     label: 'Empirical NASA BASS-II data',
+    badge: 'NASA experimental data',
     summary: 'The scenario matches a direct test record from BASS-II (PSI-25).',
     tone: 'border-focus text-focus',
   },
   interpolated_from_ntrs: {
     label: 'Bounded NTRS interpolation',
+    badge: 'Estimate · interpolated',
     summary:
       'The result is interpolated across oxygen, airflow or gravity regimes, bounded by NASA technical reports, with its assumptions stated.',
     tone: 'border-secondary text-secondary',
   },
   theoretical_extrapolation_to_verify: {
     label: 'Theoretical extrapolation · to verify',
+    badge: 'Theoretical · to verify',
     summary:
       'The scenario lies outside the empirical envelope. Treat the output as a hypothesis that still needs verification.',
     tone: 'border-warning text-warning',

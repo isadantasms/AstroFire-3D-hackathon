@@ -1,6 +1,6 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 // Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
-import { useMemo, useState, type ReactNode } from 'react'
+import { useId, useMemo, useState, type ReactNode } from 'react'
 import { Tag } from '../../../components/ConsolePanel'
 import { fmt } from '../../../lib/format'
 import type { CatalogSource, ExperimentRecord } from '../../../types/catalog'
@@ -8,23 +8,22 @@ import type { CatalogSource, ExperimentRecord } from '../../../types/catalog'
 interface ExperimentTableProps {
   experiments: ExperimentRecord[]
   source: CatalogSource
-  selectedMaterialId: string
-  selectedTestId: string | null
-  onSelect: (record: ExperimentRecord) => void
 }
 
-export function ExperimentTable({
-  experiments,
-  source,
-  selectedMaterialId,
-  selectedTestId,
-  onSelect,
-}: ExperimentTableProps) {
-  const [onlySelectedMaterial, setOnlySelectedMaterial] = useState(false)
+/** Read-only BASS-II record table (Research & Data), with a material filter. */
+export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
+  const filterId = useId()
+  const [material, setMaterial] = useState('all')
+
+  const materials = useMemo(() => {
+    const seen = new Map<string, string>()
+    for (const r of experiments) if (!seen.has(r.material_id)) seen.set(r.material_id, r.material_name)
+    return [...seen.entries()]
+  }, [experiments])
 
   const rows = useMemo(
-    () => (onlySelectedMaterial ? experiments.filter((r) => r.material_id === selectedMaterialId) : experiments),
-    [experiments, onlySelectedMaterial, selectedMaterialId],
+    () => (material === 'all' ? experiments : experiments.filter((r) => r.material_id === material)),
+    [experiments, material],
   )
 
   return (
@@ -38,20 +37,27 @@ export function ExperimentTable({
           <h2 id="experiments-title" className="label-mono">
             BASS-II experiment matrix
           </h2>
-          <span className="font-mono text-xs text-muted">
+          <span className="font-mono text-xs text-muted tabular-nums">
             {rows.length}/{experiments.length}
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-1.5 text-xs whitespace-nowrap text-secondary">
-            <input
-              type="checkbox"
-              checked={onlySelectedMaterial}
-              onChange={(e) => setOnlySelectedMaterial(e.target.checked)}
-              className="accent-[var(--border-focus)]"
-            />
-            Selected material only
+          <label htmlFor={filterId} className="sr-only">
+            Filter by material
           </label>
+          <select
+            id={filterId}
+            value={material}
+            onChange={(e) => setMaterial(e.target.value)}
+            className="border border-subtle bg-void px-2 py-1 text-xs text-primary"
+          >
+            <option value="all">All materials</option>
+            {materials.map(([id, name]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
           <Tag tone="focus">Observed · NASA BASS-II</Tag>
           {source === 'snapshot' ? <Tag>Repository snapshot</Tag> : <Tag>Live API</Tag>}
         </div>
@@ -59,9 +65,7 @@ export function ExperimentTable({
 
       <div className="min-h-0 flex-1 overflow-auto">
         <table className="w-full border-collapse text-left text-xs">
-          <caption className="sr-only">
-            BASS-II test records. Select a row to load its conditions into the mission controls.
-          </caption>
+          <caption className="sr-only">BASS-II test records from the NASA PSI-25 dataset.</caption>
           <thead className="sticky top-0 z-10 bg-elevated">
             <tr className="text-secondary">
               <Th>Test ID</Th>
@@ -75,53 +79,36 @@ export function ExperimentTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => {
-              const selected = r.test_id === selectedTestId
-              return (
-                <tr
-                  key={r.test_id}
-                  tabIndex={0}
-                  aria-selected={selected}
-                  onClick={() => onSelect(r)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      onSelect(r)
-                    }
-                  }}
-                  className={`cursor-pointer border-b border-subtle transition-colors outline-none focus-visible:bg-elevated focus-visible:shadow-[inset_2px_0_0_var(--border-focus)] ${
-                    selected ? 'bg-elevated shadow-[inset_2px_0_0_var(--border-focus)]' : 'hover:bg-elevated/60'
-                  }`}
-                >
-                  <Td mono>{r.test_id}</Td>
-                  <Td>
-                    <span className="block max-w-48 truncate" title={r.material_name}>
-                      {r.material_name}
-                    </span>
-                  </Td>
-                  <Td mono numeric>{fmt(r.thickness_mm, 2)}</Td>
-                  <Td mono numeric>{fmt(r.airflow_cm_s, 1)}</Td>
-                  <Td mono numeric>{fmt(r.initial_o2_pct, 1)}</Td>
-                  <Td mono numeric>
-                    {r.spread_rate_mm_s === null ? (
-                      <span title="Not reported in this record">—</span>
-                    ) : (
-                      fmt(r.spread_rate_mm_s, 3)
-                    )}
-                  </Td>
-                  <Td>
-                    <span className="block max-w-56 truncate" title={r.notes}>
-                      {r.outcome}
-                    </span>
-                  </Td>
-                  <Td>
-                    <span className="block max-w-40 truncate text-muted" title={`${r.source_table} · PI: ${r.pi_group}`}>
-                      {r.source_table.replace('NASA/TM-20210011385 ', '')}
-                    </span>
-                  </Td>
-                </tr>
-              )
-            })}
+            {rows.map((r) => (
+              <tr key={r.test_id} className="border-b border-subtle hover:bg-elevated/60">
+                <Td mono>{r.test_id}</Td>
+                <Td>
+                  <span className="block max-w-48 truncate" title={r.material_name}>
+                    {r.material_name}
+                  </span>
+                </Td>
+                <Td mono numeric>{fmt(r.thickness_mm, 2)}</Td>
+                <Td mono numeric>{fmt(r.airflow_cm_s, 1)}</Td>
+                <Td mono numeric>{fmt(r.initial_o2_pct, 1)}</Td>
+                <Td mono numeric>
+                  {r.spread_rate_mm_s === null ? (
+                    <span title="Not reported in this record">—</span>
+                  ) : (
+                    fmt(r.spread_rate_mm_s, 3)
+                  )}
+                </Td>
+                <Td>
+                  <span className="block max-w-56 truncate" title={r.notes}>
+                    {r.outcome}
+                  </span>
+                </Td>
+                <Td>
+                  <span className="block max-w-40 truncate text-muted" title={`${r.source_table} · PI: ${r.pi_group}`}>
+                    {r.source_table.replace('NASA/TM-20210011385 ', '')}
+                  </span>
+                </Td>
+              </tr>
+            ))}
           </tbody>
         </table>
         {rows.length === 0 ? (
@@ -130,7 +117,6 @@ export function ExperimentTable({
       </div>
       <p className="border-t border-subtle px-4 py-1.5 text-[0.6875rem] text-muted">
         Source: NASA PSI BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0 · tables from NASA/TM-20210011385.
-        Select a row to load its conditions; then run the simulation.
       </p>
     </section>
   )
@@ -146,7 +132,7 @@ function Th({ children, numeric }: { children: ReactNode; numeric?: boolean }) {
 
 function Td({ children, mono, numeric }: { children: ReactNode; mono?: boolean; numeric?: boolean }) {
   return (
-    <td className={`px-3 py-1.5 whitespace-nowrap text-primary ${mono ? 'font-mono' : ''} ${numeric ? 'text-right' : ''}`}>
+    <td className={`px-3 py-1.5 whitespace-nowrap text-primary ${mono ? 'font-mono tabular-nums' : ''} ${numeric ? 'text-right' : ''}`}>
       {children}
     </td>
   )

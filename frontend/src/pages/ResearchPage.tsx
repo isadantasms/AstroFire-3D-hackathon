@@ -1,11 +1,15 @@
 // SI-assisted: generated with Gemini & Claude, reviewed and edited by Rocha, Elias, Pina & Dantas
 // Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
 // Reference: Olson et al., NASA/TM-20210011385 (2021); Saffire I-VI (NTRS-20170000230)
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { ExternalLink, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { ConsolePanel, Tag } from '../components/ConsolePanel'
 import { FlameGeometryFigure } from '../components/FlameGeometryFigure'
+// Lazy: keeps the BASS-II snapshot and API client out of the main bundle.
+const BassExperimentsSection = lazy(() =>
+  import('../features/simulator/experiments/BassExperimentsSection').then((m) => ({ default: m.BassExperimentsSection })),
+)
 import pinnMetrics from '../../../backend/data/pinn_validation_metrics.json'
 
 type TargetEnvKey = 'lunar_base_30o2' | 'iss_space_station' | 'martian_habitat' | 'spacecraft_cabin_rover'
@@ -176,6 +180,11 @@ export function ResearchPage() {
 
         {/* Fig. 01: flame geometry (moved here from the Home page) */}
         <FlameGeometryFigure />
+
+        {/* BASS-II record table (moved here from the Simulator) */}
+        <Suspense fallback={<div className="h-[32rem] border border-subtle bg-panel" />}>
+          <BassExperimentsSection />
+        </Suspense>
 
         {/* PINN Training & Validation Pipeline */}
         <ConsolePanel

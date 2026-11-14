@@ -1,9 +1,10 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha, Esquivel & Elias
 import { useEffect, useRef, useState } from 'react'
 import { CircleDashed, CircleOff, Droplets, ExternalLink, Flame } from 'lucide-react'
-import { Tag } from '../../../components/ConsolePanel'
+import { Tooltip } from '../../../components/Tooltip'
 import { fmt } from '../../../lib/format'
 import type { Simulation3D, SimulationResponse } from '../../../types/contract'
+import { chamberDevControlsEnabled, defaultChamberView } from './devMode'
 import type { ChamberPhase, ChamberRenderInput, ChamberStateMessage } from './types'
 
 export interface FlameChamberProps extends ChamberRenderInput {
@@ -18,16 +19,19 @@ export interface FlameChamberProps extends ChamberRenderInput {
   onDischarge: () => void
   loading: boolean
   stale: boolean
-  mock: boolean
+  /** Force the developer view controls on or off (defaults to the env / ?dev flag). */
+  devControls?: boolean
 }
 
 const WEBGL_BASE_URL = import.meta.env.VITE_WEBGL_URL || 'http://127.0.0.1:8080/index.html'
 
+export const BELOW_OXYGEN_LIMIT = 'Extinguished below oxygen limit'
+
 /**
- * 3D Flame Chamber host. Renders a static placeholder by default; the Unity WebGL view
- * (unity-fire-simulation/WebGlSimulation) can be selected and receives the contract payload
- * (APPLY_FIRE_PAYLOAD) and the chamber state (APPLY_CHAMBER_STATE) via postMessage.
- * No suppression effect is simulated here; that belongs to the 3D module.
+ * 3D Flame Chamber host. Renders a static view by default; the Unity WebGL view
+ * (unity-fire-simulation/WebGlSimulation) receives the contract payload (APPLY_FIRE_PAYLOAD)
+ * and the chamber state (APPLY_CHAMBER_STATE) via postMessage.
+ * No suppression (mist) effect is drawn here; that belongs to the 3D module.
  */
 export function FlameChamberPlaceholder({
   phase,
@@ -40,18 +44,15 @@ export function FlameChamberPlaceholder({
   onDischarge,
   loading,
   stale,
-  mock,
+  devControls = chamberDevControlsEnabled(),
 }: FlameChamberProps) {
-  // Static by default: the Unity build is only available when served locally.
-  const [viewMode, setViewMode] = useState<'webgl' | 'static'>('static')
+  const [viewMode, setViewMode] = useState<'webgl' | 'static'>(defaultChamberView)
   const [webglReady, setWebglReady] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
-      if (event.data && event.data.type === 'UNITY_FIRE_SIMULATION_READY') {
-        setWebglReady(true)
-      }
+      if (event.data && event.data.type === 'UNITY_FIRE_SIMULATION_READY') setWebglReady(true)
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
@@ -66,108 +67,131 @@ export function FlameChamberPlaceholder({
   }, [payload, phase, flame, suppression, webglReady, viewMode])
 
   const remainingS = useDischargeCountdown(phase, dischargeStartedAt, suppression?.discharge_seconds ?? null)
+  const inputs = payload?.inputs
 
   return (
-    <div className="relative flex h-full min-h-64 flex-col border border-subtle bg-void" data-testid="chamber-placeholder">
-      {/* Title bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle bg-panel px-4 py-2">
-        <h2 className="label-mono">3D flame chamber</h2>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {mock && flame ? <Tag tone="warning">Mock data</Tag> : null}
-          {stale ? <Tag tone="warning">Stale</Tag> : null}
-          <div className="inline-flex border border-subtle bg-void p-0.5 font-mono text-[0.65rem]" role="group" aria-label="Chamber view">
-            <button
-              type="button"
-              aria-pressed={viewMode === 'static'}
-              onClick={() => setViewMode('static')}
-              className={`px-2 py-0.5 transition-colors ${viewMode === 'static' ? 'bg-focus/20 text-focus' : 'text-secondary hover:text-primary'}`}
-            >
-              Static placeholder
-            </button>
-            <button
-              type="button"
-              aria-pressed={viewMode === 'webgl'}
-              onClick={() => setViewMode('webgl')}
-              className={`px-2 py-0.5 transition-colors ${viewMode === 'webgl' ? 'bg-focus/20 text-focus' : 'text-secondary hover:text-primary'}`}
-            >
-              Unity WebGL (local)
-            </button>
+    <section aria-labelledby="chamber-title" className="flex h-full min-h-0 flex-col gap-2">
+      <div
+        className="relative flex min-h-72 flex-1 flex-col overflow-hidden rounded-xl border border-subtle bg-void"
+        data-testid="chamber-placeholder"
+      >
+        {/* Chamber bar: state + extinguisher */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle bg-panel/80 px-4 py-2">
+          <div className="flex items-center gap-3">
+            <h2 id="chamber-title" className="text-sm font-semibold text-primary">
+              3D flame chamber
+            </h2>
+            <ChamberStatus phase={phase} extinguishedBy={extinguishedBy} remainingS={remainingS} stale={stale} />
           </div>
-          <a
-            href={WEBGL_BASE_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 border border-subtle bg-void px-2 py-0.5 font-mono text-[0.65rem] text-focus hover:border-focus"
-            title="Open the standalone Unity WebGL build served by StartWebGL.cmd"
-          >
-            Standalone
-            <ExternalLink className="size-2.5" aria-hidden />
-            <span className="sr-only">(opens in a new tab)</span>
-          </a>
+          <div className="flex items-center gap-2">
+            {devControls ? <DevControls viewMode={viewMode} onChange={setViewMode} /> : null}
+            <DischargeButton blocked={dischargeBlocked} onDischarge={onDischarge} />
+          </div>
         </div>
-      </div>
 
-      {/* Status strip: chamber state + suppression control */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle bg-hero px-4 py-2">
-        <ChamberStatus phase={phase} extinguishedBy={extinguishedBy} remainingS={remainingS} />
-        <div className="flex items-center gap-2">
-          {dischargeBlocked ? (
-            <span id="discharge-blocked-reason" className="hidden text-[0.6875rem] text-muted xl:inline">
-              {dischargeBlocked}
-            </span>
+        <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+          {viewMode === 'webgl' ? (
+            <iframe
+              ref={iframeRef}
+              src={`${WEBGL_BASE_URL}?embed=1`}
+              title="AstroFire 3D Unity WebGL fire simulation"
+              className={`size-full border-0 transition-opacity ${stale || loading ? 'opacity-60' : 'opacity-100'}`}
+              onLoad={() => setWebglReady(true)}
+            />
+          ) : (
+            <>
+              <ChamberGrid />
+              {flame && phase !== 'idle' ? <StaticFlame params={flame} phase={phase} dimmed={stale || loading} /> : null}
+              {phase === 'idle' && !loading ? (
+                <p className="relative max-w-xs text-center text-sm text-muted">
+                  Pick a scenario and run the simulation to light the chamber.
+                </p>
+              ) : null}
+            </>
+          )}
+          {phase === 'extinguished' && extinguishedBy === 'no_sustained_flame' && !loading ? (
+            <p
+              data-testid="chamber-extinguished-message"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-subtle bg-void/90 px-3 py-1 text-xs whitespace-nowrap text-secondary"
+            >
+              {BELOW_OXYGEN_LIMIT}
+            </p>
           ) : null}
-          <button
-            type="button"
-            onClick={onDischarge}
-            disabled={dischargeBlocked !== null}
-            aria-describedby={dischargeBlocked ? 'discharge-blocked-reason' : undefined}
-            title={dischargeBlocked ?? 'Research visualization of a fine water mist discharge. Not an operational procedure.'}
-            className="inline-flex items-center gap-1.5 border border-focus px-3 py-1.5 font-mono text-[0.6875rem] tracking-[0.06em] text-focus uppercase transition-colors hover:bg-focus hover:text-hero disabled:cursor-not-allowed disabled:border-subtle disabled:text-muted disabled:hover:bg-transparent"
-          >
-            <Droplets className="size-3.5" aria-hidden />
-            Discharge FWM PFE
-          </button>
+          {loading ? (
+            <p
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-md bg-void/90 px-2 py-0.5 text-xs text-secondary"
+              role="status"
+            >
+              Receiving parameters…
+            </p>
+          ) : null}
         </div>
       </div>
 
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-        {viewMode === 'webgl' ? (
-          <iframe
-            ref={iframeRef}
-            src={`${WEBGL_BASE_URL}?embed=1`}
-            title="AstroFire 3D Unity WebGL fire simulation"
-            className={`size-full border-0 transition-opacity ${stale || loading ? 'opacity-60' : 'opacity-100'}`}
-            onLoad={() => setWebglReady(true)}
-          />
-        ) : (
-          <>
-            <ChamberGrid />
-            {flame && phase !== 'idle' ? <StaticFlame params={flame} phase={phase} dimmed={stale || loading} /> : null}
-            {phase === 'idle' && !loading ? (
-              <p className="relative max-w-xs text-center text-sm text-muted">
-                Run a simulation to send flame parameters to the chamber.
-              </p>
-            ) : null}
-          </>
-        )}
-        {loading ? (
-          <p className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-void/90 px-2 py-0.5 font-mono text-xs text-secondary" role="status">
-            Receiving parameters…
-          </p>
-        ) : null}
-      </div>
-
-      <dl className="grid grid-cols-2 gap-px border-t border-subtle bg-subtle sm:grid-cols-4">
-        <Readout label="Geometry" value={flame?.flame_geometry ?? '—'} />
-        <Readout label="Burn rate" value={fmt(flame?.burn_rate_mm_s, 3)} unit="mm/s" />
-        <Readout label="Flame color" value={flame?.flame_color_hex ?? '—'} swatch={flame?.flame_color_hex} />
-        <Readout label="Oxygen factor" value={fmt(flame?.oxygen_factor, 2)} />
-      </dl>
-
-      <p className="border-t border-subtle bg-panel px-4 py-1.5 text-[0.6875rem] text-muted">
-        Static placeholder for the 3D chamber module. Flame and suppression states are a research
-        visualization driven by the backend estimate, not a simulation or an operational procedure.
+      {/* Summary of the run inputs */}
+      <p
+        data-testid="chamber-summary"
+        className="px-1 text-center font-mono text-xs text-balance text-secondary tabular-nums"
+      >
+        {inputs ? summaryText(inputs) : '—'}
       </p>
+      <p className="px-1 text-center text-[0.6875rem] text-muted">Research visualization, not a validated simulation.</p>
+    </section>
+  )
+}
+
+function summaryText(i: SimulationResponse['inputs']): string {
+  return `${i.environment_label} · ${i.material_name} · ${fmt(i.thickness_mm, 1)} mm · ${fmt(i.o2_pct, 1)}% O₂ · ${fmt(i.airflow_cm_s, 1)} cm/s`
+}
+
+function DischargeButton({ blocked, onDischarge }: { blocked: string | null; onDischarge: () => void }) {
+  const button = (describedBy?: string) => (
+    <button
+      type="button"
+      onClick={onDischarge}
+      disabled={blocked !== null}
+      aria-describedby={describedBy}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-focus px-3 py-1.5 text-xs font-medium text-focus transition-colors hover:bg-focus hover:text-hero disabled:cursor-not-allowed disabled:border-subtle disabled:text-muted disabled:hover:bg-transparent"
+    >
+      <Droplets className="size-3.5" aria-hidden />
+      Discharge FWM PFE
+    </button>
+  )
+  return (
+    <Tooltip label={blocked} align="end" side="bottom" focusable={blocked !== null}>
+      {(id) => button(id)}
+    </Tooltip>
+  )
+}
+
+function DevControls({ viewMode, onChange }: { viewMode: 'webgl' | 'static'; onChange: (mode: 'webgl' | 'static') => void }) {
+  const tab = (mode: 'webgl' | 'static', label: string) => (
+    <button
+      type="button"
+      aria-pressed={viewMode === mode}
+      onClick={() => onChange(mode)}
+      className={`rounded px-2 py-0.5 transition-colors ${viewMode === mode ? 'bg-focus/20 text-focus' : 'text-secondary hover:text-primary'}`}
+    >
+      {label}
+    </button>
+  )
+  return (
+    <div className="flex items-center gap-1.5 font-mono text-[0.65rem]" data-testid="chamber-dev-controls">
+      <div className="inline-flex rounded-md border border-subtle bg-void p-0.5" role="group" aria-label="Chamber view">
+        {tab('static', 'Static placeholder')}
+        {tab('webgl', 'Unity WebGL (local)')}
+      </div>
+      <a
+        href={WEBGL_BASE_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1 rounded-md border border-subtle bg-void px-2 py-0.5 text-focus hover:border-focus"
+        title="Open the standalone Unity WebGL build served by StartWebGL.cmd"
+      >
+        Standalone
+        <ExternalLink className="size-2.5" aria-hidden />
+        <span className="sr-only">(opens in a new tab)</span>
+      </a>
     </div>
   )
 }
@@ -195,47 +219,34 @@ function ChamberStatus({
   phase,
   extinguishedBy,
   remainingS,
+  stale,
 }: {
   phase: ChamberPhase
   extinguishedBy: FlameChamberProps['extinguishedBy']
   remainingS: number | null
+  stale: boolean
 }) {
   const ui = PHASE_UI[phase]
   const Icon = ui.icon
-  let detail = 'awaiting a run'
-  if (phase === 'burning') detail = 'flame active'
-  if (phase === 'suppressing') detail = `FWM PFE discharge · ${fmt(remainingS, 1)} s left`
-  if (phase === 'extinguished') {
-    detail = extinguishedBy === 'suppression' ? 'after FWM PFE discharge' : 'no sustained flame in this run'
-  }
+  let detail: string | null = null
+  if (phase === 'suppressing') detail = `${fmt(remainingS, 1)} s left`
+  // "Extinguished below oxygen limit" is shown over the chamber, so the bar stays on one line.
+  if (phase === 'extinguished' && extinguishedBy === 'suppression') detail = 'after FWM PFE discharge'
   return (
-    <p className="flex items-center gap-2 font-mono text-xs" data-testid="chamber-state" aria-live="polite">
-      <span className="text-muted">STATE</span>
-      <span className={`inline-flex items-center gap-1.5 font-medium tracking-[0.08em] uppercase ${ui.tone}`}>
+    <p className="flex items-center gap-1.5 text-xs" data-testid="chamber-state" aria-live="polite">
+      <span className={`inline-flex items-center gap-1 rounded-full bg-void/70 px-2 py-0.5 font-medium ${ui.tone}`}>
         <Icon className="size-3.5" aria-hidden />
         {ui.label}
       </span>
-      <span className="text-secondary">· {detail}</span>
+      {detail ? <span className="text-muted tabular-nums"> {detail}</span> : null}
+      {stale ? <span className="text-warning"> · controls changed</span> : null}
     </p>
-  )
-}
-
-function Readout({ label, value, unit, swatch }: { label: string; value: string; unit?: string; swatch?: string }) {
-  return (
-    <div className="bg-panel px-3 py-2">
-      <dt className="label-mono">{label}</dt>
-      <dd className="mt-1 flex items-center gap-1.5 font-mono text-sm text-primary">
-        {swatch ? <span className="size-3 border border-subtle" style={{ backgroundColor: swatch }} aria-hidden /> : null}
-        {value}
-        {unit ? <span className="text-xs text-secondary">{unit}</span> : null}
-      </dd>
-    </div>
   )
 }
 
 function ChamberGrid() {
   return (
-    <svg className="absolute inset-0 size-full" aria-hidden="true">
+    <svg className="absolute inset-0 size-full opacity-60" aria-hidden="true">
       <defs>
         <pattern id="mm-grid" width="24" height="24" patternUnits="userSpaceOnUse">
           <path d="M24 0H0V24" fill="none" stroke="var(--border-subtle)" strokeWidth="0.6" />
@@ -248,45 +259,33 @@ function ChamberGrid() {
 
 function StaticFlame({ params, phase, dimmed }: { params: Simulation3D; phase: ChamberPhase; dimmed: boolean }) {
   const color = params.flame_color_hex
-  const out = phase === 'extinguished' || params.oxygen_factor === 0
-  const suppressing = phase === 'suppressing'
+  const out = phase === 'extinguished'
   const base = out ? 0 : 0.35 + 0.65 * params.oxygen_factor
-  const opacity = suppressing ? base * 0.45 : base
   const spherical = params.flame_geometry === 'spherical'
   return (
     <svg
       viewBox="0 0 300 160"
-      className={`relative w-full max-w-md transition-opacity ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+      className={`relative w-full max-w-lg transition-opacity ${dimmed ? 'opacity-40' : 'opacity-100'}`}
       role="img"
-      aria-label={
-        out
-          ? 'Static illustration: flame extinguished'
-          : suppressing
-            ? `Static illustration: ${params.flame_geometry} flame under fine water mist`
-            : `Static illustration: ${params.flame_geometry} flame`
-      }
+      aria-label={out ? 'Static illustration: flame extinguished' : `Static illustration: ${params.flame_geometry} flame`}
     >
       <defs>
         <radialGradient id="flame-fill" cx={spherical ? '50%' : '35%'} cy="50%" r="60%">
-          <stop offset="0%" stopColor={color} stopOpacity={0.7 * opacity} />
-          <stop offset="70%" stopColor={color} stopOpacity={0.2 * opacity} />
+          <stop offset="0%" stopColor={color} stopOpacity={0.7 * base} />
+          <stop offset="70%" stopColor={color} stopOpacity={0.2 * base} />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </radialGradient>
-        <pattern id="mist-dots" width="10" height="10" patternUnits="userSpaceOnUse">
-          <circle cx="2" cy="2" r="1" fill="var(--brand-blue-light)" opacity="0.55" />
-          <circle cx="7" cy="7" r="0.7" fill="var(--brand-blue-light)" opacity="0.4" />
-        </pattern>
       </defs>
       {!out ? (
         spherical ? (
           <>
             <circle cx="150" cy="80" r="62" fill="url(#flame-fill)" />
-            <circle cx="150" cy="80" r="44" fill="none" stroke={color} strokeOpacity={opacity} strokeWidth="1.5" />
+            <circle cx="150" cy="80" r="44" fill="none" stroke={color} strokeOpacity={base} strokeWidth="1.5" />
           </>
         ) : (
           <>
             <ellipse cx="170" cy="80" rx="105" ry="38" fill="url(#flame-fill)" />
-            <path d="M88 80 C 100 50, 180 48, 272 80 C 180 112, 100 110, 88 80 Z" fill="none" stroke={color} strokeOpacity={opacity} strokeWidth="1.5" />
+            <path d="M88 80 C 100 50, 180 48, 272 80 C 180 112, 100 110, 88 80 Z" fill="none" stroke={color} strokeOpacity={base} strokeWidth="1.5" />
           </>
         )
       ) : null}
@@ -298,18 +297,7 @@ function StaticFlame({ params, phase, dimmed }: { params: Simulation3D; phase: C
             </g>
           ))
         : null}
-      {suppressing ? <rect x="40" y="10" width="220" height="140" fill="url(#mist-dots)" /> : null}
-      <rect x={spherical ? 142 : 80} y="72" width="16" height="16" fill="var(--text-secondary)" />
-      {out ? (
-        <text x="150" y="140" textAnchor="middle" className="fill-[var(--text-secondary)] font-mono text-[11px]">
-          FLAME EXTINGUISHED
-        </text>
-      ) : null}
-      {suppressing ? (
-        <text x="150" y="146" textAnchor="middle" className="fill-[var(--brand-blue-light)] font-mono text-[11px]">
-          FINE WATER MIST
-        </text>
-      ) : null}
+      <rect x={spherical ? 142 : 80} y="72" width="16" height="16" rx="2" fill="var(--text-secondary)" />
     </svg>
   )
 }

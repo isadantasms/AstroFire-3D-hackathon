@@ -8,6 +8,10 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string
   /** Unity WebGL build URL for the optional 3D view (served locally by StartWebGL.cmd). */
   readonly VITE_WEBGL_URL?: string
+  /** "true" shows the chamber developer controls (also enabled with ?dev in the URL). */
+  readonly VITE_CHAMBER_DEV_CONTROLS?: string
+  /** "webgl" makes the Unity WebGL view the default chamber view (default: static). */
+  readonly VITE_CHAMBER_VIEW?: string
 }
 
 interface ImportMeta {

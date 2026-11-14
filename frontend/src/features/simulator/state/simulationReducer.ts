@@ -148,7 +148,9 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
       }
     case 'runSucceeded': {
       if (!sameRequest(action.request, state.pendingRequest)) return state
-      const flameActive = action.result.simulation_3d.oxygen_factor > 0
+      // No sustained flame when the oxygen factor or the burn rate is zero (below the oxygen limit).
+      const { oxygen_factor, burn_rate_mm_s } = action.result.simulation_3d
+      const flameActive = oxygen_factor > 0 && burn_rate_mm_s > 0
       return {
         ...state,
         status: 'success',
@@ -221,6 +223,8 @@ export function sameRequest(a: SimulationRequest | null, b: SimulationRequest | 
   )
 }
 
+export const SUPPRESSION_UNAVAILABLE = 'Suppression estimate not available yet'
+
 /**
  * Why the "Discharge FWM PFE" control is unavailable, or null when it can be used.
  * The discharge duration must come from the backend; it is never assumed.
@@ -232,9 +236,17 @@ export function dischargeBlockedReason(state: SimulationState): string | null {
   if (state.chamber.phase === 'suppressing') return 'Discharge in progress.'
   if (state.chamber.phase !== 'burning') return 'No active flame to suppress.'
   const seconds = state.result.suppression_estimate?.estimated_discharge_seconds
-  if (seconds === undefined) return 'The backend did not provide a suppression estimate for this run.'
+  if (seconds === undefined) return SUPPRESSION_UNAVAILABLE
   if (seconds <= 0) return 'The suppression estimate reports no discharge for this run.'
   return null
+}
+
+/** Current step of the Simulate -> Measure risk -> Suppress cycle (1-based). */
+export function cycleStep(state: SimulationState): 1 | 2 | 3 {
+  if (!state.result || state.status === 'loading' || isResultStale(state)) return 1
+  const { phase, extinguishedBy } = state.chamber
+  if (phase === 'suppressing' || (phase === 'extinguished' && extinguishedBy === 'suppression')) return 3
+  return 2
 }
 
 /** True when a result is on screen but the controls no longer match the run that produced it. */

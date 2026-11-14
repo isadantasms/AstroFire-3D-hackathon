@@ -3,8 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { SimulatorPage } from './SimulatorPage'
-import { createMockClient } from '../services/api/mockClient'
+import { createMockClient, mockSimulate } from '../services/api/mockClient'
 import type { ApiClient } from '../services/api/client'
+import { chamberDevControlsEnabled } from '../features/simulator/chamber/devMode'
+import { isCitationShown, shortCitationId } from '../features/simulator/results/resultHelpers'
+import { withTestEstimate } from '../test/fixtures'
 
 afterEach(cleanup)
 
@@ -16,68 +19,130 @@ function renderSimulator(client: ApiClient = createMockClient(0)) {
   )
 }
 
+async function runPreset(name: string) {
+  fireEvent.click(await screen.findByRole('button', { name }))
+  fireEvent.click(screen.getByRole('button', { name: 'Run Simulation' }))
+  return screen.findByTestId('results')
+}
+
+const currentStep = () => within(screen.getByTestId('cycle-bar')).getByRole('listitem', { current: 'step' })
+
 describe('SimulatorPage', () => {
-  it('shows the mock banner and the empty state before the first run', async () => {
+  it('starts clean: cycle bar, MOCK DATA badge, empty state, no banner, table or dev controls', async () => {
     renderSimulator()
     expect(await screen.findByRole('button', { name: 'Run Simulation' })).toBeInTheDocument()
-    expect(screen.getByTestId('mock-mode-banner')).toHaveTextContent('MOCK DATA')
-    expect(screen.getByTestId('results-empty')).toBeInTheDocument()
-    expect(screen.getByTestId('chamber-placeholder')).toHaveTextContent('Static placeholder')
+    expect(currentStep()).toHaveTextContent('Simulate')
+    expect(screen.getByTestId('mock-badge')).toHaveTextContent('MOCK DATA')
+    expect(screen.getByTestId('mock-badge')).toHaveAccessibleDescription(/closest of three sample payloads/)
+    expect(screen.queryByTestId('mock-mode-banner')).toBeNull()
+    expect(screen.getByTestId('results-empty')).toHaveTextContent(/Pick a scenario.*Run.*Discharge the extinguisher/)
+    expect(screen.queryByRole('table')).toBeNull()
+    expect(screen.queryByTestId('chamber-dev-controls')).toBeNull()
+    expect(screen.queryByText('Geometry')).toBeNull()
+    expect(screen.getByTestId('thickness')).toHaveTextContent('—')
+    expect(screen.getByTestId('chamber-summary')).toHaveTextContent('—')
+    expect(screen.getByText('Research visualization, not a validated simulation.')).toBeInTheDocument()
   })
 
-  it('runs a simulation and renders grounding, telemetry and citations labeled as mock', async () => {
+  it('offers only the three fixture scenarios as presets', async () => {
     renderSimulator()
-    fireEvent.click(await screen.findByRole('button', { name: 'Run Simulation' }))
+    const presets = await screen.findByRole('list', { name: 'Scenario presets' })
+    expect(within(presets).getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'ISS · quiescent',
+      'Lunar habitat · ventilated',
+      'ISS · low oxygen',
+    ])
+  })
 
-    expect(await screen.findByTestId('results')).toBeInTheDocument()
-    expect(screen.getByTestId('mock-notice')).toHaveTextContent('MOCK DATA')
-    expect(screen.getByTestId('grounding-badge')).toHaveTextContent('Bounded NTRS interpolation')
-    expect(screen.getByRole('meter', { name: 'Flammability score' })).toBeInTheDocument()
-    expect(screen.getAllByText(/not an approved operational procedure/).length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByRole('link', { name: /PSI-25/ })).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
+  it('runs the ISS quiescent scenario and renders the results in order', async () => {
+    renderSimulator()
+    await runPreset('ISS · quiescent')
+    expect(currentStep()).toHaveTextContent('Measure risk')
+
+    const results = screen.getByTestId('results')
+    const titles = within(results).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
+    expect(titles).toEqual(['Risk', 'Telemetry', 'ISS FWM PFE suppression sizing', 'SI copilot', expect.stringMatching(/^Sources/)])
+
+    expect(screen.getByRole('meter', { name: 'Flammability score' })).toHaveAttribute('aria-valuenow', '48')
+    expect(screen.getByText('Moderate Alert').className).toMatch(/text-warning/)
+    expect(screen.getByTestId('grounding-badge')).toHaveTextContent('NASA experimental data')
+    expect(screen.getByText('0.45')).toBeInTheDocument()
+    expect(screen.getByText('16.5')).toBeInTheDocument()
+
+    expect(screen.getByTestId('thickness')).toHaveTextContent('5.00 mm')
+    expect(screen.getByTestId('chamber-summary')).toHaveTextContent(
+      'ISS Microgravity (0.00g Quiescent) · PMMA (Cast Polymethyl Methacrylate Slab) · 5.0 mm · 21.0% O₂ · 0.5 cm/s',
+    )
+    expect(screen.getByTestId('suppression-guidance')).toHaveTextContent('Research guidance, not an operational procedure')
+    expect(screen.getByText('Scientific limitations')).toBeInTheDocument()
+    expect(screen.getByTestId('on-earth')).toHaveTextContent(/Optical sensor calibration/)
+
+    const link = screen.getByRole('link', { name: /Burning and Suppression of Solids - II \(BASS-II\)\s*\(opens/ })
+    expect(link).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
+    expect(screen.getByText('PSI-25')).toBeInTheDocument()
+  })
+
+  it('shows the suppression card awaiting the engine and keeps the discharge disabled with a tooltip', async () => {
+    renderSimulator()
+    await runPreset('ISS · quiescent')
+    const card = screen.getByTestId('suppression-card')
+    expect(within(card).getByText('Estimated')).toBeInTheDocument()
+    expect(within(card).getByTestId('suppression-awaiting')).toHaveTextContent('Awaiting suppression estimate from engine')
+    expect(within(card).getAllByText('—')).toHaveLength(4)
+
+    expect(screen.getByTestId('chamber-state')).toHaveTextContent('Burning')
+    const discharge = screen.getByRole('button', { name: /Discharge FWM PFE/ })
+    expect(discharge).toBeDisabled()
+    expect(discharge).toHaveAccessibleDescription('Suppression estimate not available yet')
+  })
+
+  it('shows payload texts as they come (Lunar scenario) inside the guidance block', async () => {
+    renderSimulator()
+    await runPreset('Lunar habitat · ventilated')
+    expect(screen.getByTestId('grounding-badge')).toHaveTextContent('Estimate · interpolated')
+    expect(screen.getByText('Critical Flashover Risk').className).toMatch(/text-critical/)
+    expect(screen.getByTestId('suppression-guidance')).toHaveTextContent('IMMEDIATE CABIN HVAC SHUTOFF')
+  })
+
+  it('the low-oxygen scenario goes straight to Extinguished below the oxygen limit', async () => {
+    renderSimulator()
+    await runPreset('ISS · low oxygen')
+    expect(screen.getByTestId('chamber-state')).toHaveTextContent('Extinguished')
+    expect(screen.getByTestId('chamber-extinguished-message')).toHaveTextContent('Extinguished below oxygen limit')
+    expect(screen.getByRole('button', { name: /Discharge FWM PFE/ })).toBeDisabled()
+    expect(screen.getByText('Safe (Extinguished Below LOI)').className).toMatch(/text-nominal/)
   })
 
   it('warns that results are stale after a parameter change', async () => {
     renderSimulator()
-    fireEvent.click(await screen.findByRole('button', { name: 'Run Simulation' }))
-    await screen.findByTestId('results')
+    await runPreset('ISS · quiescent')
     expect(screen.queryByTestId('stale-banner')).not.toBeInTheDocument()
-
     fireEvent.change(screen.getByRole('spinbutton', { name: /Oxygen value/ }), { target: { value: '18' } })
     expect(screen.getByTestId('stale-banner')).toHaveTextContent('reflect the previous run')
+    expect(currentStep()).toHaveTextContent('Simulate')
   })
 
-  it('selecting a BASS-II row fills the controls and marks the record', async () => {
-    renderSimulator()
-    const table = await screen.findByRole('table')
-    const row = within(table).getByText('BASS2-M1').closest('tr')
-    expect(row).not.toBeNull()
-    fireEvent.click(row!)
-
-    expect(screen.getByText(/Loaded from BASS-II record/)).toHaveTextContent('BASS2-M1')
-    expect(screen.getByRole('spinbutton', { name: /Oxygen value/ })).toHaveValue(22.2)
-    expect(screen.getByRole('spinbutton', { name: /Cabin airflow value/ })).toHaveValue(9)
-    expect(row).toHaveAttribute('aria-selected', 'true')
-  })
-
-  it('runs the simulate -> suppress cycle using the backend discharge time', async () => {
-    renderSimulator()
+  it('runs the simulate -> suppress cycle when the engine provides an estimate', async () => {
+    const client: ApiClient = {
+      ...createMockClient(0),
+      simulate: async (request) => withTestEstimate(mockSimulate(request), 3),
+    }
+    renderSimulator(client)
     const discharge = await screen.findByRole('button', { name: /Discharge FWM PFE/ })
     expect(discharge).toBeDisabled()
     expect(screen.getByTestId('chamber-state')).toHaveTextContent('Idle')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Run Simulation' }))
-    await screen.findByTestId('results')
+    await runPreset('ISS · quiescent')
     expect(screen.getByTestId('chamber-state')).toHaveTextContent('Burning')
     expect(discharge).toBeEnabled()
+    expect(screen.queryByTestId('suppression-awaiting')).toBeNull()
 
     vi.useFakeTimers()
     try {
       fireEvent.click(discharge)
       expect(screen.getByTestId('chamber-state')).toHaveTextContent('Suppressing')
+      expect(currentStep()).toHaveTextContent('Suppress')
       expect(discharge).toBeDisabled()
-
-      // Mock estimated_discharge_seconds is 3 s: still suppressing just before, extinguished after.
       act(() => vi.advanceTimersByTime(2900))
       expect(screen.getByTestId('chamber-state')).toHaveTextContent('Suppressing')
       act(() => vi.advanceTimersByTime(200))
@@ -92,32 +157,7 @@ describe('SimulatorPage', () => {
     await waitFor(() => expect(screen.getByTestId('chamber-state')).toHaveTextContent('Burning'))
   })
 
-  it('keeps the discharge disabled when the run has no sustained flame', async () => {
-    renderSimulator()
-    fireEvent.click(await screen.findByRole('button', { name: /Hypoxic Quench/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Run Simulation' }))
-    await screen.findByTestId('results')
-    expect(screen.getByTestId('chamber-state')).toHaveTextContent('no sustained flame')
-    expect(screen.getByRole('button', { name: /Discharge FWM PFE/ })).toBeDisabled()
-  })
-
-  it('shows the suppression sizing card as estimates with units and no hardcoded tank volume', async () => {
-    renderSimulator()
-    fireEvent.click(await screen.findByRole('button', { name: 'Run Simulation' }))
-    const card = await screen.findByRole('region', { name: 'ISS FWM PFE suppression sizing' })
-    expect(within(card).getByText('Estimated')).toBeInTheDocument()
-    expect(within(card).getByText('Est. mist volume')).toBeInTheDocument()
-    expect(within(card).getByText('mL')).toBeInTheDocument()
-    expect(within(card).getByText('Est. discharge time')).toBeInTheDocument()
-    expect(within(card).getByText('% used')).toBeInTheDocument()
-    expect(within(card).getByText('Est. cooling eff.')).toBeInTheDocument()
-    expect(within(card).getByText('% at 0.00 g')).toBeInTheDocument()
-    expect(within(card).getByText(/not an approved operational procedure/)).toBeInTheDocument()
-    expect(within(card).getByText('Sources to verify')).toBeInTheDocument()
-    expect(card).not.toHaveTextContent('2.72')
-  })
-
-  it('shows an error state with retry when the API fails', async () => {
+  it('shows an error state with retry when the API fails, without the MOCK DATA badge in live mode', async () => {
     const failing: ApiClient = {
       ...createMockClient(0),
       mode: 'live',
@@ -128,6 +168,22 @@ describe('SimulatorPage', () => {
     const alert = await screen.findByTestId('results-error')
     expect(alert).toHaveTextContent('backend is unreachable')
     expect(within(alert).getByRole('button', { name: 'Retry' })).toBeInTheDocument()
-    expect(screen.queryByTestId('mock-mode-banner')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('mock-badge')).not.toBeInTheDocument()
+  })
+})
+
+describe('simulator helpers', () => {
+  it('chamber developer controls need ?dev (or the env flag)', () => {
+    expect(chamberDevControlsEnabled('')).toBe(false)
+    expect(chamberDevControlsEnabled('?dev=1')).toBe(true)
+    expect(chamberDevControlsEnabled('?dev')).toBe(true)
+    expect(chamberDevControlsEnabled('?dev=0')).toBe(false)
+  })
+
+  it('shortens citation ids and hides unregistered Brazilian sources', () => {
+    expect(shortCitationId('PSI-25 (DOI: 10.60555/4qc4-de67)')).toBe('PSI-25')
+    expect(shortCitationId('NASA/TM-20210011385')).toBe('NASA/TM-20210011385')
+    expect(isCitationShown({ id: 'NTRS-20170000230', title: 'Saffire', url: '', finding: '' })).toBe(true)
+    expect(isCitationShown({ id: 'UFSC VSB-30', title: 'Sounding rocket study', url: '', finding: '' })).toBe(false)
   })
 })

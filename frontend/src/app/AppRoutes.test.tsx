@@ -149,6 +149,12 @@ describe('site structure', () => {
     expect(screen.getByText('Illustrative schematic. Not simulation output or measured data.')).toBeInTheDocument()
   })
 
+  it('the BASS-II table moved from the Simulator to Research & Data', async () => {
+    renderAt('/research')
+    expect(await screen.findByRole('heading', { level: 2, name: 'BASS-II experiment matrix' })).toBeInTheDocument()
+    expect(await screen.findByText('BASS2-M1')).toBeInTheDocument()
+  })
+
   it.each([
     ['/simulator', 'Simulator'],
     ['/research', 'Research & Data'],
