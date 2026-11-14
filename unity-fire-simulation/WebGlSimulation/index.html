@@ -131,7 +131,11 @@
             } else if (event.data.type === "APPLY_CHAMBER_STATE") {
               var nextPhase = event.data.phase || null;
               if (nextPhase === "suppressing" && lastChamberPhase !== "suppressing") {
+                unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                 unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
+                setTimeout(function() {
+                  unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
+                }, 120);
               } else if (nextPhase === "burning" && lastChamberPhase === "extinguished") {
                 unityInstance.SendMessage("FireSimulation", "ResetSuppression");
               }

@@ -19,8 +19,22 @@ function renderSimulator(client: ApiClient = createMockClient(0)) {
   )
 }
 
-async function runPreset(name: string) {
-  fireEvent.click(await screen.findByRole('button', { name }))
+async function runPreset(name: 'ISS · quiescent' | 'Lunar habitat · ventilated' | 'ISS · low oxygen') {
+  const trigger = await screen.findByRole('button', { name: 'Material' })
+  if (name === 'ISS · quiescent') {
+    fireEvent.change(screen.getByRole('spinbutton', { name: /Airflow value/ }), { target: { value: '0.5' } })
+  } else if (name === 'Lunar habitat · ventilated') {
+    fireEvent.click(trigger)
+    fireEvent.click(screen.getByRole('option', { name: /Cotton-Fiberglass/i }))
+    fireEvent.click(screen.getByRole('radio', { name: /Lunar/i }))
+    fireEvent.change(screen.getByRole('spinbutton', { name: /Oxygen value/ }), { target: { value: '30' } })
+    fireEvent.change(screen.getByRole('spinbutton', { name: /Airflow value/ }), { target: { value: '15' } })
+  } else if (name === 'ISS · low oxygen') {
+    fireEvent.click(trigger)
+    fireEvent.click(screen.getByRole('option', { name: /Nomex III/i }))
+    fireEvent.change(screen.getByRole('spinbutton', { name: /Oxygen value/ }), { target: { value: '13.5' } })
+    fireEvent.change(screen.getByRole('spinbutton', { name: /Airflow value/ }), { target: { value: '2' } })
+  }
   fireEvent.click(screen.getByRole('button', { name: 'Run Simulation' }))
   return screen.findByTestId('results')
 }
@@ -44,14 +58,15 @@ describe('SimulatorPage', () => {
     expect(screen.getByText('Research visualization, not a validated simulation.')).toBeInTheDocument()
   })
 
-  it('offers only the three fixture scenarios as presets', async () => {
+  it('opens the custom material selector and allows choosing a spacecraft material', async () => {
     renderSimulator()
-    const presets = await screen.findByRole('list', { name: 'Scenario presets' })
-    expect(within(presets).getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'ISS · quiescent',
-      'Lunar habitat · ventilated',
-      'ISS · low oxygen',
-    ])
+    const trigger = await screen.findByRole('button', { name: 'Material' })
+    fireEvent.click(trigger)
+    const listbox = screen.getByRole('listbox', { name: 'Material' })
+    expect(within(listbox).getAllByRole('option').length).toBeGreaterThanOrEqual(3)
+    fireEvent.click(within(listbox).getByRole('option', { name: /Nomex III/i }))
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(trigger).toHaveTextContent(/Nomex III/i)
   })
 
   it('runs the ISS quiescent scenario and renders the results in order', async () => {

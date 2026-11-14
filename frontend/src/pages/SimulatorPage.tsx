@@ -22,6 +22,15 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
   const mock = client.mode === 'mock'
   const catalog = catalogState.status === 'ready' ? catalogState.catalog : null
   const loading = state.status === 'loading'
+  const standbyMaterial = useMemo(() => {
+    const found = catalog?.materials.find((m) => m.material_id === state.draft.material_id)
+    return {
+      material_id: state.draft.material_id,
+      material_name: found?.material_name ?? state.draft.material_id,
+      thickness_mm: state.draft.thickness_mm ?? found?.nominal_thickness_mm ?? 2,
+      gravity_g: state.draft.gravity_g,
+    }
+  }, [catalog, state.draft.gravity_g, state.draft.material_id, state.draft.thickness_mm])
 
   return (
     <div className="flex flex-col bg-void lg:h-[calc(100dvh-3.5rem)]">
@@ -69,6 +78,7 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
             flame={state.result?.simulation_3d ?? null}
             suppression={suppression}
             payload={state.result}
+            standbyMaterial={standbyMaterial}
             extinguishedBy={state.chamber.extinguishedBy}
             dischargeStartedAt={state.chamber.dischargeStartedAt}
             dischargeBlocked={dischargeBlocked}

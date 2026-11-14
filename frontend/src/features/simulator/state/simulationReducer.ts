@@ -104,6 +104,7 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
     case 'setMaterial':
       return {
         ...state,
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle },
         draft: {
           ...state.draft,
           material_id: action.material.material_id,
@@ -112,7 +113,11 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
         },
       }
     case 'setGravity':
-      return { ...state, draft: { ...state.draft, gravity_g: action.gravity_g, test_id: null } }
+      return {
+        ...state,
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle },
+        draft: { ...state.draft, gravity_g: action.gravity_g, test_id: null },
+      }
     case 'setOxygen':
       return { ...state, draft: { ...state.draft, o2_pct: action.o2_pct, test_id: null } }
     case 'setAirflow':

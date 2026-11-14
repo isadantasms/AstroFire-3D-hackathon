@@ -7,9 +7,18 @@ import type { Simulation3D, SimulationResponse } from '../../../types/contract'
 import { chamberDevControlsEnabled, defaultChamberView, UNITY_READY_TIMEOUT_MS } from './devMode'
 import type { ChamberPhase, ChamberRenderInput, ChamberStateMessage } from './types'
 
+export interface StandbyMaterialPreview {
+  material_id: string
+  material_name: string
+  thickness_mm: number
+  gravity_g: number
+}
+
 export interface FlameChamberProps extends ChamberRenderInput {
   /** Full simulation contract payload sent to the Unity WebGL controller via ApplyJson. */
   payload?: SimulationResponse | null
+  /** Selected material to preview in 3D while the chamber is idle (without changing location). */
+  standbyMaterial?: StandbyMaterialPreview | null
   /** Set with the phase: how the flame went out (drives the status text). */
   extinguishedBy: 'suppression' | 'no_sustained_flame' | null
   /** Epoch ms when the current discharge started (for the countdown). */
@@ -38,6 +47,7 @@ export function FlameChamberPlaceholder({
   flame,
   suppression,
   payload = null,
+  standbyMaterial = null,
   extinguishedBy,
   dischargeStartedAt,
   dischargeBlocked,
@@ -51,14 +61,51 @@ export function FlameChamberPlaceholder({
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const showIframe = viewMode === 'webgl' && (unity === 'loading' || unity === 'ready')
 
+  const phaseRef = useRef(phase)
+  phaseRef.current = phase
+
   // Re-sent when Unity reports ready, so the first payload is never lost while it loads.
   useEffect(() => {
     const target = iframeRef.current?.contentWindow
+    if (!target || unity !== 'ready' || !payload || phaseRef.current === 'idle') return
+    target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload }, '*')
+  }, [payload, unity])
+
+  // When idle (after switching material or location), stop the flame and update the 3D specimen/destination.
+  useEffect(() => {
+    const target = iframeRef.current?.contentWindow
+    if (!target || unity !== 'ready' || phase !== 'idle' || !standbyMaterial) return
+    const g = standbyMaterial.gravity_g
+    const envLabel =
+      g === 0 ? 'ISS Microgravity' : g <= 0.2 ? 'Lunar Surface' : g <= 0.5 ? 'Martian Surface' : 'Earth 1g'
+    const standbyPayload = {
+      scenario_id: `standby_${standbyMaterial.material_id}_${g}g`,
+      grounding_status: 'interpolated_from_ntrs',
+      inputs: {
+        material_id: standbyMaterial.material_id,
+        material_name: standbyMaterial.material_name,
+        thickness_mm: Math.max(0.05, standbyMaterial.thickness_mm),
+        gravity_g: g,
+        environment_label: envLabel,
+        o2_pct: 21,
+        airflow_cm_s: 5,
+      },
+      simulation_3d: {
+        flame_geometry: 'spherical',
+        burn_rate_mm_s: 0,
+        flame_color_hex: '#3B82F6',
+        oxygen_factor: 0,
+      },
+    }
+    target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload: standbyPayload }, '*')
+  }, [phase, standbyMaterial, unity])
+
+  useEffect(() => {
+    const target = iframeRef.current?.contentWindow
     if (!target || unity !== 'ready') return
-    if (payload) target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload }, '*')
     const message: ChamberStateMessage = { type: 'APPLY_CHAMBER_STATE', phase, flame, suppression }
     target.postMessage(message, '*')
-  }, [payload, phase, flame, suppression, unity])
+  }, [phase, flame, suppression, unity])
 
   const remainingS = useDischargeCountdown(phase, dischargeStartedAt, suppression?.discharge_seconds ?? null)
   const inputs = payload?.inputs

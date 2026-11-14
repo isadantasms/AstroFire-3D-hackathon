@@ -1,9 +1,9 @@
-// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { useId, type ReactNode } from 'react'
-import { Play } from 'lucide-react'
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Elias
+import { useEffect, useId, useRef, useState } from 'react'
+import { Check, ChevronDown, Play } from 'lucide-react'
 import type { MaterialInfo } from '../../../types/catalog'
 import { clamp, fmt } from '../../../lib/format'
-import { AIRFLOW_SLIDER, GRAVITY_OPTIONS, O2_SLIDER, SCENARIO_PRESETS, type ScenarioPreset } from '../presets'
+import { AIRFLOW_SLIDER, GRAVITY_OPTIONS, O2_SLIDER } from '../presets'
 import type { DraftInputs, SimulationAction } from '../state/simulationReducer'
 
 interface MissionControlsProps {
@@ -16,66 +16,126 @@ interface MissionControlsProps {
   onRun: () => void
 }
 
+function splitMaterialLabel(raw: string): { title: string; subtitle: string | null } {
+  const idx = raw.indexOf('(')
+  if (idx === -1) return { title: raw.trim(), subtitle: null }
+  const title = raw.slice(0, idx).trim()
+  const subtitle = raw.slice(idx + 1).replace(/\)\s*$/, '').trim()
+  return { title, subtitle: subtitle || null }
+}
+
 export function MissionControls({ draft, materials, resultThicknessMm, running, dispatch, onRun }: MissionControlsProps) {
-  const materialSelectId = useId()
+  const materialLabelId = useId()
+  const [open, setOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const selectedMaterial = materials.find((m) => m.material_id === draft.material_id) ?? materials[0]
 
-  const applyPreset = (preset: ScenarioPreset) =>
-    dispatch({
-      type: 'applyPreset',
-      draft: {
-        material_id: preset.material_id,
-        gravity_g: preset.gravity_g,
-        o2_pct: preset.o2_pct,
-        airflow_cm_s: preset.airflow_cm_s,
-      },
-      material: materials.find((m) => m.material_id === preset.material_id),
-    })
+  useEffect(() => {
+    if (!open) return
+    const handlePointerDown = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
 
-  const presetActive = (p: ScenarioPreset) =>
-    p.material_id === draft.material_id &&
-    p.gravity_g === draft.gravity_g &&
-    p.o2_pct === draft.o2_pct &&
-    p.airflow_cm_s === draft.airflow_cm_s
+  const selectedLabel = splitMaterialLabel(selectedMaterial?.material_name ?? draft.material_id)
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="relative flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-1 pb-4">
         <h2 className="text-base font-semibold text-primary">Mission controls</h2>
 
-        <Field label="Scenario">
-          <ul className="flex flex-wrap gap-1.5" aria-label="Scenario presets">
-            {SCENARIO_PRESETS.map((preset) => (
-              <li key={preset.id}>
-                <button
-                  type="button"
-                  aria-pressed={presetActive(preset)}
-                  onClick={() => applyPreset(preset)}
-                  className="rounded-full border border-subtle px-3 py-1 text-xs whitespace-nowrap text-secondary transition-colors hover:border-label hover:text-primary aria-pressed:border-brand aria-pressed:bg-brand/10 aria-pressed:text-primary"
-                >
-                  {preset.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Field>
+        <div>
+          <p id={materialLabelId} className="mb-2 text-xs text-secondary">
+            Material
+          </p>
+          <div ref={dropdownRef} className="relative">
+            <button
+              type="button"
+              aria-labelledby={materialLabelId}
+              aria-haspopup="listbox"
+              aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}
+              className={`flex w-full items-center justify-between gap-2.5 rounded-xl border bg-void px-3 py-2.5 text-left transition-colors focus-visible:outline-none ${
+                open ? 'border-focus bg-elevated/40' : 'border-subtle hover:border-label/60 focus-visible:border-focus'
+              }`}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[0.8125rem] font-medium text-primary">
+                  {selectedLabel.title}
+                </span>
+                {selectedLabel.subtitle ? (
+                  <span className="mt-0.5 block truncate text-[0.6875rem] text-muted">
+                    {selectedLabel.subtitle}
+                  </span>
+                ) : null}
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                {selectedMaterial ? (
+                  <span className="rounded-md border border-subtle bg-panel px-1.5 py-0.5 font-mono text-[0.65rem] text-secondary tabular-nums">
+                    {fmt(selectedMaterial.nominal_thickness_mm, 2)} mm
+                  </span>
+                ) : null}
+                <ChevronDown
+                  className={`size-4 text-secondary transition-transform duration-150 ${open ? 'rotate-180 text-focus' : ''}`}
+                  aria-hidden
+                />
+              </span>
+            </button>
 
-        <Field label="Material" htmlFor={materialSelectId}>
-          <select
-            id={materialSelectId}
-            value={draft.material_id}
-            onChange={(e) => {
-              const material = materials.find((m) => m.material_id === e.target.value)
-              if (material) dispatch({ type: 'setMaterial', material })
-            }}
-            title={materials.find((m) => m.material_id === draft.material_id)?.material_name}
-            className="w-full rounded-lg border border-subtle bg-void px-2.5 py-2 text-[0.8125rem] text-primary focus:border-focus"
-          >
-            {materials.map((m) => (
-              <option key={m.material_id} value={m.material_id}>
-                {m.material_name}
-              </option>
-            ))}
-          </select>
+            {open ? (
+              <ul
+                role="listbox"
+                aria-labelledby={materialLabelId}
+                className="absolute z-30 mt-1.5 max-h-72 w-full overflow-y-auto rounded-xl border border-subtle bg-panel p-1 shadow-xl"
+              >
+                {materials.map((m) => {
+                  const active = m.material_id === draft.material_id
+                  const label = splitMaterialLabel(m.material_name)
+                  return (
+                    <li key={m.material_id}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => {
+                          dispatch({ type: 'setMaterial', material: m })
+                          setOpen(false)
+                        }}
+                        className={`flex w-full items-start justify-between gap-2 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                          active ? 'bg-elevated text-primary' : 'text-secondary hover:bg-void/60 hover:text-primary'
+                        }`}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-xs font-medium text-primary">{label.title}</span>
+                          {label.subtitle ? (
+                            <span className="mt-0.5 block text-[0.6875rem] text-muted">{label.subtitle}</span>
+                          ) : null}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
+                          <span className="font-mono text-[0.65rem] text-muted tabular-nums">
+                            {fmt(m.nominal_thickness_mm, 2)} mm
+                          </span>
+                          <Check className={`size-3.5 text-focus ${active ? 'opacity-100' : 'opacity-0'}`} aria-hidden />
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : null}
+          </div>
+
           <p className="mt-2 flex items-baseline justify-between text-xs" data-testid="thickness">
             <span className="text-muted">Thickness</span>
             <span className="font-mono text-secondary tabular-nums">
@@ -88,7 +148,7 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
               )}
             </span>
           </p>
-        </Field>
+        </div>
 
         <fieldset>
           <legend className="mb-2 text-xs text-secondary">Gravity</legend>
@@ -148,21 +208,6 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
           {running ? 'Running…' : 'Run Simulation'}
         </button>
       </div>
-    </div>
-  )
-}
-
-function Field({ label, htmlFor, children }: { label: string; htmlFor?: string; children: ReactNode }) {
-  return (
-    <div>
-      {htmlFor ? (
-        <label htmlFor={htmlFor} className="mb-2 block text-xs text-secondary">
-          {label}
-        </label>
-      ) : (
-        <p className="mb-2 text-xs text-secondary">{label}</p>
-      )}
-      {children}
     </div>
   )
 }
