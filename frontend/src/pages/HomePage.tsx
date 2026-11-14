@@ -29,7 +29,6 @@ export function HomePage() {
     // One continuous background for the whole Home; the fixed sky sits behind everything.
     <div ref={rootRef} className="relative isolate overflow-x-clip bg-linear-to-b from-hero to-void">
       <SkyLayer />
-      <PlanetHorizon />
       <Hero />
       <ProblemSection />
       <HowItWorksSection />
@@ -59,9 +58,12 @@ function LaunchSimulatorButton() {
 
 function Hero() {
   return (
-    <section className="relative isolate" aria-labelledby="hero-title">
+    // Full viewport height below the sticky header, with a floor for short screens.
+    <section className="relative isolate h-[calc(100svh-3.5rem)] min-h-[560px]" aria-labelledby="hero-title">
       <RocketHeroBackdrop />
-      <div className="relative mx-auto flex min-h-[560px] max-w-4xl flex-col items-center justify-center px-4 py-20 text-center sm:min-h-[640px] sm:px-6">
+      <PlanetHorizon />
+      <div className="relative mx-auto flex h-full max-w-4xl flex-col items-center justify-center px-4 pt-10 pb-36 text-center sm:px-6">
+        <div data-rocket-avoid className="flex flex-col items-center">
         <p className="hero-rise font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase" style={stagger(0)}>
           <span className="text-brand" aria-hidden>
             ●
@@ -104,6 +106,7 @@ function Hero() {
             Watch the 30s pitch
           </a>
         </div>
+        </div>
       </div>
     </section>
   )
@@ -112,10 +115,24 @@ function Hero() {
 /* ------------------------------------------------------------------ */
 
 /** Shared section pattern: mono label, centered title, centered content, same width and spacing. */
-function HomeSection({ id, label, title, children }: { id: string; label: string; title: string; children: ReactNode }) {
+function HomeSection({
+  id,
+  label,
+  title,
+  first = false,
+  children,
+}: {
+  id: string
+  label: string
+  title: string
+  /** The first section sits right under the planet arc: ~96px of breathing room from the arc. */
+  first?: boolean
+  children: ReactNode
+}) {
   return (
     <section className="relative" aria-labelledby={`${id}-title`}>
-      <div className="mx-auto max-w-5xl px-4 py-20 text-center sm:px-6 sm:py-24">
+      <div className={`mx-auto max-w-5xl px-4 text-center sm:px-6 ${first ? "pt-6 pb-24" : "py-24"}`}>
+        <div data-rocket-avoid>
         <p data-reveal className="reveal font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
           <span className="text-brand" aria-hidden>
             ●
@@ -130,6 +147,7 @@ function HomeSection({ id, label, title, children }: { id: string; label: string
         >
           {title}
         </h2>
+        </div>
         <div className="mt-12">{children}</div>
       </div>
     </section>
@@ -138,7 +156,7 @@ function HomeSection({ id, label, title, children }: { id: string; label: string
 
 function ProblemSection() {
   return (
-    <HomeSection id="problem" label="The science" title="Fire in space doesn’t behave like on Earth.">
+    <HomeSection id="problem" first label="The science" title="Fire in space doesn’t behave like on Earth.">
       <div className="grid gap-4 md:grid-cols-3">
         <ProblemCard step={2} index="01" channel="Gravity" title="It turns into a ball." diagram={<BallDiagram />}>
           Without gravity, hot air doesn’t rise, so flames become slow, round and hard to see.
@@ -338,7 +356,9 @@ function FinalCta() {
   return (
     <section className="relative" aria-label="Launch the simulator">
       <div data-reveal className="reveal mx-auto flex max-w-5xl justify-center px-4 pb-24 sm:px-6">
-        <LaunchSimulatorButton />
+        <div data-rocket-avoid>
+          <LaunchSimulatorButton />
+        </div>
       </div>
     </section>
   )

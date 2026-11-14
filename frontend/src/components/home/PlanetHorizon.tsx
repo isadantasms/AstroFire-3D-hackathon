@@ -1,55 +1,39 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 /**
- * The planet horizon as the bridge between the hero and the next section (aria-hidden).
- * The orange arc sits at the hero's base; the planet's dark body below it fades into the
- * page background, and its glow dissolves downwards, so no straight edge or color step
- * appears. While scrolling, the planet rises a little slower than the content (light
- * parallax, transform only); its glow breathes. Static with reduced motion.
- * Painted above the fixed sky (so the rocket can pass behind the horizon) and below content.
+ * The planet horizon at the base of the hero (aria-hidden). It is placed inside the hero
+ * and scrolls with the page at the same speed (no parallax). The orange arc's apex sits
+ * ARC_ABOVE_HERO_BOTTOM px above the hero's bottom edge; the arc is flat enough that,
+ * across the content column, it stays above the hero's bottom edge, so the next section
+ * (which starts ~96px below the hero) never touches it. The planet's dark body below the
+ * arc fades into the page background and its glow breathes, with no straight edge.
  */
-import { useEffect, useRef } from 'react'
-import { usePrefersReducedMotion } from '../hero/useMotionPreferences'
 
-/** Fraction of the scroll the planet lags behind (0 = moves with content). */
-const PARALLAX = 0.25
+/** Distance from the arc's apex to the hero's bottom edge, in px. */
+const ARC_ABOVE_HERO_BOTTOM = 120
+
+const SVG_H = 900
+const APEX_Y = 120 // apex of the ellipse inside the SVG
+const CX = 720
+const RX = 1300
+const RY = 520
+const CY = APEX_Y + RY
 
 export function PlanetHorizon() {
-  const reduced = usePrefersReducedMotion()
-  const ref = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el || reduced) return
-    let frame = 0
-    const update = () => {
-      frame = 0
-      const y = Math.min(window.scrollY, 1600) * PARALLAX
-      el.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`
-    }
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(update)
-    }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', onScroll)
-      el.style.transform = ''
-    }
-  }, [reduced])
-
   return (
     <div
-      ref={ref}
-      className="pointer-events-none absolute inset-x-0 top-[440px] h-[900px] will-change-transform"
+      className="pointer-events-none absolute inset-x-0"
+      style={{ top: `calc(100% - ${ARC_ABOVE_HERO_BOTTOM + APEX_Y}px)`, height: SVG_H }}
       aria-hidden="true"
       data-testid="planet-horizon"
     >
-      {/* Glow above the arc, dissolving into the sections below. */}
-      <div className="absolute top-[200px] left-1/2 h-[760px] w-[1700px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgb(242_140_40/0.2),rgb(242_140_40/0.06)_55%,transparent)]" />
-      <svg className="absolute inset-0 size-full" viewBox="0 0 1440 900" preserveAspectRatio="none" focusable="false">
+      {/* Glow above the arc, dissolving into the section below. */}
+      <div
+        className="absolute left-1/2 h-[700px] w-[1700px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgb(242_140_40/0.18),rgb(242_140_40/0.05)_55%,transparent)]"
+        style={{ top: APEX_Y }}
+      />
+      <svg className="absolute inset-0 size-full" viewBox={`0 0 1440 ${SVG_H}`} preserveAspectRatio="none" focusable="false">
         <defs>
-          <linearGradient id="planet-body" x1="0" y1="120" x2="0" y2="760" gradientUnits="userSpaceOnUse">
+          <linearGradient id="planet-body" x1="0" y1={APEX_Y} x2="0" y2="760" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="#111a2e" />
             <stop offset="0.45" stopColor="#0d1424" stopOpacity="0.85" />
             <stop offset="1" stopColor="#0a101c" stopOpacity="0" />
@@ -59,30 +43,30 @@ export function PlanetHorizon() {
             <stop offset="0.5" stopColor="var(--brand-orange)" stopOpacity="0.95" />
             <stop offset="1" stopColor="var(--brand-orange)" stopOpacity="0" />
           </linearGradient>
-          {/* The arc itself fades towards the bottom so its sides never end in a hard cut. */}
-          <linearGradient id="planet-fade" x1="0" y1="120" x2="0" y2="760" gradientUnits="userSpaceOnUse">
+          {/* Everything fades towards the bottom so nothing ends in a hard cut. */}
+          <linearGradient id="planet-fade" x1="0" y1={APEX_Y} x2="0" y2="800" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="white" />
-            <stop offset="0.5" stopColor="white" />
+            <stop offset="0.45" stopColor="white" />
             <stop offset="1" stopColor="white" stopOpacity="0" />
           </linearGradient>
           <mask id="planet-mask">
-            <rect width="1440" height="900" fill="url(#planet-fade)" />
+            <rect width="1440" height={SVG_H} fill="url(#planet-fade)" />
           </mask>
         </defs>
         <g mask="url(#planet-mask)">
-          <ellipse cx="720" cy="1020" rx="1150" ry="900" fill="url(#planet-body)" />
+          <ellipse cx={CX} cy={CY} rx={RX} ry={RY} fill="url(#planet-body)" />
           <ellipse
             className="horizon-breathe hero-anim"
-            cx="720"
-            cy="1020"
-            rx="1154"
-            ry="904"
+            cx={CX}
+            cy={CY}
+            rx={RX + 4}
+            ry={RY + 4}
             fill="none"
             stroke="var(--brand-amber)"
             strokeWidth="8"
             vectorEffect="non-scaling-stroke"
           />
-          <ellipse cx="720" cy="1020" rx="1150" ry="900" fill="none" stroke="url(#planet-rim)" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+          <ellipse cx={CX} cy={CY} rx={RX} ry={RY} fill="none" stroke="url(#planet-rim)" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
         </g>
       </svg>
     </div>

@@ -1,6 +1,7 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { describe, expect, it } from 'vitest'
 import {
+  avoidanceAlpha,
   CYCLE_MAX_MS,
   CYCLE_MIN_MS,
   easeLaunch,
@@ -10,6 +11,8 @@ import {
   makeSkyFlight,
   mulberry32,
   pointAt,
+  samplePath,
+  SIDE_BAND,
   STAR_LAYERS,
 } from './heroMotion'
 
@@ -28,6 +31,28 @@ describe('sky motion helpers', () => {
       expect(offscreen(end)).toBe(true)
       expect(end.y).toBeLessThan(start.y)
     }
+  })
+
+  it.each(FLIGHT_KINDS)('%s flight stays in the side bands, away from the central column', (kind) => {
+    const rand = mulberry32(17)
+    for (let n = 0; n < 30; n++) {
+      const path = makeSkyFlight(rand, W, H, kind)
+      for (const p of samplePath(path, 120)) {
+        if (offscreen(p)) continue
+        const inSides = p.x <= SIDE_BAND * W || p.x >= (1 - SIDE_BAND) * W
+        expect(inSides).toBe(true)
+      }
+    }
+  })
+
+  it('fades out near content to avoid and is fully visible far from it', () => {
+    const title = { left: 400, top: 200, right: 1040, bottom: 400 }
+    expect(avoidanceAlpha(700, 300, [title])).toBe(0) // inside
+    expect(avoidanceAlpha(1060, 300, [title])).toBe(0) // within the margin
+    expect(avoidanceAlpha(1400, 300, [title])).toBe(1) // far away
+    const mid = avoidanceAlpha(1040 + 48 + 36, 300, [title])
+    expect(mid).toBeGreaterThan(0)
+    expect(mid).toBeLessThan(1)
   })
 
   it('picks a different path from one flight to the next', () => {

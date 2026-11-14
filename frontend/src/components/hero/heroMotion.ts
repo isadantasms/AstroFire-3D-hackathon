@@ -87,44 +87,69 @@ export interface FlightPath {
   p3: Point
 }
 
-export type FlightKind = 'rise-right' | 'diagonal-left-to-right' | 'diagonal-right-to-left' | 'edge-left'
+export type FlightKind = 'rise-right' | 'rise-left' | 'edge-right' | 'edge-left'
 
-export const FLIGHT_KINDS: readonly FlightKind[] = ['rise-right', 'diagonal-left-to-right', 'diagonal-right-to-left', 'edge-left']
+export const FLIGHT_KINDS: readonly FlightKind[] = ['rise-right', 'rise-left', 'edge-right', 'edge-left']
+
+/** Flights stay in the side bands: x <= SIDE_BAND * w or x >= (1 - SIDE_BAND) * w while on screen. */
+export const SIDE_BAND = 0.24
 
 /**
- * A curved crossing of a w x h viewport, different each time: rising from the bottom,
- * diagonals in either direction, or hugging the left edge. Every path starts and ends
- * outside the viewport and climbs (ends higher than it starts).
+ * A curved crossing of a w x h viewport along the sides and edges, different each time.
+ * Every path starts below or beside the viewport, climbs, and leaves it again; it never
+ * crosses the central column where headings and text live.
  */
 export function makeSkyFlight(rand: () => number, w: number, h: number, kind?: FlightKind): FlightPath & { kind: FlightKind } {
   const k = kind ?? FLIGHT_KINDS[Math.floor(rand() * FLIGHT_KINDS.length) % FLIGHT_KINDS.length]
   const r = () => rand()
-  switch (k) {
-    case 'rise-right': {
-      const x0 = w * (0.78 + 0.15 * r())
-      return { kind: k, p0: { x: x0, y: h + 70 }, p1: { x: x0 + 20, y: h * 0.55 }, p2: { x: x0 + 80 + 40 * r(), y: h * 0.25 }, p3: { x: w + 90, y: -90 } }
-    }
-    case 'diagonal-left-to-right':
-      return {
-        kind: k,
-        p0: { x: -70, y: h * (0.75 + 0.2 * r()) },
-        p1: { x: w * 0.3, y: h * (0.55 + 0.15 * r()) },
-        p2: { x: w * 0.65, y: h * (0.25 + 0.1 * r()) },
-        p3: { x: w + 90, y: h * (0.05 + 0.2 * r()) - 60 },
-      }
-    case 'diagonal-right-to-left':
-      return {
-        kind: k,
-        p0: { x: w + 70, y: h * (0.75 + 0.2 * r()) },
-        p1: { x: w * 0.7, y: h * (0.55 + 0.15 * r()) },
-        p2: { x: w * 0.35, y: h * (0.25 + 0.1 * r()) },
-        p3: { x: -90, y: h * (0.05 + 0.2 * r()) - 60 },
-      }
-    case 'edge-left': {
-      const x0 = w * (0.04 + 0.08 * r())
-      return { kind: k, p0: { x: x0, y: h + 70 }, p1: { x: w * 0.02, y: h * 0.5 }, p2: { x: w * 0.08, y: h * 0.15 }, p3: { x: w * (0.2 + 0.1 * r()), y: -90 } }
-    }
+  const mirror = (p: FlightPath): FlightPath => ({
+    p0: { x: w - p.p0.x, y: p.p0.y },
+    p1: { x: w - p.p1.x, y: p.p1.y },
+    p2: { x: w - p.p2.x, y: p.p2.y },
+    p3: { x: w - p.p3.x, y: p.p3.y },
+  })
+  // Rising from the bottom on the right side, leaving through the top-right corner.
+  const riseRight = (): FlightPath => {
+    const x0 = w * (0.82 + 0.1 * r())
+    return { p0: { x: x0, y: h + 70 }, p1: { x: x0 + 10, y: h * 0.55 }, p2: { x: x0 + 40 + 30 * r(), y: h * 0.25 }, p3: { x: w + 90, y: -90 } }
   }
+  // Hugging the right edge from the bottom to the top.
+  const edgeRight = (): FlightPath => {
+    const x0 = w * (0.9 + 0.06 * r())
+    return { p0: { x: x0, y: h + 70 }, p1: { x: w * 0.98, y: h * 0.5 }, p2: { x: w * 0.9, y: h * 0.15 }, p3: { x: w * (0.8 + 0.04 * r()), y: -90 } }
+  }
+  switch (k) {
+    case 'rise-right':
+      return { kind: k, ...riseRight() }
+    case 'rise-left':
+      return { kind: k, ...mirror(riseRight()) }
+    case 'edge-right':
+      return { kind: k, ...edgeRight() }
+    case 'edge-left':
+      return { kind: k, ...mirror(edgeRight()) }
+  }
+}
+
+export interface Rect {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+/**
+ * Opacity for the rocket (or a trail segment) at a screen point: 1 far from content,
+ * fading to 0 within (margin + ramp) px of any rectangle to avoid, 0 inside it.
+ */
+export function avoidanceAlpha(x: number, y: number, rects: readonly Rect[], margin = 48, ramp = 72): number {
+  let alpha = 1
+  for (const r of rects) {
+    const dx = Math.max(r.left - x, 0, x - r.right)
+    const dy = Math.max(r.top - y, 0, y - r.bottom)
+    const d = Math.hypot(dx, dy) - margin
+    alpha = Math.min(alpha, Math.max(0, Math.min(1, d / ramp)))
+  }
+  return alpha
 }
 
 /** Position on the cubic path and the rocket rotation (the rocket is drawn pointing up). */

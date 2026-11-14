@@ -12,6 +12,7 @@
  */
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react'
 import {
+  avoidanceAlpha,
   between,
   CYCLE_MAX_MS,
   CYCLE_MIN_MS,
@@ -30,6 +31,7 @@ import {
   TRAIL_SEGMENTS,
   TRAIL_TO,
   type FlightPath,
+  type Rect,
   type Star,
 } from '../hero/heroMotion'
 import { usePageVisible, usePrefersReducedMotion } from '../hero/useMotionPreferences'
@@ -157,6 +159,13 @@ function ShootingStars({ active }: { active: boolean }) {
   )
 }
 
+/** Screen rectangles of the content the rocket must avoid (marked with data-rocket-avoid). */
+function readAvoidRects(): Rect[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('[data-rocket-avoid]'), (el) => el.getBoundingClientRect()).filter(
+    (r) => r.width > 0,
+  )
+}
+
 function useViewportSize() {
   const [size, setSize] = useState(() => ({
     w: typeof window === 'undefined' ? 1440 : window.innerWidth,
@@ -208,11 +217,16 @@ function RocketFlyby({ motion }: { motion: boolean }) {
         const progress = Math.min(1, (now - start) / FLIGHT_MS)
         const t = easeLaunch(progress)
         const p = pointAt(flight.path, t)
+        // Headings and text blocks the rocket must never cross (it fades out near them).
+        const avoid = readAvoidRects()
         rocket.setAttribute('transform', `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${p.angle.toFixed(1)})`)
+        rocket.style.opacity = avoidanceAlpha(p.x, p.y, avoid).toFixed(3)
         const target = Math.floor(t * TRAIL_SEGMENTS)
         for (; shown < target; shown++) {
           const seg = segRefs.current[shown]
-          if (seg) seg.style.opacity = '1'
+          const a = points[shown]
+          const b = points[shown + 1]
+          if (seg && a && b) seg.style.opacity = avoidanceAlpha((a.x + b.x) / 2, (a.y + b.y) / 2, avoid).toFixed(3)
         }
         if (progress < 1) {
           raf = requestAnimationFrame(frame)
@@ -233,7 +247,7 @@ function RocketFlyby({ motion }: { motion: boolean }) {
       window.clearTimeout(cycleTimer)
       cancelAnimationFrame(raf)
     }
-  }, [motion, flight])
+  }, [motion, flight, points])
 
   return (
     <svg className="absolute inset-0 size-full" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" focusable="false" data-testid="sky-rocket">
