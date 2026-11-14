@@ -16,6 +16,8 @@ The application's server integration can call these public Unity methods on the 
 
 For WebGL, the host page can forward an endpoint response with `unityInstance.SendMessage("FireSimulation", "ApplyJson", JSON.stringify(payload))`. Material changes are part of inputs.material_id in that payload. No-argument actions can be forwarded with `unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher")` or `unityInstance.SendMessage("FireSimulation", "SkipAnimation")`.
 
+Extinguisher commands are ignored while a destination change is pending or its animation is playing, including the return to the cabin. These commands are not queued. Starting a trip immediately cancels an ongoing extinguisher action, clears its spray and returns it to the wall mount. It becomes available again when the cabin has arrived and no further trip is pending.
+
 Read-only progress/state properties remain available to a future host bridge: DestinationTravel.IsTravelling, Phase, ArrivedDestination, RequestedDestination, SkipProgress; ExtinguisherController.IsUsing and Progress; FireSimulationController.Suppression and BurnFrontMillimeters. Unity SendMessage invokes methods; it does not return these properties to JavaScript automatically.
 
 Save the scene and rebuild WebGL to update the exported application.

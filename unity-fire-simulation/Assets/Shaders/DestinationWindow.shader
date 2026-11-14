@@ -8,6 +8,8 @@ Shader "FireSimulation/DestinationWindow"
         _Arrival("Arrival", Float) = 1
         _WindowView("Live destination",2D)="black" {}
         _UseWindowView("Use live view",Float)=0
+        _EarthSurfaceView("Earth surface sky",Float)=0
+        _EarthViewOffset("Earth view parallax",Vector)=(0,0,0,0)
     }
     SubShader
     {
@@ -26,6 +28,8 @@ Shader "FireSimulation/DestinationWindow"
             float4 _Destinations;
             float _Travel, _Arrival;
             float _UseWindowView;
+            float _EarthSurfaceView;
+            float4 _EarthViewOffset;
             float4 _WindowView_TexelSize;
             CBUFFER_END
             V vert(A i) { V o; o.p=TransformObjectToHClip(i.p.xyz); o.uv=i.uv; return o; }
@@ -44,6 +48,17 @@ Shader "FireSimulation/DestinationWindow"
                 float3 atmosphere=lerp(sky*1.7,sky,saturate((uv.y-.4)*1.7));
                 return lerp(atmosphere,ground,land);
             }
+            float3 earthSky(float2 uv)
+            {
+                // Quantized cloud silhouettes match the cabin's voxel style.
+                float2 pixel=floor((uv+_EarthViewOffset.xy*.35)*float2(160,120))/float2(160,120);
+                float3 sky=lerp(float3(.70,.85,.95),float3(.14,.43,.78),saturate(pixel.y));
+                float2 drift=float2(_Time.y*.0015,0);
+                float cloudShape=noise(floor((pixel+drift)*float2(48,32))/float2(4,4));
+                float clouds=step(.58,cloudShape)*smoothstep(.43,.58,pixel.y);
+                float3 cloudColor=lerp(float3(.77,.86,.92),float3(.98,.99,1),step(.68,cloudShape));
+                return lerp(sky,cloudColor,clouds*.88);
+            }
             half4 frag(V i):SV_Target
             {
                 if(_UseWindowView>.5)
@@ -52,7 +67,15 @@ Shader "FireSimulation/DestinationWindow"
                     #if UNITY_UV_STARTS_AT_TOP
                     if(_WindowView_TexelSize.y<0) screenUV.y=1-screenUV.y;
                     #endif
-                    float3 image=SAMPLE_TEXTURE2D(_WindowView,sampler_WindowView,screenUV).rgb;
+                    float4 live=SAMPLE_TEXTURE2D(_WindowView,sampler_WindowView,screenUV);
+                    float3 image=live.rgb;
+                    if(_EarthSurfaceView>.5)
+                    {
+                        float3 sky=earthSky(i.uv);
+                        float haze=smoothstep(.18,.63,i.uv.y)*.22;
+                        float3 ground=lerp(live.rgb,float3(.68,.82,.87),haze);
+                        image=lerp(sky,ground,saturate(live.a));
+                    }
                     float edge=pow(saturate(length(i.uv*2-1)),12);
                     float reflection=pow(saturate(1-abs(i.uv.x+i.uv.y*.6-.75)*7),16)*.015;
                     return half4(image*float3(.97,.99,1)+float3(.08,.16,.22)*edge*.16+reflection,1);
