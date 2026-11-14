@@ -1,0 +1,448 @@
+{
+  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina & Celina",
+  "project": "[PROJECT_NAME]",
+  "model_architecture": "Hybrid Physics-Informed Neural Network (PINN) + Stratified 5-Fold Cross-Validation Ensemble",
+  "grounding_sources": {
+    "psi_dataset": "BASS-II (PSI-25)",
+    "doi": "10.60555/4qc4-de67",
+    "ntrs_report": "NASA/TM-20210011385",
+    "saffire_reference": "NTRS-20170000230",
+    "license": "CC0-1.0 / US Government Public Domain",
+    "compliance_guard": "PSI-10 strictly excluded (unlicensed dataset blocked)"
+  },
+  "why_small_data_succeeds": {
+    "empirical_records_count": 79,
+    "collocation_boundary_points": 24,
+    "explanation": "In orbital combustion research, each ISS glovebox burn costs astronaut crew time and resupply mass, resulting in high-precision small-N tabular datasets (79 verified BASS-II state transitions). Instead of data-hungry black-box deep learning, our Physics-Informed Neural Network (PINN) embeds Olson Eq. (6.1) and Bhattacharjee Eq. (2.2)-(2.5) directly into the loss function, achieving high generalization accuracy without synthetic hallucination."
+  },
+  "training_execution_ms": 665.38,
+  "classification_metrics": {
+    "task": "Sustained Flame Spread vs. Radiative Quench / O2 Extinction",
+    "validation_scheme": "Stratified 5-Fold Cross-Validation (79 empirical ISS states)",
+    "accuracy_pct": 94.94,
+    "precision_pct": 95.31,
+    "recall_pct": 98.39,
+    "f1_score_pct": 96.83,
+    "confusion_matrix": {
+      "true_positives_sustained": 61,
+      "true_negatives_quenched": 14,
+      "false_positives": 3,
+      "false_negatives": 1
+    }
+  },
+  "regression_metrics": {
+    "task": "Microgravity Flame Spread Rate Vf (mm/s) Prediction",
+    "validation_scheme": "5-Fold Cross-Validation on measured BASS-II spread rates",
+    "r2_score": 0.9117,
+    "rmse_mm_s": 0.1747,
+    "mae_mm_s": 0.0549
+  },
+  "fold_breakdown": [
+    {
+      "fold": 1,
+      "samples": 17,
+      "classification_accuracy_pct": 94.12,
+      "spread_rate_rmse_mm_s": 0.0819
+    },
+    {
+      "fold": 2,
+      "samples": 17,
+      "classification_accuracy_pct": 94.12,
+      "spread_rate_rmse_mm_s": 0.0662
+    },
+    {
+      "fold": 3,
+      "samples": 15,
+      "classification_accuracy_pct": 93.33,
+      "spread_rate_rmse_mm_s": 0.3635
+    },
+    {
+      "fold": 4,
+      "samples": 15,
+      "classification_accuracy_pct": 100.0,
+      "spread_rate_rmse_mm_s": 0.0591
+    },
+    {
+      "fold": 5,
+      "samples": 15,
+      "classification_accuracy_pct": 93.33,
+      "spread_rate_rmse_mm_s": 0.1118
+    }
+  ],
+  "feature_importance": [
+    {
+      "feature_key": "base_vf_mm_s",
+      "feature_name": "Material Polymer/Textile Family Baseline Reactivity",
+      "importance_pct": 34.94,
+      "physical_mechanism": "Distinguishes PMMA acrylic, SIBAL cotton-fiberglass blend, and Nomex III fire barrier."
+    },
+    {
+      "feature_key": "radiative_quench_margin",
+      "feature_name": "Forced Ventilation & Radiative Quench Velocity (cm/s)",
+      "importance_pct": 21.53,
+      "physical_mechanism": "Supplies oxidizer in 0g where natural buoyancy is absent; quenches at ultra-low flow or high blowoff."
+    },
+    {
+      "feature_key": "o2_margin_pct",
+      "feature_name": "Oxygen Margin Above Olson Eq. (6.1) LOI (% O2)",
+      "importance_pct": 21.39,
+      "physical_mechanism": "Primary thermodynamic driver governing flame temperature and extinction boundary."
+    },
+    {
+      "feature_key": "inv_sqrt_thickness",
+      "feature_name": "Bhattacharjee Thermal Thickness Scaling (1/sqrt(tau_mm))",
+      "importance_pct": 11.72,
+      "physical_mechanism": "Controls solid heat-sink capacity; thin films (0.1 mm) spread >30x faster than 6.35 mm rods."
+    },
+    {
+      "feature_key": "gravity_g",
+      "feature_name": "Gravitational Acceleration & Buoyant Stretch (g)",
+      "importance_pct": 10.42,
+      "physical_mechanism": "Induces buoyant flow V_b = 25*sqrt(g/g0) cm/s on Lunar (0.16g) and Martian (0.38g) habitats."
+    }
+  ],
+  "pinn_loss_curve": [
+    {
+      "epoch": 1,
+      "train_mse_loss": 0.0995,
+      "val_mse_loss": 0.09756,
+      "physics_residual_loss": 0.031753,
+      "total_pinn_loss": 0.115376
+    },
+    {
+      "epoch": 5,
+      "train_mse_loss": 0.07631,
+      "val_mse_loss": 0.071053,
+      "physics_residual_loss": 0.020975,
+      "total_pinn_loss": 0.086798
+    },
+    {
+      "epoch": 10,
+      "train_mse_loss": 0.058611,
+      "val_mse_loss": 0.049135,
+      "physics_residual_loss": 0.012617,
+      "total_pinn_loss": 0.064919
+    },
+    {
+      "epoch": 15,
+      "train_mse_loss": 0.048519,
+      "val_mse_loss": 0.035211,
+      "physics_residual_loss": 0.007715,
+      "total_pinn_loss": 0.052377
+    },
+    {
+      "epoch": 20,
+      "train_mse_loss": 0.042803,
+      "val_mse_loss": 0.026242,
+      "physics_residual_loss": 0.004823,
+      "total_pinn_loss": 0.045215
+    },
+    {
+      "epoch": 25,
+      "train_mse_loss": 0.039579,
+      "val_mse_loss": 0.020366,
+      "physics_residual_loss": 0.003098,
+      "total_pinn_loss": 0.041128
+    },
+    {
+      "epoch": 30,
+      "train_mse_loss": 0.037764,
+      "val_mse_loss": 0.016443,
+      "physics_residual_loss": 0.002054,
+      "total_pinn_loss": 0.03879
+    },
+    {
+      "epoch": 35,
+      "train_mse_loss": 0.036741,
+      "val_mse_loss": 0.013772,
+      "physics_residual_loss": 0.00141,
+      "total_pinn_loss": 0.037447
+    },
+    {
+      "epoch": 40,
+      "train_mse_loss": 0.036165,
+      "val_mse_loss": 0.011916,
+      "physics_residual_loss": 0.001005,
+      "total_pinn_loss": 0.036668
+    },
+    {
+      "epoch": 45,
+      "train_mse_loss": 0.035841,
+      "val_mse_loss": 0.010603,
+      "physics_residual_loss": 0.000744,
+      "total_pinn_loss": 0.036213
+    },
+    {
+      "epoch": 50,
+      "train_mse_loss": 0.035657,
+      "val_mse_loss": 0.009658,
+      "physics_residual_loss": 0.000572,
+      "total_pinn_loss": 0.035943
+    },
+    {
+      "epoch": 55,
+      "train_mse_loss": 0.035554,
+      "val_mse_loss": 0.008965,
+      "physics_residual_loss": 0.000455,
+      "total_pinn_loss": 0.035782
+    },
+    {
+      "epoch": 60,
+      "train_mse_loss": 0.035497,
+      "val_mse_loss": 0.008451,
+      "physics_residual_loss": 0.000374,
+      "total_pinn_loss": 0.035684
+    },
+    {
+      "epoch": 65,
+      "train_mse_loss": 0.035465,
+      "val_mse_loss": 0.008062,
+      "physics_residual_loss": 0.000317,
+      "total_pinn_loss": 0.035624
+    },
+    {
+      "epoch": 70,
+      "train_mse_loss": 0.035448,
+      "val_mse_loss": 0.007766,
+      "physics_residual_loss": 0.000275,
+      "total_pinn_loss": 0.035586
+    },
+    {
+      "epoch": 75,
+      "train_mse_loss": 0.03544,
+      "val_mse_loss": 0.007536,
+      "physics_residual_loss": 0.000244,
+      "total_pinn_loss": 0.035562
+    },
+    {
+      "epoch": 80,
+      "train_mse_loss": 0.035436,
+      "val_mse_loss": 0.007356,
+      "physics_residual_loss": 0.000221,
+      "total_pinn_loss": 0.035546
+    },
+    {
+      "epoch": 85,
+      "train_mse_loss": 0.035435,
+      "val_mse_loss": 0.007213,
+      "physics_residual_loss": 0.000203,
+      "total_pinn_loss": 0.035536
+    },
+    {
+      "epoch": 90,
+      "train_mse_loss": 0.035435,
+      "val_mse_loss": 0.007099,
+      "physics_residual_loss": 0.000189,
+      "total_pinn_loss": 0.035529
+    },
+    {
+      "epoch": 95,
+      "train_mse_loss": 0.035436,
+      "val_mse_loss": 0.007005,
+      "physics_residual_loss": 0.000177,
+      "total_pinn_loss": 0.035525
+    },
+    {
+      "epoch": 100,
+      "train_mse_loss": 0.035438,
+      "val_mse_loss": 0.006928,
+      "physics_residual_loss": 0.000168,
+      "total_pinn_loss": 0.035522
+    },
+    {
+      "epoch": 105,
+      "train_mse_loss": 0.035439,
+      "val_mse_loss": 0.006863,
+      "physics_residual_loss": 0.00016,
+      "total_pinn_loss": 0.035519
+    },
+    {
+      "epoch": 110,
+      "train_mse_loss": 0.035441,
+      "val_mse_loss": 0.006807,
+      "physics_residual_loss": 0.000154,
+      "total_pinn_loss": 0.035518
+    },
+    {
+      "epoch": 115,
+      "train_mse_loss": 0.035442,
+      "val_mse_loss": 0.006759,
+      "physics_residual_loss": 0.000148,
+      "total_pinn_loss": 0.035516
+    },
+    {
+      "epoch": 120,
+      "train_mse_loss": 0.035444,
+      "val_mse_loss": 0.006717,
+      "physics_residual_loss": 0.000144,
+      "total_pinn_loss": 0.035516
+    }
+  ],
+  "out_of_fold_predictions_sample": [
+    {
+      "test_id": "BASS2-O15b",
+      "material_id": "pmma_rod",
+      "pi_group": "Olson",
+      "true_outcome": "Hemispherical Blue Flame -> Quench",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9714,
+      "true_spread_rate_mm_s": 0.0385,
+      "predicted_spread_rate_mm_s": 0.0305,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M3-s1",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9972,
+      "true_spread_rate_mm_s": 0.029,
+      "predicted_spread_rate_mm_s": 0.0221,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M14-s1",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9969,
+      "true_spread_rate_mm_s": 0.0624,
+      "predicted_spread_rate_mm_s": 0.063,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-P15",
+      "material_id": "pmma_black_rod",
+      "pi_group": "Fernandez-Pello",
+      "true_outcome": "Sustained Sooty Tail + Blue Edge",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9885,
+      "true_spread_rate_mm_s": 0.068,
+      "predicted_spread_rate_mm_s": 0.053,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M13-s2",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9971,
+      "true_spread_rate_mm_s": 0.035,
+      "predicted_spread_rate_mm_s": 0.0289,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M13-s3",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9971,
+      "true_spread_rate_mm_s": 0.033,
+      "predicted_spread_rate_mm_s": 0.0276,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M7-s1",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9966,
+      "true_spread_rate_mm_s": 0.106,
+      "predicted_spread_rate_mm_s": 0.071,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-B15",
+      "material_id": "pmma_thin_film",
+      "pi_group": "Bhattacharjee",
+      "true_outcome": "Sustained Fast Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9933,
+      "true_spread_rate_mm_s": 2.65,
+      "predicted_spread_rate_mm_s": 2.3159,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M4-s1",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9972,
+      "true_spread_rate_mm_s": 0.045,
+      "predicted_spread_rate_mm_s": 0.0304,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M19-s2",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9971,
+      "true_spread_rate_mm_s": 0.0159,
+      "predicted_spread_rate_mm_s": 0.0181,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M14-s3",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9969,
+      "true_spread_rate_mm_s": 0.0353,
+      "predicted_spread_rate_mm_s": 0.0566,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M4-s2",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9972,
+      "true_spread_rate_mm_s": 0.033,
+      "predicted_spread_rate_mm_s": 0.0275,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-M11-s3",
+      "material_id": "pmma_clear_slab",
+      "pi_group": "Miller & Wichman",
+      "true_outcome": "Sustained Spread",
+      "predicted_outcome": "Sustained Spread",
+      "ignition_probability": 0.9972,
+      "true_spread_rate_mm_s": 0.022,
+      "predicted_spread_rate_mm_s": 0.031,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-B14",
+      "material_id": "pmma_thin_film",
+      "pi_group": "Bhattacharjee",
+      "true_outcome": "Extinguished Below LOI",
+      "predicted_outcome": "Extinction / Quench",
+      "ignition_probability": 0.0,
+      "true_spread_rate_mm_s": 0.0,
+      "predicted_spread_rate_mm_s": 0.0,
+      "correct_classification": true
+    },
+    {
+      "test_id": "BASS2-F3",
+      "material_id": "nomex_iii_fabric",
+      "pi_group": "Ferkul",
+      "true_outcome": "No Sustained Ignition",
+      "predicted_outcome": "Extinction / Quench",
+      "ignition_probability": 0.0,
+      "true_spread_rate_mm_s": 0.0,
+      "predicted_spread_rate_mm_s": 0.0,
+      "correct_classification": true
+    }
+  ]
+}

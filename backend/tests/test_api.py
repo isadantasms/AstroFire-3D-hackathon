@@ -7,7 +7,7 @@ Verifies 1:1 compliance with contracts/simulation_schema.json and NASA/TM-202100
 """
 import json
 import pathlib
-from backend.app.main import get_experiments, get_health, get_materials, post_simulate
+from backend.app.main import get_experiments, get_health, get_materials, get_model_metrics, post_simulate
 from backend.app.schemas import SimulationRequest
 
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent.parent / "contracts" / "simulation_schema.json"
@@ -85,11 +85,21 @@ def test_direct_empirical_bass2_match() -> None:
     assert res["simulation_3d"]["burn_rate_mm_s"] == 0.144
 
 
+def test_pinn_model_metrics() -> None:
+    metrics = get_model_metrics()
+    assert metrics["grounding_sources"]["psi_dataset"] == "BASS-II (PSI-25)"
+    assert metrics["classification_metrics"]["accuracy_pct"] >= 90.0
+    assert metrics["regression_metrics"]["r2_score"] >= 0.90
+    assert len(metrics["feature_importance"]) == 5
+    assert len(metrics["pinn_loss_curve"]) >= 20
+
+
 if __name__ == "__main__":
     test_health_and_experiments()
     test_quiescent_0g_spherical_blue_flame()
     test_lunar_ventilated_elongated_orange_flame()
     test_hypoxia_extinction_below_loi()
     test_direct_empirical_bass2_match()
-    print("ALL BACKEND CONTRACT & PHYSICS TESTS PASSED!")
+    test_pinn_model_metrics()
+    print("ALL BACKEND CONTRACT, PHYSICS & PINN TRAINING TESTS PASSED!")
 

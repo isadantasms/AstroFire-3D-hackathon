@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
+from .ml_pipeline import METRICS_OUTPUT_PATH, run_training_pipeline
 from .physics_engine import EMPIRICAL_CACHE, MATERIAL_CATALOG, run_simulation
 from .schemas import SimulationContractResponse, SimulationRequest
 
@@ -56,6 +57,12 @@ def post_simulate(request: SimulationRequest) -> SimulationContractResponse:
     return run_simulation(request)
 
 
+def get_model_metrics() -> dict[str, object]:
+    if METRICS_OUTPUT_PATH.exists():
+        return json.loads(METRICS_OUTPUT_PATH.read_text(encoding="utf-8"))
+    return run_training_pipeline()
+
+
 if HAS_FASTAPI:
     app = FastAPI(
         title="[PROJECT_NAME] — Microgravity Combustion & Fire Safety API",
@@ -93,6 +100,10 @@ if HAS_FASTAPI:
     def api_simulate(request: SimulationRequest) -> SimulationContractResponse:
         return post_simulate(request)
 
+    @app.get("/api/model-metrics")
+    def api_model_metrics() -> dict[str, object]:
+        return get_model_metrics()
+
 
 class FallbackHTTPHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: object) -> None:
@@ -120,6 +131,8 @@ class FallbackHTTPHandler(BaseHTTPRequestHandler):
             mat = qs.get("material_id", [None])[0]
             pi = qs.get("pi_group", [None])[0]
             self._send_json(200, get_experiments(material_id=mat, pi_group=pi))
+        elif parsed.path == "/api/model-metrics":
+            self._send_json(200, get_model_metrics())
         else:
             self._send_json(404, {"error": "Not found"})
 
