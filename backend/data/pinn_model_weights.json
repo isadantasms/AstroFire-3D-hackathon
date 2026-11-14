@@ -1,0 +1,24 @@
+{
+  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina & Celina",
+  "classifier_weights": {
+    "w_o2_margin": 1.75207,
+    "w_quench_margin": 1.55288,
+    "w_inv_thick": -0.30688,
+    "bias": 0.16836
+  },
+  "pinn_regressor_weights": {
+    "hidden_dim": 8,
+    "prior_scale": 0.98851,
+    "w2": [
+      -0.02163,
+      -0.01923,
+      0.01713,
+      -0.00063,
+      -0.0636,
+      0.00105,
+      0.05197,
+      0.02177
+    ],
+    "b2": 0.05102
+  }
+}
