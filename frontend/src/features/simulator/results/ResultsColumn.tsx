@@ -1,5 +1,5 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { AlertTriangle, BadgeCheck, ExternalLink, Info, RotateCcw } from 'lucide-react'
+import { AlertOctagon, AlertTriangle, BadgeCheck, ExternalLink, Info, RotateCcw, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router'
 import { ConsolePanel, Tag } from '../../../components/ConsolePanel'
 import { GROUNDING } from '../../../content/grounding'
@@ -181,15 +181,16 @@ function ResultPanels({ result, mock }: { result: SimulationResponse; mock: bool
 }
 
 /** Badge color follows risk_label; the scale shows the DESIGN.md score bands. */
-const RISK_TONE: Record<RiskLabel, { text: string; bar: string }> = {
-  'Safe (Extinguished Below LOI)': { text: 'text-nominal border-nominal', bar: 'bg-nominal' },
-  'Moderate Alert': { text: 'text-warning border-warning', bar: 'bg-warning' },
-  'High Risk': { text: 'text-critical border-critical', bar: 'bg-critical' },
-  'Critical Flashover Risk': { text: 'text-critical border-critical', bar: 'bg-critical' },
+const RISK_TONE: Record<RiskLabel, { text: string; bar: string; icon: typeof ShieldCheck }> = {
+  'Safe (Extinguished Below LOI)': { text: 'text-nominal border-nominal', bar: 'bg-nominal', icon: ShieldCheck },
+  'Moderate Alert': { text: 'text-warning border-warning', bar: 'bg-warning', icon: AlertTriangle },
+  'High Risk': { text: 'text-critical border-critical', bar: 'bg-critical', icon: AlertOctagon },
+  'Critical Flashover Risk': { text: 'text-critical border-critical', bar: 'bg-critical', icon: AlertOctagon },
 }
 
 function RiskGauge({ score, label }: { score: number; label: RiskLabel }) {
   const tone = RISK_TONE[label]
+  const RiskIcon = tone.icon
   return (
     <div data-testid="risk-gauge">
       <div className="flex items-end justify-between gap-3">
@@ -200,7 +201,8 @@ function RiskGauge({ score, label }: { score: number; label: RiskLabel }) {
             <span className="ml-1 text-sm text-secondary">/ 100</span>
           </p>
         </div>
-        <span className={`border px-2 py-1 text-right font-mono text-[0.6875rem] tracking-[0.08em] uppercase ${tone.text}`}>
+        <span className={`inline-flex items-center gap-1.5 border px-2 py-1 text-right font-mono text-[0.6875rem] tracking-[0.08em] uppercase ${tone.text}`}>
+          <RiskIcon className="size-3.5 shrink-0" aria-hidden />
           {label}
         </span>
       </div>

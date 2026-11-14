@@ -202,7 +202,7 @@ export function MissionControls({
         type="button"
         onClick={onRun}
         disabled={disabled || running}
-        className="inline-flex items-center justify-center gap-2 border border-focus bg-focus px-4 py-3 text-sm font-semibold text-void transition-colors hover:bg-transparent hover:text-focus disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 border border-brand bg-brand px-4 py-3 text-sm font-semibold text-hero transition-colors hover:bg-transparent hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Play className="size-4" aria-hidden />
         {running ? 'Running…' : 'Run Simulation'}

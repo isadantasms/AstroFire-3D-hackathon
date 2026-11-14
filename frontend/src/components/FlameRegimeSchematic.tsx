@@ -9,7 +9,7 @@ export function FlameRegimeSchematic() {
     <figure className="border border-subtle bg-panel">
       <div className="grid grid-cols-2 divide-x divide-subtle">
         <div className="p-4">
-          <p className="label-mono">Quiescent · spherical</p>
+          <p className="label-mono">0 g · quiescent · spherical</p>
           <svg viewBox="0 0 200 150" className="mt-3 w-full" role="img" aria-labelledby="schem-sph">
             <title id="schem-sph">
               Spherical flame ball around a sample with no airflow, drawn in blue
@@ -29,7 +29,7 @@ export function FlameRegimeSchematic() {
         </div>
 
         <div className="p-4">
-          <p className="label-mono">Ventilated · elongated</p>
+          <p className="label-mono">0 g · ventilated · elongated</p>
           <svg viewBox="0 0 200 150" className="mt-3 w-full" role="img" aria-labelledby="schem-elo">
             <title id="schem-elo">
               Flame stretched downstream by cabin airflow, drawn in amber
@@ -60,8 +60,7 @@ export function FlameRegimeSchematic() {
         </div>
       </div>
       <figcaption className="border-t border-subtle px-4 py-2 text-xs text-muted">
-        Illustrative schematic of the two flame geometries in the data contract. Not simulation
-        output or measured data.
+        Illustrative schematic. Not simulation output or measured data.
       </figcaption>
     </figure>
   )

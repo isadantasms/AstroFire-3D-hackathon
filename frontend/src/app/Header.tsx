@@ -5,27 +5,27 @@ import { NAV_ITEMS } from './routes'
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-subtle bg-panel/95 backdrop-blur-sm lg:h-14">
+    <header className="sticky top-0 z-40 border-b border-subtle bg-hero/95 backdrop-blur-sm lg:h-14">
       <div className="mx-auto flex max-w-[1920px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-6 lg:h-full lg:py-0">
-        <Link to="/" className="flex items-center gap-2.5" aria-label="[PROJECT_NAME] home">
+        <Link to="/" className="flex items-center gap-2.5" aria-label="AstroFire 3D home">
           <BrandMark size={26} />
-          <span className="font-mono text-sm font-medium tracking-[0.14em] text-primary uppercase">
-            [PROJECT_NAME]
+          <span className="text-[0.9375rem] font-semibold tracking-tight text-primary">
+            AstroFire <span className="text-brand">3D</span>
           </span>
         </Link>
 
-        <nav aria-label="Primary">
-          <ul className="flex flex-wrap items-center gap-1">
+        <nav aria-label="Primary" className="lg:h-full">
+          <ul className="flex flex-wrap items-center gap-1 lg:h-full">
             {NAV_ITEMS.map((item) => (
-              <li key={item.to}>
+              <li key={item.to} className="lg:h-full">
                 <NavLink
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
                     [
-                      'block border-b-2 px-3 py-1.5 text-sm transition-colors',
+                      'flex items-center border-b-2 px-3 py-1.5 text-sm transition-colors lg:h-full lg:py-0',
                       isActive
-                        ? 'border-focus text-primary'
+                        ? 'border-brand text-primary'
                         : 'border-transparent text-secondary hover:text-primary',
                     ].join(' ')
                   }

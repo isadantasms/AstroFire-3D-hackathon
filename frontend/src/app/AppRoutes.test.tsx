@@ -49,14 +49,24 @@ describe('site structure', () => {
     )
   })
 
-  it('home exposes the Launch Simulator CTA and spells out SI on first mention', () => {
+  it('home hero exposes the brand, headline and the three calls to action', () => {
     renderAt('/')
-    expect(screen.getByRole('heading', { level: 1, name: '[PROJECT_NAME]' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute(
-      'href',
-      '/simulator',
-    )
-    expect(screen.getByText(/Super Intelligence \(SI\)/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'AstroFire 3D home' })).toHaveTextContent('AstroFire 3D')
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Make the next giant leap safer.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
+    expect(screen.getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/about')
+    expect(screen.getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute('href', '#')
+    expect(screen.getByText('For research and education. Not a certified safety assessment.')).toBeInTheDocument()
+  })
+
+  it('home keeps NASA out of the hero title and buttons', () => {
+    renderAt('/')
+    const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
+    expect(within(hero).queryByText(/NASA/)).toBeNull()
+    expect(screen.getByText('Illustrative schematic. Not simulation output or measured data.')).toBeInTheDocument()
+    expect(screen.getByTestId('footer-data-source')).toHaveTextContent('BASS-II (PSI-25)')
   })
 
   it.each([

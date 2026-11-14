@@ -1,22 +1,38 @@
 /* SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha */
-/* Design tokens mirror DESIGN.md section 1 and 2 exactly (names and values). */
-@import 'tailwindcss';
+/*
+ * AstroFire 3D visual identity ("Rocket hero" direction).
+ * Brand colors are kept separate from the risk colors (DESIGN.md section 1),
+ * and from the physical flame colors returned by the backend contract.
+ */
+/*
+ * Scan sources relative to this file (src/), not the shell's working directory:
+ * on Windows a lowercase drive letter ("c:\") made Tailwind's auto-detection
+ * find no sources, which shipped a page with no utility classes in dev.
+ */
+@import 'tailwindcss' source('..');
 
 :root {
   /* Surfaces */
-  --bg-void: #070b12;
-  --bg-panel: #0d131f;
-  --bg-elevated: #131c2e;
+  --bg-void: #0a101c;
+  --bg-hero: #080d17;
+  --bg-panel: #0f1728;
+  --bg-elevated: #16213a;
   /* Structure */
-  --border-subtle: #1e293b;
-  --border-focus: #38bdf8;
+  --border-subtle: #1f2c47;
+  --border-focus: #4c8dff;
+  /* Brand */
+  --brand-orange: #f28c28;
+  --brand-amber: #f2b544;
+  --brand-blue: #4c8dff;
+  --brand-blue-light: #7fa7d9;
   /* Text */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  /* Semantic physical & risk */
+  --text-primary: #e6ecf5;
+  --text-secondary: #b4c0d3;
+  --text-muted: #9aa8bd;
+  /* Physical flame colors (contract simulation_3d.flame_color_hex values) */
   --flame-0g-blue: #3b82f6;
   --flame-soot-amber: #f97316;
+  /* Risk (unchanged from DESIGN.md; always paired with an icon and text) */
   --risk-nominal: #10b981;
   --risk-warning: #f59e0b;
   --risk-critical: #ef4444;
@@ -32,10 +48,14 @@
 
 @theme inline {
   --color-void: var(--bg-void);
+  --color-hero: var(--bg-hero);
   --color-panel: var(--bg-panel);
   --color-elevated: var(--bg-elevated);
   --color-subtle: var(--border-subtle);
   --color-focus: var(--border-focus);
+  --color-brand: var(--brand-orange);
+  --color-amber: var(--brand-amber);
+  --color-label: var(--brand-blue-light);
   --color-primary: var(--text-primary);
   --color-secondary: var(--text-secondary);
   --color-muted: var(--text-muted);
@@ -45,8 +65,8 @@
   --color-warning: var(--risk-warning);
   --color-critical: var(--risk-critical);
 
-  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: 'IBM Plex Sans', -apple-system, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
 @layer base {
@@ -78,18 +98,18 @@
   }
 
   ::selection {
-    background-color: color-mix(in srgb, var(--border-focus) 35%, transparent);
+    background-color: color-mix(in srgb, var(--brand-orange) 35%, transparent);
   }
 }
 
 @layer components {
-  /* Small uppercase telemetry label used for section eyebrows and units. */
+  /* Small uppercase instrument label used for eyebrows, units and panel titles. */
   .label-mono {
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--brand-blue-light);
   }
 }
 

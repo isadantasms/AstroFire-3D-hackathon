@@ -5,20 +5,24 @@ import { LINKS } from './routes'
 
 export function Footer() {
   return (
-    <footer className="border-t border-subtle bg-panel">
+    <footer className="border-t border-subtle bg-hero">
       <div className="mx-auto grid max-w-[1920px] gap-8 px-4 py-8 sm:px-6 md:grid-cols-[1fr_auto]">
         <div className="max-w-3xl space-y-3">
           <div className="flex items-center gap-2">
             <BrandMark size={18} />
-            <span className="font-mono text-xs tracking-[0.14em] text-primary uppercase">
-              [PROJECT_NAME]
+            <span className="text-sm font-semibold text-primary">
+              AstroFire <span className="text-brand">3D</span>
             </span>
           </div>
           <p className="text-sm leading-relaxed text-secondary" data-testid="footer-disclaimer">
             <strong className="font-medium text-primary">For research and education only.</strong>{' '}
-            [PROJECT_NAME] outputs are not certified safety assessments, and suppression guidance is
+            AstroFire 3D outputs are not certified safety assessments, and suppression guidance is
             not an approved operational procedure. The 3D chamber is a parameter-driven
             illustration, not a validated CFD simulation.
+          </p>
+          <p className="font-mono text-xs leading-relaxed text-muted" data-testid="footer-data-source">
+            Data: NASA Physical Sciences Informatics, BASS-II (PSI-25), DOI 10.60555/4qc4-de67,
+            CC0-1.0 · NASA/TM-20210011385.
           </p>
         </div>
 

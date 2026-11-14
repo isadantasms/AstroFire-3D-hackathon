@@ -1,4 +1,4 @@
-// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha, Esquivel & Elias — [PROJECT_NAME]
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha, Esquivel & Elias
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { Tag } from '../../../components/ConsolePanel'
@@ -63,7 +63,7 @@ export function FlameChamberPlaceholder({ params, payload = null, loading, stale
               type="button"
               onClick={() => setViewMode('webgl')}
               className={`px-2 py-0.5 transition-colors ${
-                viewMode === 'webgl' ? 'bg-accent/20 text-accent' : 'text-secondary hover:text-primary'
+                viewMode === 'webgl' ? 'bg-focus/20 text-focus' : 'text-secondary hover:text-primary'
               }`}
             >
               3D WebGL Live
@@ -72,7 +72,7 @@ export function FlameChamberPlaceholder({ params, payload = null, loading, stale
               type="button"
               onClick={() => setViewMode('static')}
               className={`px-2 py-0.5 transition-colors ${
-                viewMode === 'static' ? 'bg-accent/20 text-accent' : 'text-secondary hover:text-primary'
+                viewMode === 'static' ? 'bg-focus/20 text-focus' : 'text-secondary hover:text-primary'
               }`}
             >
               Static placeholder
@@ -82,7 +82,7 @@ export function FlameChamberPlaceholder({ params, payload = null, loading, stale
             href={WEBGL_BASE_URL}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 border border-subtle bg-void px-2 py-0.5 font-mono text-[0.65rem] text-accent hover:border-accent"
+            className="inline-flex items-center gap-1 border border-subtle bg-void px-2 py-0.5 font-mono text-[0.65rem] text-focus hover:border-focus"
             title="Open standalone Unity WebGL simulator initialized by StartWebGL.cmd"
           >
             Standalone (:8080)
@@ -96,7 +96,7 @@ export function FlameChamberPlaceholder({ params, payload = null, loading, stale
           <iframe
             ref={iframeRef}
             src={`${WEBGL_BASE_URL}?embed=1`}
-            title="[PROJECT_NAME] Unity WebGL 3D Fire Simulation"
+            title="AstroFire 3D Unity WebGL fire simulation"
             className={`size-full border-0 transition-opacity ${stale || loading ? 'opacity-60' : 'opacity-100'}`}
             onLoad={() => {
               setWebglReady(true)
