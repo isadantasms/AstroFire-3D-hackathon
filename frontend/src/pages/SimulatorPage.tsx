@@ -80,6 +80,7 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
         <div className="grid min-h-0 min-w-0 grid-cols-1 gap-3 lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
           <FlameChamberPlaceholder
             params={state.result?.simulation_3d ?? null}
+            payload={state.result}
             loading={loading}
             stale={stale}
             mock={mock}

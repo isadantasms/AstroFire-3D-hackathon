@@ -1,43 +1,126 @@
-// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha, Esquivel & Elias — [PROJECT_NAME]
+import { useEffect, useRef, useState } from 'react'
+import { ExternalLink } from 'lucide-react'
 import { Tag } from '../../../components/ConsolePanel'
 import { fmt } from '../../../lib/format'
-import type { Simulation3D } from '../../../types/contract'
+import type { Simulation3D, SimulationResponse } from '../../../types/contract'
 
 export interface FlameChamberProps {
   /** simulation_3d block of the latest result; null before the first run. */
   params: Simulation3D | null
+  /** Full simulation contract payload sent to Esquivel's Unity WebGL controller via ApplyJson. */
+  payload?: SimulationResponse | null
   loading: boolean
   stale: boolean
   mock: boolean
 }
 
+const WEBGL_BASE_URL = import.meta.env.VITE_WEBGL_URL || 'http://127.0.0.1:8080/index.html'
+
 /**
- * STATIC placeholder for the 3D Flame Chamber (Esquivel's module).
- * Integration boundary: the 3D module will receive exactly these props and render
- * from `params` (contract simulation_3d). Nothing here is animated or simulated.
+ * 3D Flame Chamber integrating Esquivel's Unity WebGL module (unity-fire-simulation/WebGlSimulation)
+ * with a fallback Static SVG view. Synchronizes live SimulationContract payloads via postMessage ->
+ * unityInstance.SendMessage('FireSimulation', 'ApplyJson', json).
  */
-export function FlameChamberPlaceholder({ params, loading, stale, mock }: FlameChamberProps) {
+export function FlameChamberPlaceholder({ params, payload = null, loading, stale, mock }: FlameChamberProps) {
+  const [viewMode, setViewMode] = useState<'webgl' | 'static'>('webgl')
+  const [webglReady, setWebglReady] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      if (event.data && event.data.type === 'UNITY_FIRE_SIMULATION_READY') {
+        setWebglReady(true)
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
+  useEffect(() => {
+    if (!payload || !iframeRef.current?.contentWindow) return
+    iframeRef.current.contentWindow.postMessage(
+      {
+        type: 'APPLY_FIRE_PAYLOAD',
+        payload,
+      },
+      '*',
+    )
+  }, [payload, webglReady, viewMode])
+
   return (
     <div className="relative flex h-full min-h-64 flex-col border border-subtle bg-void" data-testid="chamber-placeholder">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle bg-panel px-4 py-2">
-        <h2 className="label-mono">3D flame chamber</h2>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex items-center gap-2">
+          <h2 className="label-mono">3D flame chamber</h2>
+          <Tag tone="focus">Unity WebGL</Tag>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
           {mock && params ? <Tag tone="warning">Mock data</Tag> : null}
           {stale ? <Tag tone="warning">Stale</Tag> : null}
-          <Tag>Static placeholder</Tag>
+          <div className="inline-flex border border-subtle bg-void p-0.5 font-mono text-[0.65rem]">
+            <button
+              type="button"
+              onClick={() => setViewMode('webgl')}
+              className={`px-2 py-0.5 transition-colors ${
+                viewMode === 'webgl' ? 'bg-accent/20 text-accent' : 'text-secondary hover:text-primary'
+              }`}
+            >
+              3D WebGL Live
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('static')}
+              className={`px-2 py-0.5 transition-colors ${
+                viewMode === 'static' ? 'bg-accent/20 text-accent' : 'text-secondary hover:text-primary'
+              }`}
+            >
+              Static placeholder
+            </button>
+          </div>
+          <a
+            href={WEBGL_BASE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 border border-subtle bg-void px-2 py-0.5 font-mono text-[0.65rem] text-accent hover:border-accent"
+            title="Open standalone Unity WebGL simulator initialized by StartWebGL.cmd"
+          >
+            Standalone (:8080)
+            <ExternalLink className="size-2.5" aria-hidden />
+          </a>
         </div>
       </div>
 
       <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-        <ChamberGrid />
-        {params ? <StaticFlame params={params} dimmed={stale || loading} /> : null}
-        {!params && !loading ? (
-          <p className="relative max-w-xs text-center text-sm text-muted">
-            Run a simulation to send flame parameters to the chamber.
-          </p>
-        ) : null}
+        {viewMode === 'webgl' ? (
+          <iframe
+            ref={iframeRef}
+            src={`${WEBGL_BASE_URL}?embed=1`}
+            title="[PROJECT_NAME] Unity WebGL 3D Fire Simulation"
+            className={`size-full border-0 transition-opacity ${stale || loading ? 'opacity-60' : 'opacity-100'}`}
+            onLoad={() => {
+              setWebglReady(true)
+              if (payload && iframeRef.current?.contentWindow) {
+                iframeRef.current.contentWindow.postMessage(
+                  { type: 'APPLY_FIRE_PAYLOAD', payload },
+                  '*',
+                )
+              }
+            }}
+          />
+        ) : (
+          <>
+            <ChamberGrid />
+            {params ? <StaticFlame params={params} dimmed={stale || loading} /> : null}
+            {!params && !loading ? (
+              <p className="relative max-w-xs text-center text-sm text-muted">
+                Run a simulation to send flame parameters to the chamber.
+              </p>
+            ) : null}
+          </>
+        )}
         {loading ? (
-          <p className="absolute bottom-3 left-1/2 -translate-x-1/2 font-mono text-xs text-secondary" role="status">
+          <p className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-void/90 px-2 py-0.5 font-mono text-xs text-secondary" role="status">
             Receiving parameters…
           </p>
         ) : null}
@@ -55,8 +138,8 @@ export function FlameChamberPlaceholder({ params, loading, stale, mock }: FlameC
       </dl>
 
       <p className="border-t border-subtle bg-panel px-4 py-1.5 text-[0.6875rem] text-muted">
-        The interactive 3D chamber module is in development and will render here. This static view is
-        an illustration, not a simulation.
+        Connected to Esquivel&apos;s Unity WebGL 3D Particle System (`FireSimulationController.ApplyJson`). Orbit with
+        mouse drag, zoom with scroll wheel, press F to reset camera, or switch to the static 2D diagram.
       </p>
     </div>
   )
