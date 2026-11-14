@@ -1,0 +1,146 @@
+{
+  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina, Celina & Esquivel — [PROJECT_NAME] | Temporary 3D test payloads outside Git validating strictly against contracts/simulation_schema.json. Grounded on NASA PSI BASS-II (PSI-25, DOI: 10.60555/4qc4-de67, CC0-1.0) and NASA/TM-20210011385 (PSI-10 excluded).",
+  "project": "[PROJECT_NAME]",
+  "schema_ref": "../hackathon-2026-demo/contracts/simulation_schema.json",
+  "scenarios": [
+    {
+      "scenario_id": "scenario_01_iss_quiescent_0g_blue_sphere",
+      "grounding_status": "empirical_bass2",
+      "inputs": {
+        "material_id": "pmma_clear_slab",
+        "material_name": "PMMA (Cast Polymethyl Methacrylate Slab)",
+        "thickness_mm": 5.0,
+        "gravity_g": 0.0,
+        "environment_label": "ISS Microgravity (0.00g Quiescent)",
+        "o2_pct": 21.0,
+        "airflow_cm_s": 0.5
+      },
+      "simulation_3d": {
+        "flame_geometry": "spherical",
+        "burn_rate_mm_s": 0.45,
+        "flame_color_hex": "#3B82F6",
+        "oxygen_factor": 0.62
+      },
+      "telemetry": {
+        "flammability_score": 48,
+        "risk_label": "Moderate Alert",
+        "oxygen_limit_pct": 16.5,
+        "co_ppm": 115.0,
+        "co2_pct": 1.2
+      },
+      "safety_copilot": {
+        "diagnosis": "Quiescent 0g regime (gravity_g = 0.0g, airflow_cm_s < 1.0 cm/s). Buoyancy is absent; oxygen transport occurs strictly via slow molecular diffusion, forming a stationary spherical blue flame ball around the acrylic sample.",
+        "suppression_action": "Keep cabin ventilation OFF to prevent advective oxygen feeding; apply localized fine water mist or inert N2/CO2 flood into the containment glovebox.",
+        "terrestrial_spinoff": "Optical sensor calibration for clean, low-soot blue diffusion flames that evade conventional terrestrial photoelectric smoke detectors.",
+        "scientific_limitations": "Direct empirical regime from NASA PSI BASS-II (PSI-25) microgravity glovebox tests. Valid for quiescent/ultra-low forced flow (< 1.0 cm/s) at 1 atm cabin pressure."
+      },
+      "nasa_citations": [
+        {
+          "id": "PSI-25 (DOI: 10.60555/4qc4-de67)",
+          "title": "Burning and Suppression of Solids - II (BASS-II)",
+          "url": "https://doi.org/10.60555/4qc4-de67",
+          "finding": "Demonstrates spherical, soot-free blue diffusion flame stabilization in microgravity under ultra-low flow conditions."
+        },
+        {
+          "id": "NASA/TM-20210011385",
+          "title": "Burning and Suppression of Solids - II (BASS-II) Summary Report (Olson et al., 2021)",
+          "url": "https://ntrs.nasa.gov/citations/20210011385",
+          "finding": "Documents low-velocity microgravity spread rates and extinction thresholds for solid PMMA samples."
+        }
+      ]
+    },
+    {
+      "scenario_id": "scenario_02_lunar_ventilated_elongated_soot",
+      "grounding_status": "interpolated_from_ntrs",
+      "inputs": {
+        "material_id": "cotton_fiberglass_sibal",
+        "material_name": "Cotton-Fiberglass Blend (Saffire / BASS Fabric)",
+        "thickness_mm": 0.3,
+        "gravity_g": 0.16,
+        "environment_label": "Lunar Habitat (0.16g + Enriched O2 Ventilation)",
+        "o2_pct": 30.0,
+        "airflow_cm_s": 15.0
+      },
+      "simulation_3d": {
+        "flame_geometry": "elongated",
+        "burn_rate_mm_s": 2.15,
+        "flame_color_hex": "#F97316",
+        "oxygen_factor": 0.92
+      },
+      "telemetry": {
+        "flammability_score": 88,
+        "risk_label": "Critical Flashover Risk",
+        "oxygen_limit_pct": 15.2,
+        "co_ppm": 460.0,
+        "co2_pct": 3.8
+      },
+      "safety_copilot": {
+        "diagnosis": "Combined partial-gravity buoyancy (0.16g Lunar) and forced cabin ventilation (15.0 cm/s) at 30% O2 stretch the reaction zone into an elongated, radiative soot-heavy orange plume with accelerated surface spread.",
+        "suppression_action": "IMMEDIATE CABIN HVAC SHUTOFF (< 2 seconds) to eliminate forced convective O2 supply, followed by cabin pressure reduction or targeted water mist suppression.",
+        "terrestrial_spinoff": "High-efficiency HVAC fire-damper automation for aircraft cabins, submarines, and cleanrooms with forced ventilation.",
+        "scientific_limitations": "Bounded physical interpolation combining BASS-II forced-flow empirical curves (NASA/TM-20210011385 Table 7.1 & Table A.6) with Saffire exploration atmosphere bounds (NTRS-20170000230 & NTRS-20260001600) scaled for 0.16g Lunar partial buoyancy."
+      },
+      "nasa_citations": [
+        {
+          "id": "NASA/TM-20210011385",
+          "title": "Burning and Suppression of Solids - II (BASS-II) Summary Report (Olson et al., 2021)",
+          "url": "https://ntrs.nasa.gov/citations/20210011385",
+          "finding": "Table 7.1 & Table A.6: Forced air velocities between 4 and 29 cm/s transition microgravity flames on SIBAL fabric from circular blue domes to elongated luminous plumes with higher spread rates."
+        },
+        {
+          "id": "NTRS-20170000230",
+          "title": "Operation and Development Status of the Spacecraft Fire Experiments (Saffire)",
+          "url": "https://ntrs.nasa.gov/citations/20170000230",
+          "finding": "Evaluates SIBAL cotton-fiberglass and PMMA flame spread under spacecraft cabin ventilation and exploration atmospheres relevant to Lunar and Martian habitats."
+        }
+      ]
+    },
+    {
+      "scenario_id": "scenario_03_hypoxia_extinguished_below_loi",
+      "grounding_status": "empirical_bass2",
+      "inputs": {
+        "material_id": "nomex_ht90_40",
+        "material_name": "Nomex HT90-40 (Flame-Retardant Spacecraft Fabric)",
+        "thickness_mm": 0.5,
+        "gravity_g": 0.0,
+        "environment_label": "ISS Microgravity (0.00g Hypoxic Quench)",
+        "o2_pct": 13.5,
+        "airflow_cm_s": 2.0
+      },
+      "simulation_3d": {
+        "flame_geometry": "spherical",
+        "burn_rate_mm_s": 0.0,
+        "flame_color_hex": "#3B82F6",
+        "oxygen_factor": 0.0
+      },
+      "telemetry": {
+        "flammability_score": 8,
+        "risk_label": "Safe (Extinguished Below LOI)",
+        "oxygen_limit_pct": 17.5,
+        "co_ppm": 12.0,
+        "co2_pct": 0.1
+      },
+      "safety_copilot": {
+        "diagnosis": "Ambient oxygen concentration (13.5% O2) is strictly below the material's Limiting Oxygen Index / Minimum Oxygen Concentration (LOI/MOC = 17.5% O2). Heat losses exceed chemical heat release, quenching the reaction.",
+        "suppression_action": "No active extinguishant required; maintain hypoxic atmosphere below 17.5% O2 and vent residual pyrolysis smoke through HEPA/charcoal filtration.",
+        "terrestrial_spinoff": "Hypoxic fire-prevention systems (normobaric nitrogen-enriched atmospheres) for server data centers and archival vaults.",
+        "scientific_limitations": "Empirical extinction boundary grounded in NASA BASS-II Limiting Oxygen Index (LOI) determinations (NASA/TM-20210011385). Re-ignition remains possible if cabin O2 is restored while the sample core exceeds pyrolysis temperature."
+      },
+      "nasa_citations": [
+        {
+          "id": "PSI-25 (DOI: 10.60555/4qc4-de67)",
+          "title": "Burning and Suppression of Solids - II (BASS-II)",
+          "url": "https://doi.org/10.60555/4qc4-de67",
+          "finding": "Establishes extinction limits as oxygen concentration and opposed airflow velocity are systematically stepped down until flame quench."
+        },
+        {
+          "id": "NASA/TM-20210011385",
+          "title": "Burning and Suppression of Solids - II (BASS-II) Summary Report (Olson et al., 2021)",
+          "url": "https://ntrs.nasa.gov/citations/20210011385",
+          "finding": "Defines the Minimum Oxygen Concentration (MOC / LOI) curve below which solid fuel samples self-extinguish in microgravity."
+        }
+      ]
+    }
+  ]
+}
+
