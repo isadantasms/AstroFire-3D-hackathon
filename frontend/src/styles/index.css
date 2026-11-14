@@ -1,0 +1,104 @@
+/* SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha */
+/* Design tokens mirror DESIGN.md section 1 and 2 exactly (names and values). */
+@import 'tailwindcss';
+
+:root {
+  /* Surfaces */
+  --bg-void: #070b12;
+  --bg-panel: #0d131f;
+  --bg-elevated: #131c2e;
+  /* Structure */
+  --border-subtle: #1e293b;
+  --border-focus: #38bdf8;
+  /* Text */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  /* Semantic physical & risk */
+  --flame-0g-blue: #3b82f6;
+  --flame-soot-amber: #f97316;
+  --risk-nominal: #10b981;
+  --risk-warning: #f59e0b;
+  --risk-critical: #ef4444;
+
+  /* Layout tokens from DESIGN.md section 3 (console column bounds) */
+  --console-left-min: 280px;
+  --console-left-max: 320px;
+  --console-right-min: 360px;
+  --console-right-max: 400px;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-void: var(--bg-void);
+  --color-panel: var(--bg-panel);
+  --color-elevated: var(--bg-elevated);
+  --color-subtle: var(--border-subtle);
+  --color-focus: var(--border-focus);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-flame-blue: var(--flame-0g-blue);
+  --color-flame-amber: var(--flame-soot-amber);
+  --color-nominal: var(--risk-nominal);
+  --color-warning: var(--risk-warning);
+  --color-critical: var(--risk-critical);
+
+  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+@layer base {
+  html {
+    background-color: var(--bg-void);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Mandatory numeric rule (DESIGN.md section 2): readouts never jitter. */
+  .font-mono,
+  .tabular-nums,
+  data,
+  output {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--border-focus) 35%, transparent);
+  }
+}
+
+@layer components {
+  /* Small uppercase telemetry label used for section eyebrows and units. */
+  .label-mono {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
