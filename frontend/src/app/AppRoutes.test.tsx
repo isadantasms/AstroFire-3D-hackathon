@@ -15,7 +15,7 @@ function renderAt(path: string) {
 }
 
 describe('site structure', () => {
-  it('renders the four primary navigation routes', () => {
+  it('renders the three primary navigation routes', () => {
     renderAt('/')
     const nav = screen.getByRole('navigation', { name: 'Primary' })
     const links = within(nav).getAllByRole('link')
@@ -23,13 +23,11 @@ describe('site structure', () => {
       'Home',
       'Simulator',
       'Research & Data',
-      'About & SI Usage',
     ])
     expect(links.map((l) => l.getAttribute('href'))).toEqual([
       '/',
       '/simulator',
       '/research',
-      '/about',
     ])
   })
 
@@ -43,8 +41,8 @@ describe('site structure', () => {
     const footerNav = screen.getByRole('navigation', { name: 'Footer' })
     expect(within(footerNav).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
       ['Research & Data', '/research'],
-      ['SI Usage', '/about#si-usage'],
-      ['Credits', '/about#credits'],
+      ['SI Usage', '/#si-usage'],
+      ['Credits', '/research#credits'],
     ])
     for (const removed of [
       /For research and education only/,
@@ -67,7 +65,7 @@ describe('site structure', () => {
     ).toBeInTheDocument()
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
     expect(within(hero).getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
-    expect(within(hero).getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/about')
+    expect(within(hero).getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/research')
     expect(within(hero).getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute('href', '#')
     expect(within(hero).queryByText(/Not a certified safety assessment/)).toBeNull()
   })
@@ -107,7 +105,7 @@ describe('site structure', () => {
 
     const closing = within(screen.getByRole('heading', { level: 2, name: 'Ready to test a scenario?' }).closest('section')!)
     expect(closing.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
-    expect(closing.getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/about')
+    expect(closing.getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/research')
 
     // Old sections are gone.
     for (const old of ['The science', 'How it works', 'What makes AstroFire different', 'Back on Earth']) {
@@ -146,50 +144,52 @@ describe('site structure', () => {
     expect(within(hero).queryByText(/NASA/)).toBeNull()
   })
 
-  it('sources, licenses and SI usage stay on Research & Data and About after the footer cut', async () => {
-    renderAt('/research')
-    expect(await screen.findByText('BASS-II (PSI-25, DOI: 10.60555/4qc4-de67)')).toBeInTheDocument()
-    cleanup()
-    const { container } = renderAt('/about')
-    await screen.findByRole('heading', { level: 1, name: 'About AstroFire 3D' }, { timeout: 5000 })
-    expect(container.querySelector('#si-usage')).not.toBeNull()
-    expect(container.querySelector('#credits')).toHaveTextContent('CC0-1.0')
-  })
+  it('the About page is gone: SI usage and team close the Home, before the final call to action', () => {
+    renderAt('/')
+    expect(screen.queryByRole('link', { name: 'About & SI Usage' })).toBeNull()
+    const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+    expect(h2s).toEqual(['How AstroFire 3D helps', 'How we use SI', '21 Pyro Rangers', 'Ready to test a scenario?'])
 
-  it('About page: short product sections in order, no removed technical content', async () => {
-    const { container } = renderAt('/about')
-    await screen.findByRole('heading', { level: 1, name: 'About AstroFire 3D' }, { timeout: 5000 })
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
-      'How it works',
-      'How we use SI',
-      'Data & credits',
-      'Team',
-    ])
-    expect(screen.queryByRole('heading', { name: 'Limitations' })).toBeNull()
-    expect(screen.getByRole('link', { name: /Open the Simulator/ })).toHaveAttribute('href', '/simulator')
-    for (const block of ['Data.', 'Engine.', 'Console.']) expect(screen.getByText(block)).toBeInTheDocument()
-    const tools = screen.getByTestId('dev-tools')
+    const si = within(document.getElementById('si-usage')!)
+    for (const name of ['In the product', 'In development', 'Human review']) {
+      expect(si.getByRole('heading', { level: 3, name })).toBeInTheDocument()
+    }
+    expect(si.getByText(/labeled as SI-generated in the results/)).toBeInTheDocument()
+    const tools = si.getByTestId('dev-tools')
     expect(tools).toHaveTextContent('Claude: code, interface design and website copy')
     expect(tools).toHaveTextContent('Gemini: code assistance and test data generation')
     expect(tools).toHaveTextContent('[VOICE TOOL]: narration of the demo video')
-    expect(container.querySelector('#team')).toHaveTextContent('21 Pyro Rangers · Uberlândia, Brazil · NASA Space Apps Challenge 2026')
-    for (const role of ['Data & physics engine', 'Backend & API', 'Data analysis & model accuracy', 'Science & SI validation', '3D flame chamber', 'Front-end & product']) {
-      expect(container.querySelector('#team')).toHaveTextContent(`· ${role}`)
-    }
 
+    const team = document.getElementById('team')!
+    expect(team).toHaveTextContent('Uberlândia, Brazil · NASA Space Apps Challenge 2026')
+    for (const [name, role] of [
+      ['Elias', 'Data & physics engine'],
+      ['Pina', 'Backend & API'],
+      ['Dantas', 'Data analysis & model accuracy'],
+      ['Celina', 'Science & SI validation'],
+      ['Esquivel', '3D flame chamber'],
+      ['Rocha', 'Front-end & product'],
+    ]) {
+      expect(within(team).getByText(name).nextElementSibling).toHaveTextContent(role)
+    }
+    expect(document.body.textContent).not.toMatch(/\bzero\b|100%|guaranteed/i)
+  })
+
+  it('/about redirects to the SI usage section of the Home', async () => {
+    renderAt('/about')
+    expect(await screen.findByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
+  })
+
+  it('Data & credits now live at the end of Research & Data', async () => {
+    const { container } = renderAt('/research')
+    expect(await screen.findByText('BASS-II (PSI-25, DOI: 10.60555/4qc4-de67)')).toBeInTheDocument()
     const credits = within(container.querySelector('#credits') as HTMLElement)
+    expect(credits.getByRole('heading', { level: 2, name: 'Data & credits' })).toBeInTheDocument()
     expect(credits.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['NASA data', 'Software & assets'])
-    expect(credits.getByRole('link', { name: /BASS-II \(PSI-25\)/ })).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
+    expect(credits.getByText('BASS-II (PSI-25): Burning and Suppression of Solids - II')).toBeInTheDocument()
     expect(credits.getByText(/IBM Plex Sans & IBM Plex Mono/)).toBeInTheDocument()
     expect(credits.getByText('Voxel rocket 3D model (MagicaVoxel)')).toBeInTheDocument()
-    expect(credits.queryByText(/Inter & JetBrains Mono/)).toBeNull()
     expect(credits.queryByText(/UFSC|VSB-30/)).toBeNull()
-
-    for (const removed of [/Zero-Hallucination/, /PINN/, /94\.94/, /Single Source of Truth/i, /Lead Architect/]) {
-      expect(screen.queryByText(removed)).toBeNull()
-    }
-    // No absolute wording on the page.
-    expect(container.textContent).not.toMatch(/\bzero\b|100%|guaranteed/i)
   })
 
   it('the Fig. 01 flame figure moved from the Home to Research & Data', async () => {
@@ -210,7 +210,6 @@ describe('site structure', () => {
   it.each([
     ['/simulator', 'Simulator'],
     ['/research', 'Research & Data'],
-    ['/about', 'About AstroFire 3D'],
     ['/does-not-exist', 'Page not found'],
   ])('route %s renders its page title', async (path, title) => {
     renderAt(path)

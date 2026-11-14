@@ -6,8 +6,8 @@ import { LINKS } from './routes'
 const LINK = 'transition-colors hover:text-primary'
 
 /**
- * One discreet line. Sources and licenses live in Research & Data and Credits,
- * SI usage in About & SI Usage, and research disclaimers next to the content they qualify.
+ * One discreet line. Sources, licenses and credits live in Research & Data,
+ * SI usage and the team on the Home, and research disclaimers next to the content they qualify.
  */
 export function Footer() {
   return (

@@ -8,6 +8,7 @@ import { PlanetHorizon } from '../components/home/PlanetHorizon'
 import { useReveal } from '../components/home/useReveal'
 import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences'
 import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
+import { DEV_TOOLS, TEAM } from '../content/project'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
@@ -31,6 +32,8 @@ export function HomePage() {
       <SkyLayer />
       <Hero />
       <HelpsSection />
+      <SiUsageSection />
+      <TeamSection />
       <ClosingSection />
     </div>
   )
@@ -39,7 +42,7 @@ export function HomePage() {
 function DocumentationButton() {
   const className =
     'inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label'
-  // Same file as "Read the technical documentation (PDF)" on the About page; falls back to About.
+  // Technical documentation PDF once published; until then, Research & Data.
   if (TECHNICAL_DOCS_PDF_URL) {
     return (
       <a href={TECHNICAL_DOCS_PDF_URL} target="_blank" rel="noreferrer" className={className}>
@@ -48,7 +51,7 @@ function DocumentationButton() {
     )
   }
   return (
-    <Link to={LINKS.about} className={className}>
+    <Link to={LINKS.research} className={className}>
       Documentation
     </Link>
   )
@@ -268,6 +271,81 @@ function HelpsSection() {
             ))}
           </ol>
         </div>
+      </div>
+    </section>
+  )
+}
+
+const SI_BLOCKS = [
+  {
+    name: 'In the product',
+    text: 'SI interprets the experimental data for each scenario and writes the diagnosis and suppression guidance. These texts are labeled as SI-generated in the results and in the PDF report, and always come with their sources.',
+  },
+  { name: 'In development', tools: DEV_TOOLS },
+  {
+    name: 'Human review',
+    text: 'The team reviewed every SI-assisted file, checked all references against their original sources and validated the results before publishing.',
+  },
+] as const
+
+/** How SI is used (NASA Space Apps disclosure); the footer "SI Usage" link lands here. */
+function SiUsageSection() {
+  return (
+    <section id="si-usage" className="relative scroll-mt-16" aria-labelledby="si-usage-title">
+      <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
+        <SectionHeader id="si-usage" label="SI usage" title="How we use SI" />
+        <div data-reveal style={stagger(2)} className={`reveal mt-12 p-6 sm:p-8 lg:p-10 ${PANEL}`}>
+          <div className="grid gap-8 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-subtle">
+            {SI_BLOCKS.map((block, i) => (
+              <div key={block.name} data-reveal style={stagger(3 + i)} className="reveal lg:px-8 lg:first:pl-0 lg:last:pr-0">
+                <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">{block.name}</h3>
+                {'tools' in block ? (
+                  <ul className="mt-4 space-y-3" data-testid="dev-tools">
+                    {block.tools.map((t) => (
+                      <li key={t.tool} className="flex gap-3 text-sm leading-relaxed text-secondary">
+                        <span className="shrink-0 text-[#F28C28]" aria-hidden="true">
+                          —
+                        </span>
+                        <span>
+                          <span className="font-medium text-primary">{t.tool}:</span> {t.use}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-sm leading-relaxed text-secondary">{block.text}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function TeamSection() {
+  return (
+    <section id="team" className="relative scroll-mt-16" aria-labelledby="team-title">
+      <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
+        <SectionHeader id="team" label="Team" title="21 Pyro Rangers" />
+        <p data-reveal style={stagger(1)} className="reveal mt-3 text-center text-sm text-secondary">
+          Uberlândia, Brazil · NASA Space Apps Challenge 2026
+        </p>
+        <ul data-reveal style={stagger(2)} className={`reveal mt-10 grid grid-cols-2 gap-x-4 gap-y-8 p-6 sm:grid-cols-3 sm:p-8 lg:grid-cols-6 lg:p-10 ${PANEL}`}>
+          {TEAM.map((m) => (
+            <li key={m.name} className="flex flex-col items-center text-center">
+              <span
+                aria-hidden="true"
+                className="inline-flex size-14 items-center justify-center rounded-full border border-[#1F2C47] bg-[#0F1728] font-mono text-lg font-semibold text-[#F28C28]"
+              >
+                {m.name[0]}
+              </span>
+              <span className="mt-3 text-sm font-medium text-primary">{m.name}</span>
+              <span className="mt-0.5 text-xs leading-snug text-muted">{m.role}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )

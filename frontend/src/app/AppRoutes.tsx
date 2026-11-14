@@ -1,10 +1,9 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { lazy, Suspense } from 'react'
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import { Layout } from './Layout'
 import { HomePage } from '../pages/HomePage'
 import { ResearchPage } from '../pages/ResearchPage'
-import { AboutPage } from '../pages/AboutPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 
 // The simulator bundles the contract validator and BASS-II records; load it on demand.
@@ -34,7 +33,8 @@ export function AppRoutes() {
           }
         />
         <Route path="research" element={<ResearchPage />} />
-        <Route path="about" element={<AboutPage />} />
+        {/* The About page was merged into the Home (SI usage, team) and Research & Data (credits). */}
+        <Route path="about" element={<Navigate to="/#si-usage" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
