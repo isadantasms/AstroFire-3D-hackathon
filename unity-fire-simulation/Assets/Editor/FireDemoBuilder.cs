@@ -66,5 +66,65 @@ namespace FireSimulation.Editor
         {
             if (!condition) throw new System.Exception(message);
         }
+
+        [MenuItem("Fire Simulation/Validate destination mapping")]
+        public static void ValidateDestinations()
+        {
+            Require(LaboratoryEnvironment.FromGravity(0) == LaboratoryEnvironment.Destination.ISS, "ISS mapping");
+            Require(LaboratoryEnvironment.FromGravity(.16f) == LaboratoryEnvironment.Destination.Moon, "Moon mapping");
+            Require(LaboratoryEnvironment.FromGravity(.38f) == LaboratoryEnvironment.Destination.Mars, "Mars mapping");
+            Require(LaboratoryEnvironment.FromGravity(1) == LaboratoryEnvironment.Destination.Earth, "Earth mapping");
+            Debug.Log("All four destination gravity presets mapped correctly.");
+        }
+
+        [MenuItem("Fire Simulation/Validate cabin camera bounds")]
+        public static void ValidateCabinCamera()
+        {
+            var minimum = new Vector3(-3.1f, .05f, -5.05f);
+            var maximum = new Vector3(3.1f, 3.15f, 2.4f);
+            foreach (var requestedFocus in new[] { new Vector3(0, .65f, 0), new Vector3(100, -100, 100), new Vector3(-100, 100, -100) })
+            {
+                var focus = FireOrbitCamera.ClampFocus(requestedFocus, minimum, maximum);
+                for (int yaw = 0; yaw < 360; yaw += 5)
+                    for (int pitch = -15; pitch <= 85; pitch += 5)
+                    {
+                        Vector3 direction = Quaternion.Euler(pitch, yaw, 0) * Vector3.back;
+                        float distance = FireOrbitCamera.LimitDistance(focus, direction, 12, minimum, maximum);
+                        Vector3 camera = focus + direction * distance;
+                        for (int axis = 0; axis < 3; axis++)
+                            Require(camera[axis] >= minimum[axis] - .0001f && camera[axis] <= maximum[axis] + .0001f,
+                                "Camera escaped cabin bounds.");
+                        Require(distance >= 0 && distance <= 12, "Invalid camera distance.");
+                    }
+            }
+            Debug.Log("Cabin camera checks passed: full orbit, pitch range, extreme pan and maximum zoom-out.");
+        }
+
+        [MenuItem("Fire Simulation/Validate material specimens")]
+        public static void ValidateMaterials()
+        {
+            Require(MaterialSampleView.MaterialIds.Length == 7, "Expected seven materials.");
+            for (int i = 0; i < MaterialSampleView.MaterialIds.Length; i++)
+                Require(MaterialSampleView.MaterialIndex(MaterialSampleView.MaterialIds[i]) == i, "Material ID mapping failed.");
+            Require(MaterialSampleView.MaterialIndex(" japan_wax_candle ") == 6, "Material whitespace normalization failed.");
+            Require(MaterialSampleView.MaterialIndex("nomex_ht90_40") == 5, "Legacy Nomex alias failed.");
+            Require(MaterialSampleView.MaterialIndex("unknown_material") == -1, "Unknown material fallback failed.");
+            var view = Object.FindFirstObjectByType<MaterialSampleView>();
+            if (view == null || view.fire?.payload?.inputs == null) throw new System.Exception("Open SampleScene first.");
+            var inputs = view.fire.payload.inputs;
+            string previousId = inputs.material_id, previousName = inputs.material_name;
+            try
+            {
+                for (int i = 0; i < 7; i++)
+                {
+                    view.SelectMaterial(i);
+                    Require(view.FlameOrigin.y > view.sampleBaseHeight, "Flame origin below specimen.");
+                    Require(view.EmitterSize.x > 0 && view.EmitterSize.y > 0 && view.EmitterSize.z > 0, "Invalid emitter dimensions.");
+                    Require(view.IsCandle == (i == 6), "Candle wick profile mismatch.");
+                }
+            }
+            finally { inputs.material_id = previousId; inputs.material_name = previousName; view.Refresh(); }
+            Debug.Log("Seven specimen mappings, geometry creation and flame anchors validated.");
+        }
     }
 }
