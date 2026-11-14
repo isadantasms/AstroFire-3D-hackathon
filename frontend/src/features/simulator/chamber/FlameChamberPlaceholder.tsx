@@ -1,10 +1,10 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha, Esquivel & Elias
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { CircleDashed, CircleOff, Droplets, ExternalLink, Flame } from 'lucide-react'
 import { Tooltip } from '../../../components/Tooltip'
 import { fmt } from '../../../lib/format'
 import type { Simulation3D, SimulationResponse } from '../../../types/contract'
-import { chamberDevControlsEnabled, defaultChamberView } from './devMode'
+import { chamberDevControlsEnabled, defaultChamberView, UNITY_READY_TIMEOUT_MS } from './devMode'
 import type { ChamberPhase, ChamberRenderInput, ChamberStateMessage } from './types'
 
 export interface FlameChamberProps extends ChamberRenderInput {
@@ -28,7 +28,7 @@ const WEBGL_BASE_URL = import.meta.env.VITE_WEBGL_URL || 'http://127.0.0.1:8080/
 export const BELOW_OXYGEN_LIMIT = 'Extinguished below oxygen limit'
 
 /**
- * 3D Flame Chamber host. Renders a static view by default; the Unity WebGL view
+ * 3D Flame Chamber host. Shows the Unity WebGL view by default (static view as fallback); the Unity view
  * (unity-fire-simulation/WebGlSimulation) receives the contract payload (APPLY_FIRE_PAYLOAD)
  * and the chamber state (APPLY_CHAMBER_STATE) via postMessage.
  * No suppression (mist) effect is drawn here; that belongs to the 3D module.
@@ -47,24 +47,18 @@ export function FlameChamberPlaceholder({
   devControls = chamberDevControlsEnabled(),
 }: FlameChamberProps) {
   const [viewMode, setViewMode] = useState<'webgl' | 'static'>(defaultChamberView)
-  const [webglReady, setWebglReady] = useState(false)
+  const { unity, retry } = useUnityStatus(viewMode)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  const showIframe = viewMode === 'webgl' && (unity === 'loading' || unity === 'ready')
 
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (event.data && event.data.type === 'UNITY_FIRE_SIMULATION_READY') setWebglReady(true)
-    }
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [])
-
+  // Re-sent when Unity reports ready, so the first payload is never lost while it loads.
   useEffect(() => {
     const target = iframeRef.current?.contentWindow
-    if (!target) return
+    if (!target || unity !== 'ready') return
     if (payload) target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload }, '*')
     const message: ChamberStateMessage = { type: 'APPLY_CHAMBER_STATE', phase, flame, suppression }
     target.postMessage(message, '*')
-  }, [payload, phase, flame, suppression, webglReady, viewMode])
+  }, [payload, phase, flame, suppression, unity])
 
   const remainingS = useDischargeCountdown(phase, dischargeStartedAt, suppression?.discharge_seconds ?? null)
   const inputs = payload?.inputs
@@ -90,14 +84,19 @@ export function FlameChamberPlaceholder({
         </div>
 
         <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-          {viewMode === 'webgl' ? (
-            <iframe
-              ref={iframeRef}
-              src={`${WEBGL_BASE_URL}?embed=1`}
-              title="AstroFire 3D Unity WebGL fire simulation"
-              className={`size-full border-0 transition-opacity ${stale || loading ? 'opacity-60' : 'opacity-100'}`}
-              onLoad={() => setWebglReady(true)}
-            />
+          {showIframe ? (
+            <>
+              {/* No allow-modals: a failing Unity build cannot open alert() dialogs over the app. */}
+              <iframe
+                ref={iframeRef}
+                src={`${WEBGL_BASE_URL}?embed=1`}
+                title="AstroFire 3D Unity WebGL fire simulation"
+                sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups"
+                allow="fullscreen"
+                className={`size-full border-0 transition-opacity ${stale || loading ? 'opacity-60' : 'opacity-100'}`}
+              />
+              {unity === 'loading' ? <ChamberNotice>Loading the 3D view…</ChamberNotice> : null}
+            </>
           ) : (
             <>
               <ChamberGrid />
@@ -106,6 +105,15 @@ export function FlameChamberPlaceholder({
                 <p className="relative max-w-xs text-center text-sm text-muted">
                   Pick a scenario and run the simulation to light the chamber.
                 </p>
+              ) : null}
+              {viewMode === 'webgl' && unity === 'checking' ? <ChamberNotice>Connecting to the 3D view…</ChamberNotice> : null}
+              {viewMode === 'webgl' && unity === 'unavailable' ? (
+                <ChamberNotice testId="unity-unavailable">
+                  3D view unavailable: the Unity WebGL build is not responding. Showing the static view.
+                  <button type="button" onClick={retry} className="ml-2 text-focus hover:underline">
+                    Retry
+                  </button>
+                </ChamberNotice>
               ) : null}
             </>
           )}
@@ -137,6 +145,55 @@ export function FlameChamberPlaceholder({
       </p>
       <p className="px-1 text-center text-[0.6875rem] text-muted">Research visualization, not a validated simulation.</p>
     </section>
+  )
+}
+
+type UnityStatus = 'checking' | 'loading' | 'ready' | 'unavailable'
+
+/**
+ * Unity WebGL availability: probe the local server, then wait for UNITY_FIRE_SIMULATION_READY.
+ * Falls back to 'unavailable' when the server is down or Unity never reports ready.
+ */
+function useUnityStatus(viewMode: 'webgl' | 'static') {
+  const [attempt, setAttempt] = useState(0)
+  const [probe, setProbe] = useState<{ attempt: number; status: UnityStatus } | null>(null)
+  const unity: UnityStatus = probe?.attempt === attempt ? probe.status : 'checking'
+
+  useEffect(() => {
+    if (viewMode !== 'webgl') return
+    let done = false
+    const set = (status: UnityStatus) => {
+      if (done) return
+      setProbe((p) => (p?.attempt === attempt && p.status === 'ready' ? p : { attempt, status }))
+      if (status === 'ready' || status === 'unavailable') done = true
+    }
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'UNITY_FIRE_SIMULATION_READY') set('ready')
+    }
+    window.addEventListener('message', onMessage)
+    fetch(WEBGL_BASE_URL, { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(3000) })
+      .then(() => set('loading'))
+      .catch(() => set('unavailable'))
+    const timer = setTimeout(() => set('unavailable'), UNITY_READY_TIMEOUT_MS)
+    return () => {
+      done = true
+      clearTimeout(timer)
+      window.removeEventListener('message', onMessage)
+    }
+  }, [viewMode, attempt])
+
+  return { unity, retry: () => setAttempt((n) => n + 1) }
+}
+
+function ChamberNotice({ children, testId }: { children: ReactNode; testId?: string }) {
+  return (
+    <p
+      role="status"
+      data-testid={testId}
+      className="absolute top-3 left-1/2 max-w-[90%] -translate-x-1/2 rounded-full border border-subtle bg-void/90 px-3 py-1 text-center text-xs text-secondary"
+    >
+      {children}
+    </p>
   )
 }
 

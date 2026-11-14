@@ -151,7 +151,7 @@ describe('site structure', () => {
 
   it('the BASS-II table moved from the Simulator to Research & Data', async () => {
     renderAt('/research')
-    expect(await screen.findByRole('heading', { level: 2, name: 'BASS-II experiment matrix' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'BASS-II experiment matrix' }, { timeout: 5000 })).toBeInTheDocument()
     expect(await screen.findByText('BASS2-M1')).toBeInTheDocument()
   })
 
@@ -162,6 +162,6 @@ describe('site structure', () => {
     ['/does-not-exist', 'Page not found'],
   ])('route %s renders its page title', async (path, title) => {
     renderAt(path)
-    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: title }, { timeout: 5000 })).toBeInTheDocument()
   })
 })

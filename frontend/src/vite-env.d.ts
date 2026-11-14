@@ -10,7 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_WEBGL_URL?: string
   /** "true" shows the chamber developer controls (also enabled with ?dev in the URL). */
   readonly VITE_CHAMBER_DEV_CONTROLS?: string
-  /** "webgl" makes the Unity WebGL view the default chamber view (default: static). */
+  /** "static" forces the static chamber view (default: Unity WebGL, with static fallback). */
   readonly VITE_CHAMBER_VIEW?: string
 }
 
