@@ -159,29 +159,27 @@ describe('site structure', () => {
   it('About page: short product sections in order, no removed technical content', async () => {
     const { container } = renderAt('/about')
     await screen.findByRole('heading', { level: 1, name: 'About AstroFire 3D' }, { timeout: 5000 })
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.replace(/^\d+/, ''))).toEqual([
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'How it works',
       'How we use SI',
       'Data & credits',
       'Team',
     ])
     expect(screen.queryByRole('heading', { name: 'Limitations' })).toBeNull()
-    expect(screen.getByRole('navigation', { name: 'On this page' })).toBeInTheDocument()
-    expect(screen.getByText('Figure 1.')).toBeInTheDocument()
-    expect(screen.getByText('Table 1.')).toBeInTheDocument()
-    for (const block of ['Data', 'Engine', 'Console']) {
-      expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent?.replace(/^\d+/, '') === block)).toBeInTheDocument()
-    }
-    expect(screen.getByRole('cell', { name: 'Claude' }).nextElementSibling).toHaveTextContent('code, interface design and website copy')
-    expect(screen.getByRole('cell', { name: 'Gemini' }).nextElementSibling).toHaveTextContent('code assistance and test data generation')
-    expect(screen.getByRole('cell', { name: '[VOICE TOOL]' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Open the Simulator/ })).toHaveAttribute('href', '/simulator')
+    for (const block of ['Data.', 'Engine.', 'Console.']) expect(screen.getByText(block)).toBeInTheDocument()
+    const tools = screen.getByTestId('dev-tools')
+    expect(tools).toHaveTextContent('Claude: code, interface design and website copy')
+    expect(tools).toHaveTextContent('Gemini: code assistance and test data generation')
+    expect(tools).toHaveTextContent('[VOICE TOOL]: narration of the demo video')
     expect(container.querySelector('#team')).toHaveTextContent('21 Pyro Rangers · Uberlândia, Brazil · NASA Space Apps Challenge 2026')
     for (const role of ['Data & physics engine', 'Backend & API', 'Data analysis & model accuracy', 'Science & SI validation', '3D flame chamber', 'Front-end & product']) {
-      expect(screen.getByText(role)).toBeInTheDocument()
+      expect(container.querySelector('#team')).toHaveTextContent(`· ${role}`)
     }
 
     const credits = within(container.querySelector('#credits') as HTMLElement)
-    expect(credits.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Resource', 'Type', 'License', 'Source'])
+    expect(credits.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['NASA data', 'Software & assets'])
+    expect(credits.getByRole('link', { name: /BASS-II \(PSI-25\)/ })).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
     expect(credits.getByText(/IBM Plex Sans & IBM Plex Mono/)).toBeInTheDocument()
     expect(credits.getByText('Voxel rocket 3D model (MagicaVoxel)')).toBeInTheDocument()
     expect(credits.queryByText(/Inter & JetBrains Mono/)).toBeNull()
