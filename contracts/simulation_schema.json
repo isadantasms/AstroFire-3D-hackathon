@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spaceapps2026.org/contracts/simulation_schema.json",
+  "title": "MicrogravitySimulationContract",
+  "description": "Unified 80/20 JSON contract connecting FastAPI, the Three.js Microgravity Simulator, and the 3-Column Telemetry Console with explicit scientific grounding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_id",
+    "grounding_status",
+    "inputs",
+    "simulation_3d",
+    "telemetry",
+    "safety_copilot",
+    "nasa_citations"
+  ],
+  "properties": {
+    "scenario_id": {
+      "type": "string",
+      "description": "Unique identifier for the simulation scenario or empirical test."
+    },
+    "grounding_status": {
+      "type": "string",
+      "enum": ["empirical_bass2", "interpolated_from_ntrs", "theoretical_extrapolation_to_verify"],
+      "description": "Explicitly distinguishes direct NASA PSI empirical measurements from bounded model interpolations."
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["material_id", "material_name", "thickness_mm", "gravity_g", "environment_label", "o2_pct", "airflow_cm_s"],
+      "properties": {
+        "material_id": { "type": "string" },
+        "material_name": { "type": "string" },
+        "thickness_mm": { "type": "number", "minimum": 0.01, "maximum": 50.0 },
+        "gravity_g": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "environment_label": { "type": "string" },
+        "o2_pct": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
+        "airflow_cm_s": { "type": "number", "minimum": 0.0, "maximum": 100.0 }
+      }
+    },
+    "simulation_3d": {
+      "type": "object",
+      "description": "The 4 core visual parameters consumed by the 3D Particle System.",
+      "additionalProperties": false,
+      "required": ["flame_geometry", "burn_rate_mm_s", "flame_color_hex", "oxygen_factor"],
+      "properties": {
+        "flame_geometry": {
+          "type": "string",
+          "enum": ["spherical", "elongated"]
+        },
+        "burn_rate_mm_s": { "type": "number", "minimum": 0.0 },
+        "flame_color_hex": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "oxygen_factor": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["flammability_score", "risk_label", "oxygen_limit_pct", "co_ppm", "co2_pct"],
+      "properties": {
+        "flammability_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "risk_label": {
+          "type": "string",
+          "enum": ["Safe (Extinguished Below LOI)", "Moderate Alert", "High Risk", "Critical Flashover Risk"]
+        },
+        "oxygen_limit_pct": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
+        "co_ppm": { "type": "number", "minimum": 0.0 },
+        "co2_pct": { "type": "number", "minimum": 0.0 }
+      }
+    },
+    "safety_copilot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diagnosis", "suppression_action", "terrestrial_spinoff", "scientific_limitations"],
+      "properties": {
+        "diagnosis": { "type": "string" },
+        "suppression_action": { "type": "string" },
+        "terrestrial_spinoff": { "type": "string" },
+        "scientific_limitations": {
+          "type": "string",
+          "description": "Explicit note on boundary conditions or assumptions to prevent scientific overclaiming."
+        }
+      }
+    },
+    "nasa_citations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "url", "finding"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "finding": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+# =====================================================================
+# NASA SPACE APPS CHALLENGE 2026 — [PROJECT_NAME] GIT IGNORE
+# =====================================================================
+
+# CRITICAL: Local Study Dossiers & Separated Pre-Hackathon Materials (NEVER COMMIT)
+arquivos a separar/
+"arquivos a separar"/
+arquivos\ a\ separar/
+*/arquivos a separar/*
+NASA SPACE APPS - 2026/
+"NASA SPACE APPS - 2026"/
+NASA\ SPACE\ APPS\ -\ 2026/
+*/NASA SPACE APPS - 2026/*
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+
+# Node / Frontend / Three.js
+node_modules/
+.vite/
+coverage/
+*.log
+
+# Playwright & Visual Evidence Temp
+test-results/
+playwright-report/
+playwright/.cache/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
