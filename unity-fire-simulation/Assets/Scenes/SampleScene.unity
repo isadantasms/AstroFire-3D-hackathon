@@ -132,7 +132,6 @@ GameObject:
   - component: {fileID: 1000004}
   - component: {fileID: 1000005}
   - component: {fileID: 1000006}
-  - component: {fileID: 1000007}
   m_Layer: 0
   m_Name: FireSimulation
   m_TagString: Untagged
@@ -206,22 +205,6 @@ MonoBehaviour:
   flameLight: {fileID: 1000302}
   materialSample: {fileID: 1000201}
   specimen: {fileID: 1000005}
---- !u!114 &1000007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 654d8a86916b4f9b8911ef229507673c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  fire: {fileID: 1000002}
-  environment: {fileID: 1000004}
-  travel: {fileID: 1000006}
-  extinguisher: {fileID: 1200002}
 --- !u!114 &1000004
 MonoBehaviour:
   m_ObjectHideFlags: 0
