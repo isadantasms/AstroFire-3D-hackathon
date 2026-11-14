@@ -15,7 +15,7 @@
     "collocation_boundary_points": 24,
     "explanation": "In orbital combustion research, each ISS glovebox burn costs astronaut crew time and resupply mass, resulting in high-precision small-N tabular datasets (79 verified BASS-II state transitions). Instead of data-hungry black-box deep learning, our Physics-Informed Neural Network (PINN) embeds Olson Eq. (6.1) and Bhattacharjee Eq. (2.2)-(2.5) directly into the loss function, achieving high generalization accuracy without synthetic hallucination."
   },
-  "training_execution_ms": 665.38,
+  "training_execution_ms": 654.38,
   "classification_metrics": {
     "task": "Sustained Flame Spread vs. Radiative Quench / O2 Extinction",
     "validation_scheme": "Stratified 5-Fold Cross-Validation (79 empirical ISS states)",
