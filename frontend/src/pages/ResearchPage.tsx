@@ -6,6 +6,7 @@ import { ExternalLink, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { ConsolePanel, Tag } from '../components/ConsolePanel'
 import { FlameGeometryFigure } from '../components/FlameGeometryFigure'
+import { CreditsLedger } from '../components/CreditsLedger'
 // Lazy: keeps the BASS-II snapshot and API client out of the main bundle.
 const BassExperimentsSection = lazy(() =>
   import('../features/simulator/experiments/BassExperimentsSection').then((m) => ({ default: m.BassExperimentsSection })),
@@ -378,6 +379,9 @@ export function ResearchPage() {
             ))}
           </div>
         </ConsolePanel>
+
+        {/* Data & credits (moved here from the former About page) */}
+        <CreditsLedger />
       </div>
     </>
   )
