@@ -7,7 +7,7 @@ import { SkyLayer } from '../components/home/SkyLayer'
 import { PlanetHorizon } from '../components/home/PlanetHorizon'
 import { useReveal } from '../components/home/useReveal'
 import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences'
-import { LINKS } from '../app/routes'
+import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
@@ -37,11 +37,18 @@ export function HomePage() {
 }
 
 function DocumentationButton() {
+  const className =
+    'inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label'
+  // Same file as "Read the technical documentation (PDF)" on the About page; falls back to About.
+  if (TECHNICAL_DOCS_PDF_URL) {
+    return (
+      <a href={TECHNICAL_DOCS_PDF_URL} target="_blank" rel="noreferrer" className={className}>
+        Documentation
+      </a>
+    )
+  }
   return (
-    <Link
-      to={LINKS.about}
-      className="inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label"
-    >
+    <Link to={LINKS.about} className={className}>
       Documentation
     </Link>
   )

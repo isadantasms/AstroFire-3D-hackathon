@@ -113,7 +113,14 @@ function ResultPanels({ result }: { result: SimulationResponse }) {
         {estimate ? <p className="mt-3 text-xs leading-relaxed text-muted">{estimate.confined_rack_note}</p> : null}
       </Card>
 
-      <Card title="SI copilot">
+      <Card
+        title="SI copilot"
+        aside={
+          <span data-testid="si-generated" className="rounded-md border border-subtle px-1.5 py-0.5 text-[0.6875rem] text-label">
+            SI-generated
+          </span>
+        }
+      >
         <Diagnosis text={copilot.diagnosis} />
         <div className="mt-4 rounded-lg border-l-2 border-warning/80 bg-void/60 px-3 py-2.5" data-testid="suppression-guidance">
           <p className="text-[0.6875rem] text-warning">Research guidance, not an operational procedure</p>

@@ -15,3 +15,10 @@ export const LINKS = {
   siUsage: '/about#si-usage',
   credits: '/about#credits',
 } as const
+
+/**
+ * Technical documentation PDF, shared by the Home "Documentation" button and the About page.
+ * TODO(docs): set to the published PDF (e.g. a file in frontend/public/docs/). Until then the
+ * Home button opens the About page and the About page shows "coming soon".
+ */
+export const TECHNICAL_DOCS_PDF_URL: string | null = null

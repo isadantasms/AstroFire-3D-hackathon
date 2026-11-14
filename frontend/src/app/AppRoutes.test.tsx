@@ -151,9 +151,41 @@ describe('site structure', () => {
     expect(await screen.findByText('BASS-II (PSI-25, DOI: 10.60555/4qc4-de67)')).toBeInTheDocument()
     cleanup()
     const { container } = renderAt('/about')
-    await screen.findByRole('heading', { level: 1, name: 'About & SI Usage' }, { timeout: 5000 })
+    await screen.findByRole('heading', { level: 1, name: 'About AstroFire 3D' }, { timeout: 5000 })
     expect(container.querySelector('#si-usage')).not.toBeNull()
     expect(container.querySelector('#credits')).toHaveTextContent('CC0-1.0')
+  })
+
+  it('About page: short product sections in order, no removed technical content', async () => {
+    const { container } = renderAt('/about')
+    await screen.findByRole('heading', { level: 1, name: 'About AstroFire 3D' }, { timeout: 5000 })
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      'How it works',
+      'How we use SI',
+      'Limitations',
+      'Data & credits',
+      '21 Pyro Rangers',
+    ])
+    for (const block of ['Data', 'Engine', 'Console']) expect(screen.getByText(block)).toBeInTheDocument()
+    expect(screen.getByText(/Claude:/).parentElement).toHaveTextContent('code, interface design and website copy')
+    expect(screen.getByText(/Gemini:/).parentElement).toHaveTextContent('code assistance and test data generation')
+    expect(screen.getByText('Uberlândia, Brazil · NASA Space Apps Challenge 2026')).toBeInTheDocument()
+    for (const role of ['Data & physics engine', 'Backend & API', 'Data analysis & model accuracy', 'Science & SI validation', '3D flame chamber', 'Front-end & product']) {
+      expect(screen.getByText(role)).toBeInTheDocument()
+    }
+
+    const credits = within(container.querySelector('#credits') as HTMLElement)
+    expect(credits.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Resource', 'Type', 'License', 'Source'])
+    expect(credits.getByText(/IBM Plex Sans & IBM Plex Mono/)).toBeInTheDocument()
+    expect(credits.getByText('Voxel rocket 3D model (MagicaVoxel)')).toBeInTheDocument()
+    expect(credits.queryByText(/Inter & JetBrains Mono/)).toBeNull()
+    expect(credits.queryByText(/UFSC|VSB-30/)).toBeNull()
+
+    for (const removed of [/Zero-Hallucination/, /PINN/, /94\.94/, /Single Source of Truth/i, /Lead Architect/]) {
+      expect(screen.queryByText(removed)).toBeNull()
+    }
+    // No absolute wording on the page.
+    expect(container.textContent).not.toMatch(/\bzero\b|100%|guaranteed/i)
   })
 
   it('the Fig. 01 flame figure moved from the Home to Research & Data', async () => {
@@ -174,7 +206,7 @@ describe('site structure', () => {
   it.each([
     ['/simulator', 'Simulator'],
     ['/research', 'Research & Data'],
-    ['/about', 'About & SI Usage'],
+    ['/about', 'About AstroFire 3D'],
     ['/does-not-exist', 'Page not found'],
   ])('route %s renders its page title', async (path, title) => {
     renderAt(path)
