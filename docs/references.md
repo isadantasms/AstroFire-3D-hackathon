@@ -8,7 +8,7 @@
 | --- | --- | --- | --- | --- |
 | BASS-II (PSI-25): *Burning and Suppression of Solids - II* | NASA data | CC0-1.0 | https://doi.org/10.60555/4qc4-de67 | `backend/data/`, Empirical Physics Engine |
 | NASA/TM-20210011385: *BASS-II Summary Report* (Olson et al., 2021) | NASA technical report | US Gov Public Domain | https://ntrs.nasa.gov/citations/20210011385 | Limiting Oxygen Index (LOI) & forced-flow models |
-| Saffire I–VI (NTRS-20170001815): *Spacecraft Fire Safety Demonstration* | NASA technical report | CC0-1.0 / Public Domain | https://ntrs.nasa.gov/citations/20170001815 | Exploration cabin atmosphere & partial-gravity bounds |
+| Saffire I–VI (NTRS-20170000230): *Operation and Development Status of the Spacecraft Fire Experiments (Saffire)* | NASA technical report | CC0-1.0 / Public Domain | https://ntrs.nasa.gov/citations/20170000230 | Exploration cabin atmosphere & partial-gravity bounds |
 | FLEX / SoFIE / SPICE / SAME | NASA data | CC0-1.0 | https://psi.nasa.gov/ | Spherical `0g` flame ball geometry & smoke detector spinoffs |
 | FastAPI | Library | MIT License | https://fastapi.tiangolo.com | `backend/` |
 | Pydantic V2 | Library | MIT License | https://docs.pydantic.dev | `backend/`, `contracts/simulation_schema.json` |

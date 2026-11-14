@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://spaceapps2026.org/contracts/simulation_schema.json",
+  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina, Celina & Esquivel — [PROJECT_NAME] | Grounded on NASA PSI BASS-II (PSI-25, DOI: 10.60555/4qc4-de67, CC0-1.0) and NASA/TM-20210011385 (PSI-10 strictly excluded).",
   "title": "MicrogravitySimulationContract",
-  "description": "Unified 80/20 JSON contract connecting FastAPI, the Three.js Microgravity Simulator, and the 3-Column Telemetry Console with explicit scientific grounding.",
+  "description": "Unified 80/20 JSON contract for [PROJECT_NAME] connecting FastAPI, the Three.js Microgravity Simulator (Esquivel), and the 3-Column Telemetry Console (Rocha, Dantas & Celina) with explicit NASA PSI/NTRS scientific grounding.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -17,86 +18,170 @@
   "properties": {
     "scenario_id": {
       "type": "string",
-      "description": "Unique identifier for the simulation scenario or empirical test."
+      "description": "Unique identifier for the simulation scenario or empirical NASA PSI test record."
     },
     "grounding_status": {
       "type": "string",
       "enum": ["empirical_bass2", "interpolated_from_ntrs", "theoretical_extrapolation_to_verify"],
-      "description": "Explicitly distinguishes direct NASA PSI empirical measurements from bounded model interpolations."
+      "description": "Explicitly distinguishes direct NASA PSI empirical measurements (BASS-II / PSI-25) from bounded NTRS physical interpolations."
     },
     "inputs": {
       "type": "object",
+      "description": "Environmental and material boundary conditions configured by the mission engineer.",
       "additionalProperties": false,
       "required": ["material_id", "material_name", "thickness_mm", "gravity_g", "environment_label", "o2_pct", "airflow_cm_s"],
       "properties": {
-        "material_id": { "type": "string" },
-        "material_name": { "type": "string" },
-        "thickness_mm": { "type": "number", "minimum": 0.01, "maximum": 50.0 },
-        "gravity_g": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-        "environment_label": { "type": "string" },
-        "o2_pct": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
-        "airflow_cm_s": { "type": "number", "minimum": 0.0, "maximum": 100.0 }
+        "material_id": {
+          "type": "string",
+          "description": "Canonical material identifier mapped to NASA PSI experimental samples."
+        },
+        "material_name": {
+          "type": "string",
+          "description": "Human-readable spacecraft material name (e.g., PMMA Cast Acrylic, Nomex HT90-40, Cotton-Fiberglass Blend)."
+        },
+        "thickness_mm": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 50.0,
+          "description": "Sample thickness in millimeters (mm)."
+        },
+        "gravity_g": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Ambient gravity level in Earth g-units (0.0g ISS microgravity, 0.16g Lunar surface, 0.38g Martian surface, 1.0g Earth baseline)."
+        },
+        "environment_label": {
+          "type": "string",
+          "description": "Mission environment label displayed in the UI console (e.g., ISS Microgravity 0g, Lunar Base 0.16g, Martian Habitat 0.38g)."
+        },
+        "o2_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "Cabin ambient oxygen volume concentration (% O2)."
+        },
+        "airflow_cm_s": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "Forced cabin ventilation velocity in centimeters per second (cm/s)."
+        }
       }
     },
     "simulation_3d": {
       "type": "object",
-      "description": "The 4 core visual parameters consumed by the 3D Particle System.",
+      "description": "The 4 core visual parameters consumed by Esquivel's WebGL/Three.js 3D Particle System.",
       "additionalProperties": false,
       "required": ["flame_geometry", "burn_rate_mm_s", "flame_color_hex", "oxygen_factor"],
       "properties": {
         "flame_geometry": {
           "type": "string",
-          "enum": ["spherical", "elongated"]
+          "enum": ["spherical", "elongated"],
+          "description": "Particle emitter morphology: 'spherical' for quiescent 0g diffusion flame balls (gravity_g == 0.0 and airflow_cm_s < 1.0); 'elongated' for ventilated or partial-gravity plume stretching."
         },
-        "burn_rate_mm_s": { "type": "number", "minimum": 0.0 },
+        "burn_rate_mm_s": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Flame spread rate in millimeters per second (mm/s); drives 3D particle emission speed, turbulence frequency, and flame envelope radius, plus the UI speedometer."
+        },
         "flame_color_hex": {
           "type": "string",
-          "pattern": "^#[0-9A-Fa-f]{6}$"
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Primary hex color for the 3D flame shader ('#3B82F6' for clean blue diffusion combustion in quiescent 0g; '#F97316' for radiative soot-heavy orange/amber under airflow or partial gravity)."
         },
-        "oxygen_factor": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+        "oxygen_factor": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Normalized opacity and particle volume multiplier (0.0 to 1.0). When 0.0 (o2_pct < oxygen_limit_pct), the 3D simulator fades out the flame over 600ms leaving brief dissipating smoke."
+        }
       }
     },
     "telemetry": {
       "type": "object",
+      "description": "Quantitative safety metrics rendered in Rocha, Dantas & Celina's 3-Column Aerospace Telemetry Console.",
       "additionalProperties": false,
       "required": ["flammability_score", "risk_label", "oxygen_limit_pct", "co_ppm", "co2_pct"],
       "properties": {
-        "flammability_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "flammability_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Composite flammability risk index (0-100): 0-35 Nominal/Safe, 36-70 Moderate Alert, 71-100 Critical."
+        },
         "risk_label": {
           "type": "string",
-          "enum": ["Safe (Extinguished Below LOI)", "Moderate Alert", "High Risk", "Critical Flashover Risk"]
+          "enum": ["Safe (Extinguished Below LOI)", "Moderate Alert", "High Risk", "Critical Flashover Risk"],
+          "description": "Categorical severity badge synchronized with flammability_score."
         },
-        "oxygen_limit_pct": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
-        "co_ppm": { "type": "number", "minimum": 0.0 },
-        "co2_pct": { "type": "number", "minimum": 0.0 }
+        "oxygen_limit_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "Minimum Oxygen Concentration / Limiting Oxygen Index (MOC/LOI in % O2) required to sustain combustion under the specified flow and gravity."
+        },
+        "co_ppm": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated carbon monoxide byproduct concentration in parts per million (ppm)."
+        },
+        "co2_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated carbon dioxide byproduct volume fraction (% CO2)."
+        }
       }
     },
     "safety_copilot": {
       "type": "object",
+      "description": "Actionable fire-safety decision support and scientific boundary disclosures.",
       "additionalProperties": false,
       "required": ["diagnosis", "suppression_action", "terrestrial_spinoff", "scientific_limitations"],
       "properties": {
-        "diagnosis": { "type": "string" },
-        "suppression_action": { "type": "string" },
-        "terrestrial_spinoff": { "type": "string" },
+        "diagnosis": {
+          "type": "string",
+          "description": "Concise physical explanation of the flame regime (diffusion vs. advective radiative spread)."
+        },
+        "suppression_action": {
+          "type": "string",
+          "description": "Validated spacecraft fire suppression protocol derived from NASA BASS-II, FLEX, and Saffire findings (e.g., cabin ventilation shutoff prior to extinguishant discharge)."
+        },
+        "terrestrial_spinoff": {
+          "type": "string",
+          "description": "Application of the microgravity combustion insight to Earth-based fire safety or clean combustion."
+        },
         "scientific_limitations": {
           "type": "string",
-          "description": "Explicit note on boundary conditions or assumptions to prevent scientific overclaiming."
+          "description": "Explicit note on boundary conditions, empirical scope, or interpolation assumptions to prevent scientific overclaiming."
         }
       }
     },
     "nasa_citations": {
       "type": "array",
+      "description": "Auditable list of NASA PSI datasets (CC0-1.0) and NTRS technical reports backing the simulation output.",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["id", "title", "url", "finding"],
         "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "url": { "type": "string" },
-          "finding": { "type": "string" }
+          "id": {
+            "type": "string",
+            "description": "Official NASA NTRS citation ID or PSI dataset identifier (e.g., PSI-25 / DOI: 10.60555/4qc4-de67, NASA/TM-20210011385)."
+          },
+          "title": {
+            "type": "string",
+            "description": "Official publication or investigation title."
+          },
+          "url": {
+            "type": "string",
+            "description": "Direct public URL to the NASA PSI repository or NTRS report."
+          },
+          "finding": {
+            "type": "string",
+            "description": "Specific empirical finding or table reference supporting the calculated parameters."
+          }
         }
       }
     }
