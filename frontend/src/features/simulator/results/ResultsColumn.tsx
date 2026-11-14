@@ -98,34 +98,49 @@ function ResultPanels({ result, mock }: { result: SimulationResponse; mock: bool
       {/* ISS FWM PFE Suppression Sizing & Gravity Cooling Efficiency */}
       {result.suppression_estimate ? (
         <ConsolePanel
+          id="suppression-sizing"
           title="ISS FWM PFE suppression sizing"
-          aside={<Tag>{fmt(result.suppression_estimate.cooling_efficiency_pct, 1)}% cooling eff.</Tag>}
+          aside={
+            <span className="flex gap-1.5">
+              {mockTag}
+              <Tag tone="focus">Estimated</Tag>
+            </span>
+          }
         >
-          <dl className="grid grid-cols-2 gap-px border border-subtle bg-subtle">
+          <p className="flex gap-2 border border-warning/50 bg-warning/5 px-3 py-2 text-[0.6875rem] leading-snug text-warning">
+            <AlertTriangle className="mt-px size-3.5 shrink-0" aria-hidden />
+            Research guidance from a first-order estimate, not an approved operational procedure.
+          </p>
+          <dl className="mt-3 grid grid-cols-2 gap-px border border-subtle bg-subtle">
             <Metric
-              label="Cooling efficiency"
-              value={fmt(result.suppression_estimate.cooling_efficiency_pct, 1)}
-              unit="% (0g–1g)"
-            />
-            <Metric
-              label="Water mist needed"
+              label="Est. mist volume"
               value={fmt(result.suppression_estimate.estimated_mist_volume_ml, 1)}
               unit="mL"
             />
             <Metric
-              label="Open-cabin discharge"
+              label="Est. discharge time"
               value={fmt(result.suppression_estimate.estimated_discharge_seconds, 2)}
               unit="s"
             />
             <Metric
-              label="FWM PFE tank used"
+              label="Est. extinguisher tank"
               value={fmt(result.suppression_estimate.tank_capacity_used_pct, 2)}
-              unit="% of 2.72 L"
+              unit="% used"
+            />
+            <Metric
+              label="Est. cooling eff."
+              value={fmt(result.suppression_estimate.cooling_efficiency_pct, 1)}
+              unit={`% at ${fmt(inputs.gravity_g, 2)} g`}
             />
           </dl>
           <p className="mt-2 text-[0.6875rem] leading-snug text-muted">
-            Est. flame power: {fmt(result.suppression_estimate.estimated_flame_power_kw, 2)} kW.{' '}
+            Est. flame power {fmt(result.suppression_estimate.estimated_flame_power_kw, 2)} kW. Tank % refers
+            to the ISS Fine Water Mist Portable Fire Extinguisher (FWM PFE).{' '}
             {result.suppression_estimate.confined_rack_note}
+          </p>
+          <p className="mt-2 flex items-center gap-1.5 text-[0.6875rem] text-muted">
+            <Tag tone="warning">Sources to verify</Tag>
+            <span>The references behind these estimates are not yet in the project reference ledger.</span>
           </p>
         </ConsolePanel>
       ) : null}

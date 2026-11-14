@@ -23,6 +23,19 @@ const MOCK_TEXT = {
   spinoff: `${MOCK_TAG} Placeholder terrestrial application text.`,
   limitations: `${MOCK_TAG} Placeholder values shaped to the data contract. No physical model was run.`,
   finding: `${MOCK_TAG} Placeholder finding. The live API supplies the specific finding.`,
+  rackNote: `${MOCK_TAG} Placeholder suppression sizing. The live API supplies the estimate and its note.`,
+}
+
+/**
+ * MOCK suppression_estimate: round placeholder numbers that only exercise the
+ * simulate -> suppress cycle in the UI. They are not physical estimates.
+ */
+const MOCK_SUPPRESSION = {
+  cooling_efficiency_pct: 50,
+  estimated_flame_power_kw: 1,
+  estimated_mist_volume_ml: 100,
+  tank_capacity_used_pct: 5,
+  estimated_discharge_seconds: 3,
 }
 
 function environmentLabel(gravity: number): string {
@@ -72,6 +85,16 @@ export function buildMockResponse(request: SimulationRequest): SimulationRespons
       terrestrial_spinoff: MOCK_TEXT.spinoff,
       scientific_limitations: MOCK_TEXT.limitations,
     },
+    suppression_estimate: extinguished
+      ? {
+          cooling_efficiency_pct: MOCK_SUPPRESSION.cooling_efficiency_pct,
+          estimated_flame_power_kw: 0,
+          estimated_mist_volume_ml: 0,
+          tank_capacity_used_pct: 0,
+          estimated_discharge_seconds: 0,
+          confined_rack_note: MOCK_TEXT.rackNote,
+        }
+      : { ...MOCK_SUPPRESSION, confined_rack_note: MOCK_TEXT.rackNote },
     nasa_citations: [
       {
         id: 'PSI-25 (DOI: 10.60555/4qc4-de67)',

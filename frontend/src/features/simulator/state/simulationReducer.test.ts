@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { buildMockResponse } from '../../../services/api/mockClient'
 import { EXPERIMENTS_SNAPSHOT } from '../../../data/experimentsSnapshot'
 import {
+  dischargeBlockedReason,
   initialSimulationState,
   isResultStale,
   simulationReducer,
@@ -60,6 +61,51 @@ describe('simulationReducer', () => {
     state = simulationReducer(state, { type: 'runSucceeded', request: first, result: buildMockResponse(first) })
     expect(state.status).toBe('loading')
     expect(state.result).toBeNull()
+  })
+
+  it('chamber cycle: burning after a run, suppressing for the backend duration, then extinguished', () => {
+    let state = runToSuccess(initialSimulationState())
+    expect(state.chamber.phase).toBe('burning')
+    expect(dischargeBlockedReason(state)).toBeNull()
+
+    state = simulationReducer(state, { type: 'dischargeStarted', at: 1000 })
+    const seconds = state.result!.suppression_estimate!.estimated_discharge_seconds
+    expect(state.chamber).toMatchObject({ phase: 'suppressing', dischargeMs: seconds * 1000, dischargeStartedAt: 1000 })
+
+    // A timer from an older cycle must not end the current discharge.
+    const stale = simulationReducer(state, { type: 'dischargeCompleted', cycle: state.chamber.cycle - 1 })
+    expect(stale.chamber.phase).toBe('suppressing')
+
+    state = simulationReducer(state, { type: 'dischargeCompleted', cycle: state.chamber.cycle })
+    expect(state.chamber).toMatchObject({ phase: 'extinguished', extinguishedBy: 'suppression' })
+
+    state = simulationReducer(state, { type: 'runStarted', request: toRequest(state.draft) })
+    expect(state.chamber.phase).toBe('idle')
+  })
+
+  it('a run with no sustained flame is extinguished and cannot be discharged', () => {
+    let state = simulationReducer(initialSimulationState(), { type: 'setOxygen', o2_pct: 12 })
+    state = runToSuccess(state)
+    expect(state.chamber).toMatchObject({ phase: 'extinguished', extinguishedBy: 'no_sustained_flame' })
+    expect(dischargeBlockedReason(state)).toBe('No active flame to suppress.')
+    expect(simulationReducer(state, { type: 'dischargeStarted', at: 0 }).chamber.phase).toBe('extinguished')
+  })
+
+  it('blocks the discharge when the backend sends no suppression_estimate', () => {
+    const base = initialSimulationState()
+    const request = toRequest(base.draft)
+    const { suppression_estimate: _omit, ...result } = buildMockResponse(request)
+    void _omit
+    let state = simulationReducer(base, { type: 'runStarted', request })
+    state = simulationReducer(state, { type: 'runSucceeded', request, result })
+    expect(dischargeBlockedReason(state)).toMatch(/did not provide a suppression estimate/)
+    expect(simulationReducer(state, { type: 'dischargeStarted', at: 0 }).chamber.phase).toBe('burning')
+  })
+
+  it('blocks the discharge while results are stale', () => {
+    let state = runToSuccess(initialSimulationState())
+    state = simulationReducer(state, { type: 'setAirflow', airflow_cm_s: 20 })
+    expect(dischargeBlockedReason(state)).toMatch(/Re-run/)
   })
 
   it('omits thickness when it is pending (null)', () => {

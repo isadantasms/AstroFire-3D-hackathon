@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_API_MODE?: 'mock' | 'live'
   /** Backend base URL for live mode, e.g. http://localhost:8000 */
   readonly VITE_API_BASE_URL?: string
+  /** Unity WebGL build URL for the optional 3D view (served locally by StartWebGL.cmd). */
+  readonly VITE_WEBGL_URL?: string
 }
 
 interface ImportMeta {

@@ -16,7 +16,30 @@ export interface DraftInputs {
 
 export type RunStatus = 'idle' | 'loading' | 'success' | 'error'
 
+/** Simulate -> measure risk -> suppress cycle shown by the 3D chamber. */
+export type ChamberPhase = 'idle' | 'burning' | 'suppressing' | 'extinguished'
+
+export interface ChamberState {
+  phase: ChamberPhase
+  /** Why the flame is out: after a discharge, or because the run returned no sustained flame. */
+  extinguishedBy: 'suppression' | 'no_sustained_flame' | null
+  /** Discharge duration taken from suppression_estimate.estimated_discharge_seconds. */
+  dischargeMs: number | null
+  dischargeStartedAt: number | null
+  /** Incremented on every successful run so timers from an older cycle are ignored. */
+  cycle: number
+}
+
+export const IDLE_CHAMBER: ChamberState = {
+  phase: 'idle',
+  extinguishedBy: null,
+  dischargeMs: null,
+  dischargeStartedAt: null,
+  cycle: 0,
+}
+
 export interface SimulationState {
+  chamber: ChamberState
   draft: DraftInputs
   status: RunStatus
   result: SimulationResponse | null
@@ -48,9 +71,12 @@ export type SimulationAction =
   | { type: 'runStarted'; request: SimulationRequest }
   | { type: 'runSucceeded'; request: SimulationRequest; result: SimulationResponse }
   | { type: 'runFailed'; request: SimulationRequest; message: string; details: string[] }
+  | { type: 'dischargeStarted'; at: number }
+  | { type: 'dischargeCompleted'; cycle: number }
 
 export function initialSimulationState(): SimulationState {
   return {
+    chamber: IDLE_CHAMBER,
     draft: DEFAULT_DRAFT,
     status: 'idle',
     result: null,
@@ -113,9 +139,16 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
         },
       }
     case 'runStarted':
-      return { ...state, status: 'loading', pendingRequest: action.request, error: null }
-    case 'runSucceeded':
+      return {
+        ...state,
+        status: 'loading',
+        pendingRequest: action.request,
+        error: null,
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle },
+      }
+    case 'runSucceeded': {
       if (!sameRequest(action.request, state.pendingRequest)) return state
+      const flameActive = action.result.simulation_3d.oxygen_factor > 0
       return {
         ...state,
         status: 'success',
@@ -123,6 +156,33 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
         lastRunRequest: action.request,
         pendingRequest: null,
         error: null,
+        chamber: {
+          phase: flameActive ? 'burning' : 'extinguished',
+          extinguishedBy: flameActive ? null : 'no_sustained_flame',
+          dischargeMs: null,
+          dischargeStartedAt: null,
+          cycle: state.chamber.cycle + 1,
+        },
+      }
+    }
+    case 'dischargeStarted': {
+      const seconds = state.result?.suppression_estimate?.estimated_discharge_seconds
+      if (state.chamber.phase !== 'burning' || seconds === undefined || seconds <= 0) return state
+      return {
+        ...state,
+        chamber: {
+          ...state.chamber,
+          phase: 'suppressing',
+          dischargeMs: seconds * 1000,
+          dischargeStartedAt: action.at,
+        },
+      }
+    }
+    case 'dischargeCompleted':
+      if (state.chamber.phase !== 'suppressing' || action.cycle !== state.chamber.cycle) return state
+      return {
+        ...state,
+        chamber: { ...state.chamber, phase: 'extinguished', extinguishedBy: 'suppression' },
       }
     case 'runFailed':
       if (!sameRequest(action.request, state.pendingRequest)) return state
@@ -159,6 +219,22 @@ export function sameRequest(a: SimulationRequest | null, b: SimulationRequest | 
     a.airflow_cm_s === b.airflow_cm_s &&
     (a.test_id ?? null) === (b.test_id ?? null)
   )
+}
+
+/**
+ * Why the "Discharge FWM PFE" control is unavailable, or null when it can be used.
+ * The discharge duration must come from the backend; it is never assumed.
+ */
+export function dischargeBlockedReason(state: SimulationState): string | null {
+  if (!state.result) return 'Run a simulation first.'
+  if (state.status === 'loading') return 'A simulation is running.'
+  if (isResultStale(state)) return 'Parameters changed. Re-run the simulation first.'
+  if (state.chamber.phase === 'suppressing') return 'Discharge in progress.'
+  if (state.chamber.phase !== 'burning') return 'No active flame to suppress.'
+  const seconds = state.result.suppression_estimate?.estimated_discharge_seconds
+  if (seconds === undefined) return 'The backend did not provide a suppression estimate for this run.'
+  if (seconds <= 0) return 'The suppression estimate reports no discharge for this run.'
+  return null
 }
 
 /** True when a result is on screen but the controls no longer match the run that produced it. */

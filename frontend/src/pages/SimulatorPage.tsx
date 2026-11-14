@@ -1,15 +1,17 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 import { defaultApiClient, type ApiClient, type Catalog } from '../services/api/client'
 import { MissionControls } from '../features/simulator/controls/MissionControls'
 import { FlameChamberPlaceholder } from '../features/simulator/chamber/FlameChamberPlaceholder'
+import { toChamberSuppression } from '../features/simulator/chamber/types'
 import { ExperimentTable } from '../features/simulator/experiments/ExperimentTable'
 import { ResultsColumn } from '../features/simulator/results/ResultsColumn'
 import { useCatalog, useSimulation } from '../features/simulator/state/useSimulation'
 
 export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClient }) {
-  const { state, dispatch, run, stale } = useSimulation(client)
+  const { state, dispatch, run, discharge, stale, dischargeBlocked } = useSimulation(client)
+  const suppression = useMemo(() => toChamberSuppression(state.result), [state.result])
   const onCatalogLoaded = useCallback(
     (catalog: Catalog) => dispatch({ type: 'catalogLoaded', materials: catalog.materials }),
     [dispatch],
@@ -79,8 +81,14 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
         {/* Center: 3D chamber + BASS-II matrix */}
         <div className="grid min-h-0 min-w-0 grid-cols-1 gap-3 lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
           <FlameChamberPlaceholder
-            params={state.result?.simulation_3d ?? null}
+            phase={state.chamber.phase}
+            flame={state.result?.simulation_3d ?? null}
+            suppression={suppression}
             payload={state.result}
+            extinguishedBy={state.chamber.extinguishedBy}
+            dischargeStartedAt={state.chamber.dischargeStartedAt}
+            dischargeBlocked={dischargeBlocked}
+            onDischarge={discharge}
             loading={loading}
             stale={stale}
             mock={mock}

@@ -1,6 +1,6 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { SimulatorPage } from './SimulatorPage'
 import { createMockClient } from '../services/api/mockClient'
@@ -33,7 +33,7 @@ describe('SimulatorPage', () => {
     expect(screen.getByTestId('mock-notice')).toHaveTextContent('MOCK DATA')
     expect(screen.getByTestId('grounding-badge')).toHaveTextContent('Bounded NTRS interpolation')
     expect(screen.getByRole('meter', { name: 'Flammability score' })).toBeInTheDocument()
-    expect(screen.getByText(/not an approved operational procedure/)).toBeInTheDocument()
+    expect(screen.getAllByText(/not an approved operational procedure/).length).toBeGreaterThanOrEqual(2)
     expect(screen.getByRole('link', { name: /PSI-25/ })).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
   })
 
@@ -58,6 +58,63 @@ describe('SimulatorPage', () => {
     expect(screen.getByRole('spinbutton', { name: /Oxygen value/ })).toHaveValue(22.2)
     expect(screen.getByRole('spinbutton', { name: /Cabin airflow value/ })).toHaveValue(9)
     expect(row).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('runs the simulate -> suppress cycle using the backend discharge time', async () => {
+    renderSimulator()
+    const discharge = await screen.findByRole('button', { name: /Discharge FWM PFE/ })
+    expect(discharge).toBeDisabled()
+    expect(screen.getByTestId('chamber-state')).toHaveTextContent('Idle')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Run Simulation' }))
+    await screen.findByTestId('results')
+    expect(screen.getByTestId('chamber-state')).toHaveTextContent('Burning')
+    expect(discharge).toBeEnabled()
+
+    vi.useFakeTimers()
+    try {
+      fireEvent.click(discharge)
+      expect(screen.getByTestId('chamber-state')).toHaveTextContent('Suppressing')
+      expect(discharge).toBeDisabled()
+
+      // Mock estimated_discharge_seconds is 3 s: still suppressing just before, extinguished after.
+      act(() => vi.advanceTimersByTime(2900))
+      expect(screen.getByTestId('chamber-state')).toHaveTextContent('Suppressing')
+      act(() => vi.advanceTimersByTime(200))
+      expect(screen.getByTestId('chamber-state')).toHaveTextContent('Extinguished')
+      expect(screen.getByTestId('chamber-state')).toHaveTextContent('after FWM PFE discharge')
+    } finally {
+      vi.useRealTimers()
+    }
+
+    // A new run restarts the cycle.
+    fireEvent.click(screen.getByRole('button', { name: 'Run Simulation' }))
+    await waitFor(() => expect(screen.getByTestId('chamber-state')).toHaveTextContent('Burning'))
+  })
+
+  it('keeps the discharge disabled when the run has no sustained flame', async () => {
+    renderSimulator()
+    fireEvent.click(await screen.findByRole('button', { name: /Hypoxic Quench/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Run Simulation' }))
+    await screen.findByTestId('results')
+    expect(screen.getByTestId('chamber-state')).toHaveTextContent('no sustained flame')
+    expect(screen.getByRole('button', { name: /Discharge FWM PFE/ })).toBeDisabled()
+  })
+
+  it('shows the suppression sizing card as estimates with units and no hardcoded tank volume', async () => {
+    renderSimulator()
+    fireEvent.click(await screen.findByRole('button', { name: 'Run Simulation' }))
+    const card = await screen.findByRole('region', { name: 'ISS FWM PFE suppression sizing' })
+    expect(within(card).getByText('Estimated')).toBeInTheDocument()
+    expect(within(card).getByText('Est. mist volume')).toBeInTheDocument()
+    expect(within(card).getByText('mL')).toBeInTheDocument()
+    expect(within(card).getByText('Est. discharge time')).toBeInTheDocument()
+    expect(within(card).getByText('% used')).toBeInTheDocument()
+    expect(within(card).getByText('Est. cooling eff.')).toBeInTheDocument()
+    expect(within(card).getByText('% at 0.00 g')).toBeInTheDocument()
+    expect(within(card).getByText(/not an approved operational procedure/)).toBeInTheDocument()
+    expect(within(card).getByText('Sources to verify')).toBeInTheDocument()
+    expect(card).not.toHaveTextContent('2.72')
   })
 
   it('shows an error state with retry when the API fails', async () => {

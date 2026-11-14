@@ -3,6 +3,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import type { ApiClient, Catalog } from '../../../services/api/client'
 import { ContractValidationError } from '../../../services/api/validate'
 import {
+  dischargeBlockedReason,
   initialSimulationState,
   isResultStale,
   simulationReducer,
@@ -78,5 +79,22 @@ export function useSimulation(client: ApiClient) {
 
   const send = useCallback((action: SimulationAction) => dispatch(action), [])
 
-  return { state, dispatch: send, run, stale: isResultStale(state) }
+  // Suppressing lasts exactly the backend's estimated discharge time, then the flame is out.
+  const { phase, dischargeMs, cycle } = state.chamber
+  useEffect(() => {
+    if (phase !== 'suppressing' || dischargeMs === null) return
+    const timer = setTimeout(() => dispatch({ type: 'dischargeCompleted', cycle }), dischargeMs)
+    return () => clearTimeout(timer)
+  }, [phase, dischargeMs, cycle])
+
+  const discharge = useCallback(() => dispatch({ type: 'dischargeStarted', at: Date.now() }), [])
+
+  return {
+    state,
+    dispatch: send,
+    run,
+    discharge,
+    stale: isResultStale(state),
+    dischargeBlocked: dischargeBlockedReason(state),
+  }
 }
