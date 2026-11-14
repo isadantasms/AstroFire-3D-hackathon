@@ -1,0 +1,168 @@
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
+import type { ExperimentRecord, MaterialInfo } from '../../../types/catalog'
+import type { SimulationRequest, SimulationResponse } from '../../../types/contract'
+
+/** Editable scenario in the Mission Controls. */
+export interface DraftInputs {
+  material_id: string
+  /** Fixed per material (or taken from a selected BASS-II record). null = pending. */
+  thickness_mm: number | null
+  gravity_g: number
+  o2_pct: number
+  airflow_cm_s: number
+  /** Set when the scenario was loaded from a BASS-II row; cleared on any manual edit. */
+  test_id: string | null
+}
+
+export type RunStatus = 'idle' | 'loading' | 'success' | 'error'
+
+export interface SimulationState {
+  draft: DraftInputs
+  status: RunStatus
+  result: SimulationResponse | null
+  /** Request that produced `result` (used for stale detection). */
+  lastRunRequest: SimulationRequest | null
+  /** Request currently in flight. */
+  pendingRequest: SimulationRequest | null
+  error: { message: string; details: string[] } | null
+}
+
+/** Defaults mirror backend/app/schemas.py SimulationRequest defaults. */
+export const DEFAULT_DRAFT: DraftInputs = {
+  material_id: 'pmma_clear_slab',
+  thickness_mm: null,
+  gravity_g: 0,
+  o2_pct: 21,
+  airflow_cm_s: 5,
+  test_id: null,
+}
+
+export type SimulationAction =
+  | { type: 'catalogLoaded'; materials: MaterialInfo[] }
+  | { type: 'setMaterial'; material: MaterialInfo }
+  | { type: 'setGravity'; gravity_g: number }
+  | { type: 'setOxygen'; o2_pct: number }
+  | { type: 'setAirflow'; airflow_cm_s: number }
+  | { type: 'applyPreset'; draft: Omit<DraftInputs, 'thickness_mm' | 'test_id'>; material: MaterialInfo | undefined }
+  | { type: 'selectExperiment'; record: ExperimentRecord }
+  | { type: 'runStarted'; request: SimulationRequest }
+  | { type: 'runSucceeded'; request: SimulationRequest; result: SimulationResponse }
+  | { type: 'runFailed'; request: SimulationRequest; message: string; details: string[] }
+
+export function initialSimulationState(): SimulationState {
+  return {
+    draft: DEFAULT_DRAFT,
+    status: 'idle',
+    result: null,
+    lastRunRequest: null,
+    pendingRequest: null,
+    error: null,
+  }
+}
+
+export function simulationReducer(state: SimulationState, action: SimulationAction): SimulationState {
+  switch (action.type) {
+    case 'catalogLoaded': {
+      const current = action.materials.find((m) => m.material_id === state.draft.material_id)
+      const material = current ?? action.materials[0]
+      if (!material || state.draft.test_id) return state
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          material_id: material.material_id,
+          thickness_mm: material.nominal_thickness_mm,
+        },
+      }
+    }
+    case 'setMaterial':
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          material_id: action.material.material_id,
+          thickness_mm: action.material.nominal_thickness_mm,
+          test_id: null,
+        },
+      }
+    case 'setGravity':
+      return { ...state, draft: { ...state.draft, gravity_g: action.gravity_g, test_id: null } }
+    case 'setOxygen':
+      return { ...state, draft: { ...state.draft, o2_pct: action.o2_pct, test_id: null } }
+    case 'setAirflow':
+      return { ...state, draft: { ...state.draft, airflow_cm_s: action.airflow_cm_s, test_id: null } }
+    case 'applyPreset':
+      return {
+        ...state,
+        draft: {
+          ...action.draft,
+          thickness_mm: action.material?.nominal_thickness_mm ?? null,
+          test_id: null,
+        },
+      }
+    case 'selectExperiment':
+      return {
+        ...state,
+        draft: {
+          material_id: action.record.material_id,
+          thickness_mm: action.record.thickness_mm,
+          gravity_g: action.record.gravity_g,
+          o2_pct: action.record.initial_o2_pct,
+          airflow_cm_s: action.record.airflow_cm_s,
+          test_id: action.record.test_id,
+        },
+      }
+    case 'runStarted':
+      return { ...state, status: 'loading', pendingRequest: action.request, error: null }
+    case 'runSucceeded':
+      if (!sameRequest(action.request, state.pendingRequest)) return state
+      return {
+        ...state,
+        status: 'success',
+        result: action.result,
+        lastRunRequest: action.request,
+        pendingRequest: null,
+        error: null,
+      }
+    case 'runFailed':
+      if (!sameRequest(action.request, state.pendingRequest)) return state
+      return {
+        ...state,
+        status: 'error',
+        pendingRequest: null,
+        error: { message: action.message, details: action.details },
+      }
+  }
+}
+
+/** Builds the POST /api/simulate body from the current draft. */
+export function toRequest(draft: DraftInputs): SimulationRequest {
+  const request: SimulationRequest = {
+    material_id: draft.material_id,
+    gravity_g: draft.gravity_g,
+    o2_pct: draft.o2_pct,
+    airflow_cm_s: draft.airflow_cm_s,
+  }
+  if (draft.thickness_mm !== null) request.thickness_mm = draft.thickness_mm
+  if (draft.test_id) request.test_id = draft.test_id
+  return request
+}
+
+export function sameRequest(a: SimulationRequest | null, b: SimulationRequest | null): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  return (
+    a.material_id === b.material_id &&
+    a.thickness_mm === b.thickness_mm &&
+    a.gravity_g === b.gravity_g &&
+    a.o2_pct === b.o2_pct &&
+    a.airflow_cm_s === b.airflow_cm_s &&
+    (a.test_id ?? null) === (b.test_id ?? null)
+  )
+}
+
+/** True when a result is on screen but the controls no longer match the run that produced it. */
+export function isResultStale(state: SimulationState): boolean {
+  if (!state.result || !state.lastRunRequest) return false
+  return !sameRequest(toRequest(state.draft), state.lastRunRequest)
+}

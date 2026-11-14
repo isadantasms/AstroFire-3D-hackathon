@@ -15,5 +15,12 @@
 | Three.js | Library | MIT License | https://threejs.org | `frontend/` (3D Microgravity Chamber) |
 | React & TypeScript | Library | MIT / Apache-2.0 | https://react.dev | `frontend/` |
 | Tailwind CSS | Library | MIT License | https://tailwindcss.com | `frontend/`, `DESIGN.md` |
+| Vite | Library | MIT License | https://vite.dev | `frontend/` build tooling and dev server |
+| React Router | Library | MIT License | https://reactrouter.com | `frontend/` client-side routing |
+| Fontsource (`@fontsource/inter`, `@fontsource/jetbrains-mono`) | Library | MIT License (packaging); fonts under SIL OFL 1.1 | https://fontsource.org | `frontend/` self-hosted fonts |
+| Vitest | Library | MIT License | https://vitest.dev | `frontend/` unit and route tests |
+| Testing Library (`@testing-library/react`, `@testing-library/jest-dom`) | Library | MIT License | https://testing-library.com | `frontend/` tests |
+| ESLint & typescript-eslint | Library | MIT License | https://eslint.org | `frontend/` linting |
+| Ajv (JSON Schema validator) | Library | MIT License | https://ajv.js.org | `frontend/src/services/api/validate.ts` (runtime validation against `contracts/simulation_schema.json`) |
 | Playwright | Library | Apache-2.0 | https://playwright.dev | Visual & functional UI verification |
 | Gemini / Claude / GPT Coding Assistants | SI model | Provider API Terms | https://ai.google.dev | Development code assistance (`# SI-assisted` tagged & team reviewed) |
