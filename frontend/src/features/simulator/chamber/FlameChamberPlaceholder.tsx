@@ -61,30 +61,44 @@ export function FlameChamberPlaceholder({
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const showIframe = viewMode === 'webgl' && (unity === 'loading' || unity === 'ready')
 
-  const phaseRef = useRef(phase)
-  phaseRef.current = phase
-
-  // Re-sent when Unity reports ready, so the first payload is never lost while it loads.
+  // Re-sent when Unity reports ready or when a run finishes, without re-sending during suppression.
   useEffect(() => {
     const target = iframeRef.current?.contentWindow
-    if (!target || unity !== 'ready' || !payload || phaseRef.current === 'idle') return
+    if (!target || unity !== 'ready' || !payload) return
+    if (phase !== 'burning' && !(phase === 'extinguished' && extinguishedBy === 'no_sustained_flame')) return
     target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload }, '*')
-  }, [payload, unity])
+  }, [payload, phase, extinguishedBy, unity])
+
+  const standbyMaterialId = standbyMaterial?.material_id
+  const standbyMaterialName = standbyMaterial?.material_name
+  const standbyThicknessMm = standbyMaterial?.thickness_mm
+  const standbyGravityG = standbyMaterial?.gravity_g
 
   // When idle (after switching material or location), stop the flame and update the 3D specimen/destination.
   useEffect(() => {
     const target = iframeRef.current?.contentWindow
-    if (!target || unity !== 'ready' || phase !== 'idle' || !standbyMaterial) return
-    const g = standbyMaterial.gravity_g
+    if (
+      !target ||
+      unity !== 'ready' ||
+      phase !== 'idle' ||
+      loading ||
+      !standbyMaterialId ||
+      !standbyMaterialName ||
+      standbyThicknessMm === undefined ||
+      standbyGravityG === undefined
+    ) {
+      return
+    }
+    const g = standbyGravityG
     const envLabel =
       g === 0 ? 'ISS Microgravity' : g <= 0.2 ? 'Lunar Surface' : g <= 0.5 ? 'Martian Surface' : 'Earth 1g'
     const standbyPayload = {
-      scenario_id: `standby_${standbyMaterial.material_id}_${g}g`,
+      scenario_id: `standby_${standbyMaterialId}_${g}g`,
       grounding_status: 'interpolated_from_ntrs',
       inputs: {
-        material_id: standbyMaterial.material_id,
-        material_name: standbyMaterial.material_name,
-        thickness_mm: Math.max(0.05, standbyMaterial.thickness_mm),
+        material_id: standbyMaterialId,
+        material_name: standbyMaterialName,
+        thickness_mm: Math.max(0.05, standbyThicknessMm),
         gravity_g: g,
         environment_label: envLabel,
         o2_pct: 21,
@@ -98,7 +112,15 @@ export function FlameChamberPlaceholder({
       },
     }
     target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload: standbyPayload }, '*')
-  }, [phase, standbyMaterial, unity])
+  }, [
+    loading,
+    phase,
+    standbyGravityG,
+    standbyMaterialId,
+    standbyMaterialName,
+    standbyThicknessMm,
+    unity,
+  ])
 
   useEffect(() => {
     const target = iframeRef.current?.contentWindow

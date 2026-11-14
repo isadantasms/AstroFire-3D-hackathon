@@ -7,7 +7,7 @@ Exposes deterministic < 5ms endpoints synchronized strictly with contracts/simul
 Includes a zero-dependency stdlib HTTP server fallback if FastAPI/Uvicorn is not yet installed.
 """
 import json
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
@@ -122,14 +122,17 @@ if HAS_FASTAPI:
 class FallbackHTTPHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code: int, payload: object) -> None:
         body = json.dumps(payload).encode("utf-8")
-        self.send_response(status_code)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.send_response(status_code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def do_OPTIONS(self) -> None:
         self._send_json(200, {"status": "ok"})
@@ -169,6 +172,6 @@ class FallbackHTTPHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = HTTPServer(("0.0.0.0", 8000), FallbackHTTPHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", 8000), FallbackHTTPHandler)
     print("[PROJECT_NAME] API listening on http://0.0.0.0:8000")
     server.serve_forever()

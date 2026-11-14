@@ -120,20 +120,47 @@
             };
           }
           var lastChamberPhase = null;
+          var skipTimer1 = null;
+          var skipTimer2 = null;
+          var extinguishTimer = null;
+          function clearPendingTimers() {
+            if (skipTimer1) { clearTimeout(skipTimer1); skipTimer1 = null; }
+            if (skipTimer2) { clearTimeout(skipTimer2); skipTimer2 = null; }
+            if (extinguishTimer) { clearTimeout(extinguishTimer); extinguishTimer = null; }
+          }
           window.addEventListener("message", function(event) {
             if (!event.data) return;
             if (event.data.type === "APPLY_FIRE_PAYLOAD" && event.data.payload) {
+              clearPendingTimers();
+              var payloadObj = typeof event.data.payload === "string"
+                ? (function() { try { return JSON.parse(event.data.payload); } catch (_) { return {}; } })()
+                : event.data.payload;
               var jsonStr = typeof event.data.payload === "string"
                 ? event.data.payload
                 : JSON.stringify(event.data.payload);
+              var isStandby = Boolean(payloadObj && typeof payloadObj.scenario_id === "string" && payloadObj.scenario_id.indexOf("standby_") === 0);
               lastChamberPhase = null;
+              // Finish any previous in-flight rocket journey before applying the new destination/payload.
+              unityInstance.SendMessage("FireSimulation", "SkipAnimation");
               unityInstance.SendMessage("FireSimulation", "ApplyJson", jsonStr);
+              unityInstance.SendMessage("FireSimulation", "ResetSuppression");
+              if (!isStandby) {
+                // When the user presses Run Simulation, ensure the camera returns to the cabin at the target destination immediately.
+                skipTimer1 = setTimeout(function() {
+                  unityInstance.SendMessage("FireSimulation", "SkipAnimation");
+                  unityInstance.SendMessage("FireSimulation", "ResetSuppression");
+                }, 40);
+                skipTimer2 = setTimeout(function() {
+                  unityInstance.SendMessage("FireSimulation", "SkipAnimation");
+                }, 120);
+              }
             } else if (event.data.type === "APPLY_CHAMBER_STATE") {
               var nextPhase = event.data.phase || null;
               if (nextPhase === "suppressing" && lastChamberPhase !== "suppressing") {
+                clearPendingTimers();
                 unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                 unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
-                setTimeout(function() {
+                extinguishTimer = setTimeout(function() {
                   unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
                 }, 120);
               } else if (nextPhase === "burning" && lastChamberPhase === "extinguished") {

@@ -104,7 +104,7 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
     case 'setMaterial':
       return {
         ...state,
-        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle },
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 },
         draft: {
           ...state.draft,
           material_id: action.material.material_id,
@@ -115,7 +115,7 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
     case 'setGravity':
       return {
         ...state,
-        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle },
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 },
         draft: { ...state.draft, gravity_g: action.gravity_g, test_id: null },
       }
     case 'setOxygen':
@@ -149,7 +149,7 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
         status: 'loading',
         pendingRequest: action.request,
         error: null,
-        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle },
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 },
       }
     case 'runSucceeded': {
       if (!sameRequest(action.request, state.pendingRequest)) return state
