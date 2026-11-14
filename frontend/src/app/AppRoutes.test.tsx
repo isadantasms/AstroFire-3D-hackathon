@@ -51,7 +51,7 @@ describe('site structure', () => {
 
   it('home hero exposes the brand, headline and the three calls to action', () => {
     renderAt('/')
-    expect(screen.getByRole('link', { name: 'AstroFire home' })).toHaveTextContent('AstroFire')
+    expect(screen.getByRole('link', { name: 'AstroFire 3D home' })).toBeInTheDocument()
     expect(document.title === '' || !document.title.includes('3D')).toBe(true)
     expect(
       screen.getByRole('heading', { level: 1, name: 'Make the next giant leap safer.' }),
@@ -65,33 +65,47 @@ describe('site structure', () => {
     expect(screen.getByTestId('footer-disclaimer')).toHaveTextContent('For research and education only.')
   })
 
-  it('home uses plain-language sections and a final call to action', () => {
+  it('home follows problem -> approach -> solution, then a closing panel', () => {
     renderAt('/')
-    for (const name of [
-      'Fire in space doesn’t behave like on Earth.',
-      'How it works',
-      'What makes AstroFire different',
-      'Space research protects us on Earth too',
-    ]) {
-      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument()
+    expect(screen.getByText('From research to answers', { selector: 'p' }).className).toMatch(/font-mono/)
+    expect(screen.getByRole('heading', { level: 2, name: 'How AstroFire 3D helps' })).toBeInTheDocument()
+
+    const steps = within(screen.getByRole('heading', { level: 2, name: 'How AstroFire 3D helps' }).closest('section')!)
+    for (const name of ['The problem', 'Our approach', 'The solution']) {
+      expect(steps.getAllByText(name).length).toBeGreaterThan(0)
     }
     for (const title of [
-      'It turns into a ball.',
-      'Air vents spread it.',
-      'More oxygen, more danger.',
-      'Pick a scenario.',
-      'See the fire and its risk.',
-      'Put it out.',
-      'From fire to extinguisher.',
-      'Every answer has a source.',
+      'Fire behaves differently in space, and the data to plan for it is hard to use.',
+      'We bring the research together.',
+      'AstroFire 3D turns it into a clear answer in seconds.',
     ]) {
-      expect(screen.getByRole('heading', { level: 3, name: title })).toBeInTheDocument()
+      expect(steps.getByRole('heading', { level: 3, name: title })).toBeInTheDocument()
     }
-    expect(screen.getAllByRole('link', { name: /Launch Simulator/ })).toHaveLength(2)
+    for (const item of [
+      'Without gravity, flames turn round, slow and hard to see.',
+      'Cabin airflow and oxygen-richer habitats change how materials burn.',
+      'Decades of experiments are spread across reports and raw tables.',
+      'SI that reads, compares and cites these sources',
+      'Set material, gravity, oxygen and airflow',
+      'See the flame in 3D and its fire risk',
+      'Size the ISS water-mist extinguisher for that fire',
+      'Check the source behind every number',
+    ]) {
+      expect(steps.getByText(item)).toBeInTheDocument()
+    }
+    expect(steps.getByText('PSI · BASS-II')).toBeInTheDocument()
+    expect(steps.getByText('NTRS')).toBeInTheDocument()
     // The UFSC (VSB-30) item stays hidden until its reference is in docs/references.md.
-    expect(screen.queryByText(/UFSC/)).toBeNull()
-    const main = screen.getByRole('main')
-    expect(main.textContent).not.toMatch(/buoyancy|quiescent|regimes/i)
+    expect(screen.queryByText(/UFSC|VSB-30|Brazilian/)).toBeNull()
+
+    const closing = within(screen.getByRole('heading', { level: 2, name: 'Ready to test a scenario?' }).closest('section')!)
+    expect(closing.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
+    expect(closing.getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/about')
+
+    // Old sections are gone.
+    for (const old of ['The science', 'How it works', 'What makes AstroFire different', 'Back on Earth']) {
+      expect(screen.queryByText(old)).toBeNull()
+    }
   })
 
   it('home hero backdrop is decorative and holds still without motion support', () => {
@@ -111,12 +125,12 @@ describe('site structure', () => {
     expect(screen.getByText('safer.', { selector: 'span.safer-in' })).toBeInTheDocument()
   })
 
-  it('every Home section follows the hero pattern with a mono label', () => {
+  it('uses the AstroFire 3D name and wordmark', () => {
     renderAt('/')
-    for (const label of ['The science', 'How it works', 'Why AstroFire', 'Back on Earth']) {
-      const el = screen.getByText(label, { selector: 'p' })
-      expect(el.className).toMatch(/font-mono/)
-    }
+    const brand = screen.getByRole('link', { name: 'AstroFire 3D home' })
+    expect(brand).toHaveTextContent('AstroFire3D')
+    expect(within(brand).getByText('3D').className).toMatch(/9AA8BD/)
+    expect(screen.getByTestId('footer-disclaimer')).toHaveTextContent('AstroFire 3D outputs')
   })
 
   it('home keeps NASA out of the hero title and buttons', () => {

@@ -1,7 +1,7 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { useRef, type CSSProperties, type ReactNode } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { Link } from 'react-router'
-import { AlarmSmoke, ArrowRight, Droplets, Gauge, HardHat, Play, SlidersHorizontal } from 'lucide-react'
+import { ArrowRight, Play } from 'lucide-react'
 import { RocketHeroBackdrop } from '../components/RocketHeroBackdrop'
 import { SkyLayer } from '../components/home/SkyLayer'
 import { PlanetHorizon } from '../components/home/PlanetHorizon'
@@ -17,8 +17,8 @@ function stagger(step: number): CSSProperties {
   return { '--d': `${step * 80}ms` } as CSSProperties
 }
 
-/** Same translucent card on every section: #0F1728 at ~85%, #1F2C47 border, 12px corners. */
-const CARD = 'rounded-xl border border-subtle bg-panel/85'
+/** Translucent panel used by every Home section: #0F1728 at ~88%, #1F2C47 border, 16px corners. */
+const PANEL = 'rounded-2xl border border-subtle bg-panel/88'
 
 export function HomePage() {
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -30,12 +30,20 @@ export function HomePage() {
     <div ref={rootRef} className="relative isolate overflow-x-clip bg-linear-to-b from-hero to-void">
       <SkyLayer />
       <Hero />
-      <ProblemSection />
-      <HowItWorksSection />
-      <DifferentSection />
-      <EarthSection />
-      <FinalCta />
+      <HelpsSection />
+      <ClosingSection />
     </div>
+  )
+}
+
+function DocumentationButton() {
+  return (
+    <Link
+      to={LINKS.about}
+      className="inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label"
+    >
+      Documentation
+    </Link>
   )
 }
 
@@ -92,12 +100,7 @@ function Hero() {
 
         <div className="hero-rise mt-10 flex flex-wrap items-center justify-center gap-3" style={stagger(3)}>
           <LaunchSimulatorButton />
-          <Link
-            to={LINKS.about}
-            className="inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label"
-          >
-            Documentation
-          </Link>
+          <DocumentationButton />
           <a
             href={PITCH_VIDEO_URL}
             className="inline-flex items-center gap-2 rounded-[10px] px-3 py-3 text-sm text-secondary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:text-primary"
@@ -114,250 +117,175 @@ function Hero() {
 
 /* ------------------------------------------------------------------ */
 
-/** Shared section pattern: mono label, centered title, centered content, same width and spacing. */
-function HomeSection({
-  id,
-  label,
-  title,
-  first = false,
-  children,
-}: {
-  id: string
-  label: string
-  title: string
-  /** The first section sits right under the planet arc: ~96px of breathing room from the arc. */
-  first?: boolean
-  children: ReactNode
-}) {
+/** Section header in the hero pattern: mono label and centered title (rocket keeps away). */
+function SectionHeader({ id, label, title }: { id: string; label: string; title: string }) {
   return (
-    <section className="relative" aria-labelledby={`${id}-title`}>
-      <div className={`mx-auto max-w-5xl px-4 text-center sm:px-6 ${first ? "pt-6 pb-24" : "py-24"}`}>
-        <div data-rocket-avoid>
-        <p data-reveal className="reveal font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
-          <span className="text-brand" aria-hidden>
-            ●
-          </span>{' '}
-          {label}
-        </p>
-        <h2
-          id={`${id}-title`}
-          data-reveal
-          style={stagger(1)}
-          className="reveal mx-auto mt-4 max-w-2xl text-2xl font-semibold tracking-tight text-primary sm:text-3xl"
-        >
-          {title}
-        </h2>
+    <div data-rocket-avoid className="text-center">
+      <p data-reveal className="reveal font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
+        <span className="text-brand" aria-hidden>
+          ●
+        </span>{' '}
+        {label}
+      </p>
+      <h2
+        id={`${id}-title`}
+        data-reveal
+        style={stagger(1)}
+        className="reveal mx-auto mt-4 max-w-2xl text-2xl font-semibold tracking-tight text-primary sm:text-3xl"
+      >
+        {title}
+      </h2>
+    </div>
+  )
+}
+
+interface Step {
+  n: number
+  name: string
+  /** Marker and step-name styling. */
+  marker: string
+  nameColor: string
+  dashColor: string
+  title: string
+  items: { text: string; badge?: string }[]
+}
+
+/*
+ * TODO(references): add this item to "Our approach" once the UFSC (VSB-30) study is
+ * registered in docs/references.md (it is not there yet, so it is not shown):
+ *   { text: 'Brazilian sounding-rocket research', badge: 'UFSC · VSB-30' }
+ */
+const STEPS: Step[] = [
+  {
+    n: 1,
+    name: 'The problem',
+    marker: 'border-2 border-[#4C8DFF] bg-panel text-[#8CB4FF]',
+    nameColor: 'text-[#8CB4FF]',
+    dashColor: 'text-[#8CB4FF]',
+    title: 'Fire behaves differently in space, and the data to plan for it is hard to use.',
+    items: [
+      { text: 'Without gravity, flames turn round, slow and hard to see.' },
+      { text: 'Cabin airflow and oxygen-richer habitats change how materials burn.' },
+      { text: 'Decades of experiments are spread across reports and raw tables.' },
+    ],
+  },
+  {
+    n: 2,
+    name: 'Our approach',
+    marker: 'border-2 border-[#B98A5A] bg-panel text-[#E6C9A8]',
+    nameColor: 'text-[#E6C9A8]',
+    dashColor: 'text-[#B98A5A]',
+    title: 'We bring the research together.',
+    items: [
+      { text: 'NASA combustion experiments', badge: 'PSI · BASS-II' },
+      { text: 'NASA technical reports', badge: 'NTRS' },
+      { text: 'SI that reads, compares and cites these sources' },
+    ],
+  },
+  {
+    n: 3,
+    name: 'The solution',
+    marker: 'border-2 border-[#F28C28] bg-[#F28C28] text-[#0A101C]',
+    nameColor: 'text-[#F28C28]',
+    dashColor: 'text-[#F28C28]',
+    title: 'AstroFire 3D turns it into a clear answer in seconds.',
+    items: [
+      { text: 'Set material, gravity, oxygen and airflow' },
+      { text: 'See the flame in 3D and its fire risk' },
+      { text: 'Size the ISS water-mist extinguisher for that fire' },
+      { text: 'Check the source behind every number' },
+    ],
+  },
+]
+
+/** Vertical connector colors between stacked steps (narrow screens). */
+const VERTICAL_SEGMENTS = ['from-[#33456A] to-[#B98A5A]', 'from-[#B98A5A] to-[#F28C28]']
+
+function HelpsSection() {
+  return (
+    <section className="relative" aria-labelledby="helps-title">
+      {/* First section under the planet arc: ~96px of breathing room from the arc. */}
+      <div className="mx-auto max-w-6xl px-4 pt-12 pb-20 sm:px-6 min-[1400px]:pt-6">
+        <SectionHeader id="helps" label="From research to answers" title="How AstroFire 3D helps" />
+
+        <div data-reveal style={stagger(2)} className={`reveal relative mt-12 p-6 text-left sm:p-8 lg:p-10 ${PANEL}`}>
+          {/* Horizontal connector through the three markers (desktop). */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-[calc(2.5rem+13px)] left-[calc(2.5rem+14px)] hidden h-[2px] w-[calc((100%-5rem+2.5rem)*2/3)] bg-linear-to-r from-[#33456A] to-[#F28C28] lg:block"
+          />
+          <ol className="grid gap-10 lg:grid-cols-3 lg:gap-10">
+            {STEPS.map((step, i) => (
+              <li key={step.n} data-reveal style={stagger(3 + i)} className="reveal relative pl-12 lg:pl-0">
+                {/* Vertical connector to the next step (narrow screens). */}
+                {i < STEPS.length - 1 ? (
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none absolute top-7 -bottom-10 left-[13px] w-[2px] bg-linear-to-b lg:hidden ${VERTICAL_SEGMENTS[i]}`}
+                  />
+                ) : null}
+                <div className="absolute top-0 left-0 flex items-center lg:relative">
+                  <span
+                    className={`relative z-10 inline-flex size-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold ${step.marker}`}
+                    aria-hidden="true"
+                  >
+                    {step.n}
+                  </span>
+                  <span className={`hidden bg-panel px-3 font-mono text-[0.75rem] tracking-[0.14em] uppercase lg:inline ${step.nameColor}`}>
+                    {step.name}
+                  </span>
+                </div>
+                <p className={`font-mono text-[0.75rem] tracking-[0.14em] uppercase lg:hidden ${step.nameColor}`}>
+                  <span className="sr-only">Step {step.n}: </span>
+                  {step.name}
+                </p>
+                <h3 className="mt-3 text-[22px] leading-snug font-semibold text-primary lg:mt-6">{step.title}</h3>
+                <ul className="mt-5 space-y-3">
+                  {step.items.map((item) => (
+                    <li key={item.text} className="flex gap-3 text-sm leading-relaxed text-secondary">
+                      <span className={`shrink-0 ${step.dashColor}`} aria-hidden="true">
+                        —
+                      </span>
+                      <span>
+                        {item.text}
+                        {item.badge ? (
+                          <span className="ml-2 inline-block rounded-md border border-subtle bg-void/60 px-1.5 py-0.5 align-middle font-mono text-[0.6875rem] tracking-[0.06em] whitespace-nowrap text-label">
+                            {item.badge}
+                          </span>
+                        ) : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="mt-12">{children}</div>
       </div>
     </section>
   )
 }
 
-function ProblemSection() {
+function ClosingSection() {
   return (
-    <HomeSection id="problem" first label="The science" title="Fire in space doesn’t behave like on Earth.">
-      <div className="grid gap-4 md:grid-cols-3">
-        <ProblemCard step={2} index="01" channel="Gravity" title="It turns into a ball." diagram={<BallDiagram />}>
-          Without gravity, hot air doesn’t rise, so flames become slow, round and hard to see.
-        </ProblemCard>
-        <ProblemCard step={3} index="02" channel="Airflow" title="Air vents spread it." diagram={<FlowDiagram />}>
-          Cabin airflow pushes the flame and helps it grow.
-        </ProblemCard>
-        <ProblemCard step={4} index="03" channel="Oxygen" title="More oxygen, more danger." diagram={<OxygenDiagram />}>
-          Future Moon bases will have oxygen-richer air, so materials burn more easily.
-        </ProblemCard>
-      </div>
-    </HomeSection>
-  )
-}
-
-function ProblemCard({
-  step,
-  index,
-  channel,
-  title,
-  diagram,
-  children,
-}: {
-  step: number
-  index: string
-  channel: string
-  title: string
-  diagram: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <article data-reveal style={stagger(step)} className={`reveal flex flex-col p-6 sm:p-7 ${CARD}`}>
-      <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-muted uppercase">
-        <span className="text-brand">{index}</span> · {channel}
-      </p>
-      <div className="mx-auto mt-5 h-16 w-40">{diagram}</div>
-      <h3 className="mt-5 text-lg font-semibold text-primary">{title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-secondary">{children}</p>
-    </article>
-  )
-}
-
-/* Small instrument-style line diagrams, one per card (decorative). */
-
-function BallDiagram() {
-  return (
-    <svg viewBox="0 0 160 64" className="size-full" aria-hidden="true">
-      <line x1="0" y1="56" x2="160" y2="56" stroke="var(--border-subtle)" />
-      {[24, 16, 9].map((r, i) => (
-        <circle key={r} cx="80" cy="32" r={r} fill="none" stroke="var(--brand-blue)" strokeOpacity={0.35 + i * 0.25} />
-      ))}
-      <rect x="77" y="29" width="6" height="6" fill="var(--text-secondary)" />
-      <text x="118" y="14" className="fill-[var(--text-muted)] font-mono text-[8px]">
-        g = 0
-      </text>
-    </svg>
-  )
-}
-
-function FlowDiagram() {
-  return (
-    <svg viewBox="0 0 160 64" className="size-full" aria-hidden="true">
-      {[18, 32, 46].map((y) => (
-        <g key={y} stroke="var(--text-muted)" fill="none">
-          <line x1="4" y1={y} x2="34" y2={y} />
-          <polyline points={`30,${y - 3} 34,${y} 30,${y + 3}`} />
-        </g>
-      ))}
-      <path d="M58 32 C 66 18, 110 18, 154 32 C 110 46, 66 46, 58 32 Z" fill="none" stroke="var(--brand-orange)" strokeWidth="1.4" />
-      <rect x="53" y="29" width="6" height="6" fill="var(--text-secondary)" />
-    </svg>
-  )
-}
-
-function OxygenDiagram() {
-  return (
-    <svg viewBox="0 0 160 64" className="size-full" aria-hidden="true">
-      <line x1="10" y1="40" x2="150" y2="40" stroke="var(--border-subtle)" strokeWidth="6" strokeLinecap="round" />
-      <line x1="10" y1="40" x2="104" y2="40" stroke="var(--brand-blue-light)" strokeWidth="6" strokeLinecap="round" strokeOpacity="0.7" />
-      <line x1="78" y1="26" x2="78" y2="54" stroke="var(--brand-orange)" strokeWidth="1.5" strokeDasharray="3 3" />
-      <text x="78" y="20" textAnchor="middle" className="fill-[var(--brand-orange)] font-mono text-[8px]">
-        LIMIT
-      </text>
-      <text x="150" y="20" textAnchor="end" className="fill-[var(--text-muted)] font-mono text-[8px]">
-        % O2
-      </text>
-    </svg>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-
-const STEPS = [
-  {
-    icon: SlidersHorizontal,
-    title: 'Pick a scenario.',
-    body: 'Choose a material, gravity, oxygen and airflow.',
-  },
-  {
-    icon: Gauge,
-    title: 'See the fire and its risk.',
-    body: (
-      <>
-        Watch the flame in 3D and get a risk score explained by{' '}
-        <abbr title="Super Intelligence" className="no-underline">
-          SI
-        </abbr>
-        .
-      </>
-    ),
-  },
-  {
-    icon: Droplets,
-    title: 'Put it out.',
-    body: 'See how much water mist the ISS extinguisher would need.',
-  },
-]
-
-function HowItWorksSection() {
-  return (
-    <HomeSection id="how" label="How it works" title="How it works">
-      <ol className="grid gap-4 md:grid-cols-3">
-        {STEPS.map(({ icon: Icon, title, body }, i) => (
-          <li key={title} data-reveal style={stagger(i + 2)} className={`reveal flex flex-col items-center p-6 sm:p-7 ${CARD}`}>
-            <span className="inline-flex size-10 items-center justify-center rounded-[10px] border border-subtle bg-void/60 text-brand">
-              <Icon className="size-[18px]" aria-hidden />
-            </span>
-            <span className="mt-4 font-mono text-[0.6875rem] tracking-[0.14em] text-muted">STEP {String(i + 1).padStart(2, '0')}</span>
-            <h3 className="mt-3 text-lg font-semibold text-primary">{title}</h3>
-            <p className="mt-2 max-w-xs text-sm leading-relaxed text-secondary">{body}</p>
-          </li>
-        ))}
-      </ol>
-    </HomeSection>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-
-/*
- * TODO(references): add this item once the UFSC (VSB-30) study is registered in
- * docs/references.md (it is not there yet, so it is not shown):
- *   title: 'NASA and Brazilian research, side by side.'
- *   body:  'We combine NASA space experiments with Brazilian sounding-rocket research from UFSC (VSB-30).'
- */
-const DIFFERENTIATORS = [
-  {
-    title: 'From fire to extinguisher.',
-    body: 'Most tools stop at the risk. We go one step further and size the suppression.',
-  },
-  {
-    title: 'Every answer has a source.',
-    body: 'Each result links to the study behind it and says if it’s measured data or an estimate.',
-  },
-]
-
-function DifferentSection() {
-  return (
-    <HomeSection id="different" label="Why AstroFire" title="What makes AstroFire different">
-      <ul className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
-        {DIFFERENTIATORS.map((item, i) => (
-          <li key={item.title} data-reveal style={stagger(i + 2)} className={`reveal p-6 sm:p-7 ${CARD}`}>
-            <span className="font-mono text-sm text-brand">{String(i + 1).padStart(2, '0')}</span>
-            <h3 className="mt-3 text-lg font-semibold text-primary">{item.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-secondary">{item.body}</p>
-          </li>
-        ))}
-      </ul>
-    </HomeSection>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-
-const EARTH_USES = [
-  { icon: Droplets, label: 'Water mist extinguishers' },
-  { icon: AlarmSmoke, label: 'Better smoke detectors' },
-  { icon: HardHat, label: 'Safer firefighter gear' },
-]
-
-function EarthSection() {
-  return (
-    <HomeSection id="earth" label="Back on Earth" title="Space research protects us on Earth too">
-      <ul data-reveal style={stagger(2)} className={`reveal mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-8 gap-y-4 px-6 py-5 ${CARD}`}>
-        {EARTH_USES.map(({ icon: Icon, label }) => (
-          <li key={label} className="inline-flex items-center gap-2.5 text-sm text-secondary">
-            <Icon className="size-4 text-label" aria-hidden />
-            {label}
-          </li>
-        ))}
-      </ul>
-    </HomeSection>
-  )
-}
-
-function FinalCta() {
-  return (
-    <section className="relative" aria-label="Launch the simulator">
-      <div data-reveal className="reveal mx-auto flex max-w-5xl justify-center px-4 pb-24 sm:px-6">
-        <div data-rocket-avoid>
-          <LaunchSimulatorButton />
+    <section className="relative" aria-labelledby="closing-title">
+      <div className="mx-auto max-w-6xl px-4 pt-4 pb-24 sm:px-6">
+        <div
+          data-reveal
+          className={`reveal flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:p-10 ${PANEL}`}
+        >
+          <div data-rocket-avoid className="max-w-2xl">
+            <h2 id="closing-title" className="text-[30px] leading-tight font-semibold tracking-tight text-primary">
+              Ready to test a scenario?
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-secondary">
+              Space fire research also supports safer water-mist extinguishers, smoke detectors and firefighter gear on Earth.
+            </p>
+          </div>
+          <div data-rocket-avoid className="flex shrink-0 flex-wrap items-center gap-3">
+            <LaunchSimulatorButton />
+            <DocumentationButton />
+          </div>
         </div>
       </div>
     </section>

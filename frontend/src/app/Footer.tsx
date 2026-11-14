@@ -14,7 +14,7 @@ export function Footer() {
           </div>
           <p className="text-sm leading-relaxed text-secondary" data-testid="footer-disclaimer">
             <strong className="font-medium text-primary">For research and education only.</strong>{' '}
-            AstroFire outputs are not certified safety assessments, and suppression guidance is
+            AstroFire 3D outputs are not certified safety assessments, and suppression guidance is
             not an approved operational procedure. The 3D chamber is a parameter-driven
             illustration, not a validated CFD simulation.
           </p>
