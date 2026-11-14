@@ -159,17 +159,23 @@ describe('site structure', () => {
   it('About page: short product sections in order, no removed technical content', async () => {
     const { container } = renderAt('/about')
     await screen.findByRole('heading', { level: 1, name: 'About AstroFire 3D' }, { timeout: 5000 })
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.replace(/^\d+/, ''))).toEqual([
       'How it works',
       'How we use SI',
-      'Limitations',
       'Data & credits',
-      '21 Pyro Rangers',
+      'Team',
     ])
-    for (const block of ['Data', 'Engine', 'Console']) expect(screen.getByText(block)).toBeInTheDocument()
-    expect(screen.getByText(/Claude:/).parentElement).toHaveTextContent('code, interface design and website copy')
-    expect(screen.getByText(/Gemini:/).parentElement).toHaveTextContent('code assistance and test data generation')
-    expect(screen.getByText('Uberlândia, Brazil · NASA Space Apps Challenge 2026')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Limitations' })).toBeNull()
+    expect(screen.getByRole('navigation', { name: 'On this page' })).toBeInTheDocument()
+    expect(screen.getByText('Figure 1.')).toBeInTheDocument()
+    expect(screen.getByText('Table 1.')).toBeInTheDocument()
+    for (const block of ['Data', 'Engine', 'Console']) {
+      expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent?.replace(/^\d+/, '') === block)).toBeInTheDocument()
+    }
+    expect(screen.getByRole('cell', { name: 'Claude' }).nextElementSibling).toHaveTextContent('code, interface design and website copy')
+    expect(screen.getByRole('cell', { name: 'Gemini' }).nextElementSibling).toHaveTextContent('code assistance and test data generation')
+    expect(screen.getByRole('cell', { name: '[VOICE TOOL]' })).toBeInTheDocument()
+    expect(container.querySelector('#team')).toHaveTextContent('21 Pyro Rangers · Uberlândia, Brazil · NASA Space Apps Challenge 2026')
     for (const role of ['Data & physics engine', 'Backend & API', 'Data analysis & model accuracy', 'Science & SI validation', '3D flame chamber', 'Front-end & product']) {
       expect(screen.getByText(role)).toBeInTheDocument()
     }
