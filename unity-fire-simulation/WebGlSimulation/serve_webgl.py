@@ -1,78 +1,90 @@
-"""SI-assisted: generated with Codex; pending human review.
-Serve a Unity WebGL export on localhost without the Unity Editor.
-"""
+#!/usr/bin/env python3
+# SI-assisted: generated with Codex, reviewed and aligned by Esquivel & Elias — [PROJECT_NAME]
 import argparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+import mimetypes
 from pathlib import Path
+import urllib.parse
 import webbrowser
 
 
-class UnityHandler(SimpleHTTPRequestHandler):
-    def send_response(self, code, message=None):
-        self.response_code = code
-        super().send_response(code, message)
-
-    def guess_type(self, path):
-        uncompressed = str(path)
-        for extension in (".br", ".gz"):
-            if uncompressed.endswith(extension):
-                uncompressed = uncompressed[:-len(extension)]
-                break
-        if uncompressed.endswith(".wasm"):
-            return "application/wasm"
-        if uncompressed.endswith(".js"):
-            return "application/javascript"
-        if uncompressed.endswith((".data", ".unityweb")):
-            return "application/octet-stream"
-        return super().guess_type(uncompressed)
+class UnityWebGLHandler(SimpleHTTPRequestHandler):
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".wasm": "application/wasm",
+        ".js": "application/javascript",
+        ".json": "application/json",
+        ".data": "application/octet-stream",
+        ".symbols.json": "application/octet-stream",
+    }
 
     def end_headers(self):
-        # Only mark successful file responses as compressed, never an HTML error page.
-        if getattr(self, "response_code", 0) in (200, 304):
-            path = self.translate_path(self.path)
-            if path.endswith(".br"):
-                self.send_header("Content-Encoding", "br")
-            elif path.endswith(".gz"):
-                self.send_header("Content-Encoding", "gzip")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cross-Origin-Resource-Policy", "cross-origin")
         self.send_header("Cache-Control", "no-store")
-        # Allows builds using SharedArrayBuffer to run on localhost as well.
-        self.send_header("Cross-Origin-Opener-Policy", "same-origin")
-        self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
         super().end_headers()
+
+    def guess_type(self, path):
+        if path.endswith((".br", ".gz")):
+            path = path[:-3]
+        if path.endswith(".symbols.json"):
+            return "application/octet-stream"
+        return mimetypes.guess_type(path)[0] or self.extensions_map.get(Path(path).suffix, "application/octet-stream")
+
+    def send_head(self):
+        local_path = Path(self.translate_path(self.path))
+        if local_path.suffix == ".br":
+            self.send_response(200)
+            self.send_header("Content-Type", self.guess_type(local_path.name))
+            self.send_header("Content-Encoding", "br")
+            self.send_header("Content-Length", str(local_path.stat().st_size))
+            self.end_headers()
+            return local_path.open("rb")
+        if local_path.suffix == ".gz":
+            self.send_response(200)
+            self.send_header("Content-Type", self.guess_type(local_path.name))
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(local_path.stat().st_size))
+            self.end_headers()
+            return local_path.open("rb")
+        return super().send_head()
+
+
+def resolve_target(raw_target):
+    target = Path(raw_target).expanduser().resolve()
+    if target.is_file():
+        return target.parent, target.name
+    index = target / "index.html"
+    if index.is_file():
+        return target, index.name
+    raise SystemExit(f"Could not find index.html in: {target}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("build", nargs="?", help="Export folder or index.html path")
-    parser.add_argument("--port", type=int, default=0, help="0 selects a free port")
-    parser.add_argument("--no-browser", action="store_true")
+    parser = argparse.ArgumentParser(description="Serve a Unity WebGL export.")
+    parser.add_argument("target", nargs="?", default=".", help="Export folder or index.html path.")
+    parser.add_argument("--port", type=int, default=8080, help="Port number (default: 8080; falls back to free port if busy).")
+    parser.add_argument("--no-browser", action="store_true", help="Do not open the default browser.")
     args = parser.parse_args()
-    selected = args.build
-    if not selected:
-        import tkinter as tk
-        from tkinter import filedialog
-        root = tk.Tk()
-        root.withdraw()
-        selected = filedialog.askopenfilename(title="Select the Unity WebGL export index.html", filetypes=[("HTML", "*.html")])
-        root.destroy()
-        if not selected:
-            return
-    directory = Path(selected).expanduser().resolve()
-    if directory.is_file():
-        directory = directory.parent
-    if not (directory / "index.html").is_file():
-        parser.error("The selected folder must contain index.html.")
-    handler = partial(UnityHandler, directory=str(directory))
-    with ThreadingHTTPServer(("127.0.0.1", args.port), handler) as server:
-        url = f"http://localhost:{server.server_port}/"
-        print(f"Serving: {directory}\nOpen: {url}\nKeep this window open. Press Ctrl+C to stop.", flush=True)
-        if not args.no_browser:
-            webbrowser.open(url)
-        try:
-            server.serve_forever()
-        except KeyboardInterrupt:
-            pass
+
+    root, entry = resolve_target(args.target)
+    handler = partial(UnityWebGLHandler, directory=str(root))
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
+    except OSError:
+        server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    url = f"http://127.0.0.1:{server.server_port}/{urllib.parse.quote(entry)}"
+    print(f"Serving WebGL build at {url}")
+    print("Press Ctrl+C to stop.")
+    if not args.no_browser:
+        webbrowser.open(url)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
 
 
 if __name__ == "__main__":

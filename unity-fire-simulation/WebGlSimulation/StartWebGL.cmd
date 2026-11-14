@@ -1,4 +1,5 @@
+:; exec python3 "$(cd "$(dirname "$0")" && pwd)/serve_webgl.py" "$(cd "$(dirname "$0")" && pwd)/index.html" "$@"
 @echo off
-rem SI-assisted: generated with Codex; pending human review.
+setlocal
 python "%~dp0serve_webgl.py" "%~dp0index.html" %*
-pause
+if errorlevel 1 pause
