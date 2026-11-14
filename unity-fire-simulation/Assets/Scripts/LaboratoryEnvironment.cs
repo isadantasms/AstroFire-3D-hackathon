@@ -242,6 +242,13 @@ namespace FireSimulation
             windowMaterial.SetFloat("_UseWindowView",texture!=null?1:0);
         }
 
+        public void SetEarthSurfaceView(bool enabled,Vector2 parallax)
+        {
+            if(windowMaterial==null) return;
+            windowMaterial.SetFloat("_EarthSurfaceView",enabled?1:0);
+            windowMaterial.SetVector("_EarthViewOffset",new Vector4(parallax.x,parallax.y,0,0));
+        }
+
 
         void OnDisable()
         {

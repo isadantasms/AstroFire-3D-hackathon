@@ -35,6 +35,17 @@ namespace FireSimulation
         public LaboratoryEnvironment.Destination FlightDestination { get; private set; }
         public string Phase { get; private set; } = "CABIN";
         public bool Ready { get; private set; }
+        public bool CabinActionsAvailable
+        {
+            get
+            {
+                if(!Ready || IsTravelling || Phase!="CABIN" || RequestedDestination!=ArrivedDestination) return false;
+                if(environment==null) return true;
+                var desired=environment.followPayloadGravity && fire?.payload?.inputs!=null
+                    ? LaboratoryEnvironment.FromGravity(fire.payload.inputs.gravity_g) : environment.destination;
+                return desired==ArrivedDestination;
+            }
+        }
         public Vector3 ParkedPosition { get; private set; }
         public Quaternion ParkedRotation { get; private set; } = Quaternion.identity;
         public const float RocketScale = .8f;
@@ -44,8 +55,8 @@ namespace FireSimulation
         [Range(0,1)] public float planetaryOverviewStrength = .65f;
         public const float TakeoffEnd = .18f, LandingStart = .82f;
         public const float SkipHoldSeconds = 1;
-        const int SpaceLayer=30, RocketLayer=29;
-        const int ExteriorMask=(1<<SpaceLayer)|(1<<RocketLayer);
+        const int SpaceLayer=30, RocketLayer=29, EarthViewLayer=28;
+        const int ExteriorMask=(1<<SpaceLayer)|(1<<RocketLayer)|(1<<EarthViewLayer);
         public float SkipProgress => Mathf.Clamp01(skipHeld/SkipHoldSeconds);
         float skipHeld;
         int initialCullingMask, savedCullingMask;
@@ -95,6 +106,8 @@ namespace FireSimulation
             BuildWorld();
             SetLayer(world.transform,SpaceLayer);
             SetLayer(ship.transform,RocketLayer);
+            var earth=world.transform.Find("Earth");
+            if(earth!=null) SetLayer(earth,EarthViewLayer);
             initialCullingMask=travelCamera.cullingMask;
             travelCamera.cullingMask &= ~ExteriorMask;
             BuildWindowFeed();
@@ -191,6 +204,11 @@ namespace FireSimulation
             // A window mounted on the rocket, not an orbital camera aimed at the planet's center.
             Vector3 viewerOffset=travelCamera!=null ? travelCamera.transform.position-new Vector3(0,.8f,-3.5f) : Vector3.zero;
             Vector3 parallax=Vector3.ClampMagnitude(viewerOffset*.025f,.16f);
+            bool earthSurface=ArrivedDestination==LaboratoryEnvironment.Destination.Earth;
+            // The Earth porthole sees local terrain and atmosphere, excluding distant bodies and stars.
+            windowCamera.cullingMask=earthSurface ? 1<<EarthViewLayer : (1<<SpaceLayer)|(1<<EarthViewLayer);
+            windowCamera.backgroundColor=earthSurface ? new Color(.23f,.53f,.82f,0) : new Color(.003f,.005f,.012f);
+            environment.SetEarthSurfaceView(earthSurface,new Vector2(parallax.x,parallax.y));
             Vector3 mount=new Vector3(0,.4f,.65f)+parallax;
             Vector3 position=ship.transform.position+ship.transform.rotation*mount;
             Vector3 outward=(ship.transform.forward-ship.transform.up*.22f).normalized;
@@ -403,6 +421,8 @@ namespace FireSimulation
         IEnumerator Journey(LaboratoryEnvironment.Destination target)
         {
             IsTravelling = true; FlightDestination = target;
+            foreach(var extinguisher in Object.FindObjectsByType<ExtinguisherController>(FindObjectsSortMode.None))
+                extinguisher.CancelForTravel();
             skipHeld=0;
             savedPosition = travelCamera.transform.position; savedRotation = travelCamera.transform.rotation;
             savedFov = travelCamera.fieldOfView; savedClear = travelCamera.clearFlags; savedBackground = travelCamera.backgroundColor;

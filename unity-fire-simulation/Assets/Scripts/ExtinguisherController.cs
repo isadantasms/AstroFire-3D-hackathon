@@ -54,6 +54,7 @@ namespace FireSimulation
 
         void Update()
         {
+            if(Application.isPlaying && IsUsing && !CabinAvailable) CancelForTravel();
             if(!IsUsing && storagePoint!=null &&
                 ((transform.position-storagePoint.position).sqrMagnitude>.000001f || Quaternion.Angle(transform.rotation,storagePoint.rotation)>.01f))
                 SnapToStorage();
@@ -143,11 +144,26 @@ namespace FireSimulation
 
         public void UseExtinguisher()
         {
-            if(!Application.isPlaying || IsUsing || fire==null || !fire.HasVisibleFire || (travel!=null && travel.IsTravelling) || spray==null) return;
+            if(!Application.isPlaying || IsUsing || fire==null || !fire.HasVisibleFire || !CabinAvailable || spray==null) return;
             StartCoroutine(Extinguish());
         }
 
-        bool ValidOperation => fire!=null && fire.Revision==revision && (travel==null || !travel.IsTravelling);
+        bool CabinAvailable
+        {
+            get
+            {
+                if(travel==null) travel=fire!=null ? fire.GetComponent<DestinationTravel>() : FindFirstObjectByType<DestinationTravel>();
+                return travel==null || travel.CabinActionsAvailable;
+            }
+        }
+
+        public void CancelForTravel()
+        {
+            if(!IsUsing) return;
+            StopAllCoroutines();cancelled=true;Finish();
+        }
+
+        bool ValidOperation => fire!=null && fire.Revision==revision && CabinAvailable;
         Vector3 Target => fire.specimen!=null ? fire.specimen.FlameOrigin : fire.transform.position;
         IEnumerator Extinguish()
         {
