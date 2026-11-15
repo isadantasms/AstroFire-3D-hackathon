@@ -1,7 +1,6 @@
 // SI-assisted: generated with Claude, reviewed and edited by Elias
 import { useEffect, useState, type ReactNode } from 'react'
 import {
-  ArrowDown,
   ArrowLeft,
   ArrowRight,
   CircleOff,
@@ -10,8 +9,6 @@ import {
   HelpCircle,
   Play,
   RotateCcw,
-  ShieldAlert,
-  Sparkles,
   X,
 } from 'lucide-react'
 
@@ -19,20 +16,8 @@ interface TutorialStepDef {
   id: string
   shortTitle: string
   title: string
-  subtitle: string
   summary: string
   renderVisual: () => ReactNode
-}
-
-function PointerBadge({ label, direction = 'down' }: { label: string; direction?: 'down' | 'left' | 'right' }) {
-  return (
-    <div className="inline-flex items-center gap-1.5 rounded-full border border-brand/70 bg-brand/15 px-2.5 py-1 text-[0.7rem] font-semibold text-brand shadow-sm">
-      {direction === 'left' ? <ArrowLeft className="size-3.5 shrink-0" aria-hidden /> : null}
-      <span>{label}</span>
-      {direction === 'down' ? <ArrowDown className="size-3.5 shrink-0" aria-hidden /> : null}
-      {direction === 'right' ? <ArrowRight className="size-3.5 shrink-0" aria-hidden /> : null}
-    </div>
-  )
 }
 
 const TUTORIAL_STEPS: TutorialStepDef[] = [
@@ -40,36 +25,30 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
     id: 'welcome',
     shortTitle: 'Overview',
     title: 'Welcome to AstroFire 3D',
-    subtitle: 'Microgravity Fire Safety & Suppression Console',
     summary:
-      'Explore how spacecraft materials ignite, spread, and extinguish across orbital and planetary habitats using NASA BASS-II data and our Physics-Informed Neural Network (PINN).',
+      'Simulate how spacecraft materials ignite, spread, and extinguish across orbital and planetary gravity regimes.',
     renderVisual: () => (
-      <div className="space-y-4">
-        <div className="rounded-xl border border-subtle bg-void/80 p-4">
-          <div className="mb-3 flex items-center justify-between text-[0.7rem] text-muted">
-            <span className="font-mono uppercase tracking-wider text-focus">3-Step Mission Console</span>
-            <span>Static Walkthrough · Preset: ISS 0.00 g · PMMA</span>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-subtle bg-panel p-3">
-              <p className="text-xs font-semibold text-primary">1. Mission Controls</p>
-              <p className="mt-1 text-[0.7rem] text-secondary">
-                Choose material, gravity, O₂ concentration, and cabin airflow.
-              </p>
-            </div>
-            <div className="rounded-lg border border-focus/50 bg-panel p-3">
-              <p className="text-xs font-semibold text-primary">2. 3D Flame Chamber</p>
-              <p className="mt-1 text-[0.7rem] text-secondary">
-                Observe the 3D flame geometry and test FWM PFE mist suppression.
-              </p>
-            </div>
-            <div className="rounded-lg border border-subtle bg-panel p-3">
-              <p className="text-xs font-semibold text-primary">3. Results & Copilot</p>
-              <p className="mt-1 text-[0.7rem] text-secondary">
-                Review flammability risk, telemetry, extinguisher sizing, and NASA citations.
-              </p>
-            </div>
-          </div>
+      <div className="grid gap-2.5 sm:grid-cols-3">
+        <div className="rounded-xl border border-subtle bg-void/60 p-3.5">
+          <span className="font-mono text-[0.65rem] text-muted">01</span>
+          <p className="mt-1 text-xs font-medium text-primary">Mission Controls</p>
+          <p className="mt-1 text-xs leading-relaxed text-secondary">
+            Pick material, gravity, oxygen, and airflow.
+          </p>
+        </div>
+        <div className="rounded-xl border border-subtle bg-void/60 p-3.5">
+          <span className="font-mono text-[0.65rem] text-muted">02</span>
+          <p className="mt-1 text-xs font-medium text-primary">3D Flame Chamber</p>
+          <p className="mt-1 text-xs leading-relaxed text-secondary">
+            Inspect flame geometry and trigger water-mist suppression.
+          </p>
+        </div>
+        <div className="rounded-xl border border-subtle bg-void/60 p-3.5">
+          <span className="font-mono text-[0.65rem] text-muted">03</span>
+          <p className="mt-1 text-xs font-medium text-primary">Results & Copilot</p>
+          <p className="mt-1 text-xs leading-relaxed text-secondary">
+            Review risk score, telemetry, and NASA BASS-II sources.
+          </p>
         </div>
       </div>
     ),
@@ -78,27 +57,22 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
     id: 'material',
     shortTitle: 'Material',
     title: 'Step 1 · Select Material',
-    subtitle: '7 NASA BASS-II Spacecraft & Habitat Materials',
     summary:
-      'Use the Material selector to pick a solid fuel (such as PMMA Clear Cast Slab, Nomex III, or SIBAL fabric). Each material loads its verified nominal thickness and combustion properties.',
+      'Choose one of the 7 NASA BASS-II materials in the left panel to load its nominal thickness and combustion properties.',
     renderVisual: () => (
-      <div className="mx-auto max-w-sm rounded-xl border border-subtle bg-void/90 p-4">
-        <div className="mb-2 flex justify-start">
-          <PointerBadge label="Click to choose from 7 NASA BASS-II materials" direction="down" />
+      <div className="mx-auto max-w-sm rounded-xl border border-subtle bg-void/60 p-3.5">
+        <div className="flex items-center justify-between text-xs text-muted">
+          <span>Material</span>
+          <span className="font-mono text-[0.6875rem]">Thickness · 2.00 mm</span>
         </div>
-        <p className="mb-1.5 text-xs text-secondary">Material</p>
-        <div className="flex items-center justify-between gap-2 rounded-xl border-2 border-focus bg-elevated/40 px-3 py-2.5 shadow-[0_0_0_3px_rgba(76,141,255,0.18)]">
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-focus/70 bg-panel px-3 py-2.5">
           <div className="min-w-0">
             <p className="truncate text-xs font-medium text-primary">PMMA Clear Cast Slab</p>
-            <p className="truncate text-[0.65rem] text-muted">Spacecraft Window/Panel Acrylic</p>
+            <p className="truncate text-[0.6875rem] text-secondary">Acrylic spacecraft window panel</p>
           </div>
-          <span className="shrink-0 rounded border border-subtle bg-panel px-1.5 py-0.5 font-mono text-[0.65rem] text-secondary">
+          <span className="shrink-0 rounded border border-subtle bg-void px-1.5 py-0.5 font-mono text-[0.65rem] text-secondary">
             2.00 mm
           </span>
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs text-muted">
-          <span>Thickness</span>
-          <span className="font-mono text-primary">2.00 mm</span>
         </div>
       </div>
     ),
@@ -107,16 +81,12 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
     id: 'gravity',
     shortTitle: 'Gravity',
     title: 'Step 2 · Choose Gravity Regime',
-    subtitle: 'ISS (0.00 g) · Moon (0.16 g) · Mars (0.38 g) · Earth (1.00 g)',
     summary:
-      'Select the destination gravity. Switching location keeps your selected material and transitions the 3D laboratory porthole and buoyancy physics to that environment.',
+      'Switch between ISS, Moon, Mars, and Earth to compare microgravity diffusion flames against buoyant planetary flames.',
     renderVisual: () => (
-      <div className="mx-auto max-w-sm rounded-xl border border-subtle bg-void/90 p-4">
-        <div className="mb-2 flex justify-start">
-          <PointerBadge label="Switches habitat gravity & 3D destination" direction="down" />
-        </div>
-        <p className="mb-1.5 text-xs text-secondary">Gravity</p>
-        <div className="grid grid-cols-4 gap-1 rounded-lg border-2 border-focus bg-panel p-1 shadow-[0_0_0_3px_rgba(76,141,255,0.18)]">
+      <div className="mx-auto max-w-sm rounded-xl border border-subtle bg-void/60 p-3.5">
+        <p className="mb-2 text-xs text-muted">Gravity</p>
+        <div className="grid grid-cols-4 gap-1 rounded-lg border border-subtle bg-panel p-1">
           {[
             { short: 'ISS', g: '0.00 g', active: true },
             { short: 'Moon', g: '0.16 g', active: false },
@@ -126,7 +96,7 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
             <div
               key={item.short}
               className={`rounded-md px-1 py-1.5 text-center ${
-                item.active ? 'bg-elevated text-primary' : 'text-secondary'
+                item.active ? 'bg-elevated text-primary ring-1 ring-focus/60' : 'text-secondary'
               }`}
             >
               <span className="block text-xs font-medium">{item.short}</span>
@@ -141,21 +111,17 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
     id: 'atmosphere',
     shortTitle: 'O₂ & Airflow',
     title: 'Step 3 · Set Oxygen, Airflow & Run',
-    subtitle: 'Cabin Atmosphere & Forced Ventilation',
     summary:
-      'Adjust Oxygen (% O₂) and Airflow (cm/s) to test flammability limits and ventilation effects, then click Run Simulation to compute the PINN prediction and light the 3D chamber.',
+      'Adjust cabin oxygen concentration and airflow velocity, then click Run Simulation to compute the prediction.',
     renderVisual: () => (
-      <div className="mx-auto max-w-sm space-y-3 rounded-xl border border-subtle bg-void/90 p-4">
-        <div className="flex justify-start">
-          <PointerBadge label="Tune O₂ & forced ventilation" direction="down" />
-        </div>
-        <div className="space-y-2.5 rounded-lg border border-focus/60 bg-panel p-3">
+      <div className="mx-auto max-w-sm space-y-3 rounded-xl border border-subtle bg-void/60 p-3.5">
+        <div className="space-y-2.5">
           <div>
             <div className="flex justify-between text-xs">
               <span className="text-secondary">Oxygen</span>
               <span className="font-mono text-primary">21.0 % O₂</span>
             </div>
-            <div className="mt-1.5 h-1.5 w-full rounded-full bg-void">
+            <div className="mt-1.5 h-1.5 w-full rounded-full bg-panel">
               <div className="h-1.5 w-[37%] rounded-full bg-brand" />
             </div>
           </div>
@@ -164,17 +130,14 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
               <span className="text-secondary">Airflow</span>
               <span className="font-mono text-primary">5.0 cm/s</span>
             </div>
-            <div className="mt-1.5 h-1.5 w-full rounded-full bg-void">
-              <div className="h-1.5 w-[10%] rounded-full bg-brand" />
+            <div className="mt-1.5 h-1.5 w-full rounded-full bg-panel">
+              <div className="h-1.5 w-[15%] rounded-full bg-brand" />
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <div className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-hero">
-            <Play className="size-3.5 fill-current" aria-hidden />
-            Run Simulation
-          </div>
-          <PointerBadge label="Start test" direction="left" />
+        <div className="flex items-center justify-center gap-1.5 rounded-lg bg-brand py-2 text-xs font-semibold text-hero">
+          <Play className="size-3.5 fill-current" aria-hidden />
+          Run Simulation
         </div>
       </div>
     ),
@@ -183,37 +146,30 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
     id: 'flame',
     shortTitle: '3D Flame',
     title: 'Step 4 · Observe the 3D Flame',
-    subtitle: 'Authentic Microgravity vs. Gravity Flame Physics',
     summary:
-      'In ISS microgravity (0.00 g) with PMMA at 21% O₂ and 5 cm/s, there is no upward buoyancy—the flame forms a compact blue spherical diffusion flame (#3B82F6). Higher gravity elongates and turns it amber.',
+      'In microgravity, flames form a compact blue sphere fed by slow oxygen diffusion; under gravity, buoyancy elongates the plume.',
     renderVisual: () => (
-      <div className="rounded-xl border border-subtle bg-void/90 p-3">
-        <div className="flex items-center justify-between border-b border-subtle pb-2 text-xs">
-          <span className="font-semibold text-primary">3D flame chamber</span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-panel px-2 py-0.5 text-brand">
+      <div className="mx-auto max-w-md rounded-xl border border-subtle bg-void/60 p-3.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-secondary">3D chamber</span>
+          <span className="inline-flex items-center gap-1 text-brand">
             <Flame className="size-3.5" aria-hidden />
             Burning
           </span>
         </div>
-        <div className="relative mt-2 flex h-40 flex-col items-center justify-center overflow-hidden rounded-lg border border-subtle bg-hero">
-          <div className="absolute top-2.5 right-2.5">
-            <PointerBadge label="Spherical blue 0g flame (#3B82F6)" direction="left" />
-          </div>
-          <svg viewBox="0 0 240 120" className="h-28 w-56" role="img" aria-label="Static 0g blue spherical flame">
+        <div className="mt-2.5 flex h-28 flex-col items-center justify-center rounded-lg border border-subtle bg-hero">
+          <svg viewBox="0 0 240 100" className="h-20 w-48" role="img" aria-label="Static 0g blue spherical flame">
             <defs>
               <radialGradient id="tut-flame-0g" cx="50%" cy="50%" r="55%">
                 <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
-                <stop offset="55%" stopColor="#3b82f6" stopOpacity="0.5" />
+                <stop offset="55%" stopColor="#3b82f6" stopOpacity="0.45" />
                 <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
               </radialGradient>
             </defs>
-            <circle cx="120" cy="60" r="42" fill="url(#tut-flame-0g)" />
-            <circle cx="120" cy="60" r="28" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.85" />
-            <rect x="112" y="54" width="16" height="12" rx="2" fill="#b4c0d3" />
+            <circle cx="120" cy="50" r="36" fill="url(#tut-flame-0g)" />
+            <circle cx="120" cy="50" r="24" fill="none" stroke="#3b82f6" strokeWidth="1.25" strokeOpacity="0.8" />
+            <rect x="113" y="45" width="14" height="10" rx="2" fill="#b4c0d3" />
           </svg>
-          <p className="font-mono text-[0.65rem] text-secondary">
-            ISS Microgravity (0.00g) · PMMA Clear Cast Slab · 2.0 mm · 21.0% O₂ · 5.0 cm/s
-          </p>
         </div>
       </div>
     ),
@@ -222,36 +178,20 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
     id: 'suppress',
     shortTitle: 'Extinguisher',
     title: 'Step 5 · Discharge FWM PFE',
-    subtitle: 'ISS Fine Water Mist Portable Fire Extinguisher',
     summary:
-      'Click Discharge FWM PFE to trigger the 3D water-mist extinguisher. The chamber extinguishes the flame using the backend cooling efficiency and discharge duration model.',
+      'When a sample is burning, use Discharge FWM PFE below Run Simulation to release the water-mist spray and extinguish the flame.',
     renderVisual: () => (
-      <div className="rounded-xl border border-subtle bg-void/90 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle pb-2 text-xs">
-          <span className="inline-flex items-center gap-1 rounded-full bg-panel px-2 py-0.5 text-secondary">
-            <CircleOff className="size-3.5" aria-hidden />
-            Extinguished · after FWM PFE discharge
-          </span>
-          <div className="flex items-center gap-2">
-            <PointerBadge label="Click to suppress flame" direction="right" />
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-focus bg-focus px-2.5 py-1 text-[0.7rem] font-semibold text-hero">
-              <Droplets className="size-3.5" aria-hidden />
-              Discharge FWM PFE
-            </span>
-          </div>
+      <div className="mx-auto max-w-sm space-y-2.5 rounded-xl border border-subtle bg-void/60 p-3.5">
+        <div className="flex items-center justify-center gap-1.5 rounded-lg border border-focus bg-focus py-2 text-xs font-semibold text-hero">
+          <Droplets className="size-3.5" aria-hidden />
+          Discharge FWM PFE
         </div>
-        <div className="mt-2 flex h-32 items-center justify-center rounded-lg border border-subtle bg-hero px-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 text-focus">
-              <Droplets className="size-5" aria-hidden />
-              <span className="font-mono text-xs">Fine Water Mist Spray</span>
-            </div>
-            <ArrowRight className="size-4 text-muted" aria-hidden />
-            <div className="rounded-md border border-subtle bg-panel px-3 py-2 text-center">
-              <span className="block text-xs font-medium text-primary">Sample Cooled</span>
-              <span className="block font-mono text-[0.65rem] text-muted">Flame extinguished</span>
-            </div>
-          </div>
+        <div className="flex items-center justify-between rounded-lg border border-subtle bg-panel px-3 py-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 text-secondary">
+            <CircleOff className="size-3.5" aria-hidden />
+            Extinguished
+          </span>
+          <span className="font-mono text-[0.6875rem] text-muted">after FWM PFE discharge</span>
         </div>
       </div>
     ),
@@ -260,44 +200,26 @@ const TUTORIAL_STEPS: TutorialStepDef[] = [
     id: 'results',
     shortTitle: 'Results',
     title: 'Step 6 · Interpret Results & Copilot',
-    subtitle: 'Right-Hand Decision Console',
     summary:
-      'Review the Flammability Risk score, burn rate & O₂ limit telemetry, ISS FWM PFE mist sizing, SI safety copilot guidance, and the grounding badge showing whether data is empirical or interpolated.',
+      'Check the right-hand panel for the flammability risk score, burn rate telemetry, extinguisher sizing, and NASA citations.',
     renderVisual: () => (
-      <div className="mx-auto max-w-md space-y-2.5 rounded-xl border border-subtle bg-void/90 p-3">
-        <div className="flex justify-end">
-          <PointerBadge label="Risk, telemetry, sizing & NASA grounding" direction="down" />
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="rounded-lg border border-focus/60 bg-panel p-2.5">
-            <div className="flex items-center justify-between text-[0.65rem]">
-              <span className="font-semibold text-primary">Risk</span>
-              <span className="rounded border border-focus/60 px-1 py-0.5 text-[0.6rem] text-focus">
-                NASA experimental data
-              </span>
-            </div>
-            <p className="mt-1 font-mono text-lg font-semibold text-amber">54 / 100</p>
-            <p className="text-[0.65rem] text-muted">Moderate flammability risk</p>
+      <div className="mx-auto max-w-md grid gap-2.5 sm:grid-cols-2">
+        <div className="rounded-xl border border-subtle bg-void/60 p-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-secondary">Risk</span>
+            <span className="font-mono text-[0.65rem] text-focus">NASA data</span>
           </div>
-          <div className="rounded-lg border border-focus/60 bg-panel p-2.5">
-            <p className="text-[0.65rem] font-semibold text-primary">Telemetry</p>
-            <div className="mt-1.5 grid grid-cols-2 gap-1 font-mono text-[0.65rem]">
-              <span className="text-muted">Burn: <strong className="text-primary">0.07 mm/s</strong></span>
-              <span className="text-muted">O₂ lim: <strong className="text-primary">17.1%</strong></span>
-              <span className="text-muted">CO: <strong className="text-primary">370 ppm</strong></span>
-              <span className="text-muted">CO₂: <strong className="text-primary">0.9%</strong></span>
-            </div>
-          </div>
+          <p className="mt-1 font-mono text-base font-semibold text-amber">54 / 100</p>
+          <p className="text-[0.6875rem] text-muted">Moderate Alert</p>
         </div>
-        <div className="flex items-center justify-between rounded-lg border border-subtle bg-panel px-3 py-2 text-[0.7rem]">
-          <span className="inline-flex items-center gap-1.5 text-secondary">
-            <Sparkles className="size-3.5 text-focus" aria-hidden />
-            SI Safety Copilot & FWM PFE Sizing
-          </span>
-          <span className="inline-flex items-center gap-1 text-muted">
-            <ShieldAlert className="size-3.5" aria-hidden />
-            Grounded
-          </span>
+        <div className="rounded-xl border border-subtle bg-void/60 p-3">
+          <p className="text-xs text-secondary">Telemetry</p>
+          <div className="mt-1.5 grid grid-cols-2 gap-1 font-mono text-[0.6875rem]">
+            <span className="text-muted">Burn: <strong className="font-normal text-primary">0.07 mm/s</strong></span>
+            <span className="text-muted">LOI: <strong className="font-normal text-primary">17.1%</strong></span>
+            <span className="text-muted">CO: <strong className="font-normal text-primary">370 ppm</strong></span>
+            <span className="text-muted">CO₂: <strong className="font-normal text-primary">0.9%</strong></span>
+          </div>
         </div>
       </div>
     ),
@@ -340,32 +262,33 @@ export function SimulatorTutorialModal({ open, onClose }: SimulatorTutorialModal
       className="fixed inset-0 z-50 flex items-center justify-center bg-void/80 p-4 backdrop-blur-sm"
     >
       <div className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-subtle bg-panel shadow-2xl">
-        <header className="flex items-start justify-between gap-3 border-b border-subtle px-5 py-4">
+        <header className="flex items-start justify-between gap-4 px-6 pt-5 pb-3">
           <div>
-            <p className="font-mono text-[0.7rem] uppercase tracking-wider text-focus">
-              Simulator Tutorial · Step {stepIndex + 1} of {TUTORIAL_STEPS.length}
+            <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-muted uppercase">
+              Tutorial walkthrough · Demo preview
             </p>
-            <h2 id="tutorial-title" className="mt-0.5 text-base font-semibold text-primary">
+            <h2 id="tutorial-title" className="mt-1 text-lg font-semibold tracking-tight text-primary">
               {step.title}
             </h2>
-            <p className="text-xs text-muted">{step.subtitle}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close tutorial"
-            className="inline-flex items-center justify-center rounded-lg border border-subtle bg-void p-1.5 text-secondary transition-colors hover:border-focus hover:text-primary"
+            className="inline-flex items-center justify-center rounded-lg border border-subtle bg-void/60 p-1.5 text-secondary transition-colors hover:border-label hover:text-primary"
           >
             <X className="size-4" aria-hidden />
           </button>
         </header>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-3">
           <p className="text-sm leading-relaxed text-secondary">{step.summary}</p>
-          {step.renderVisual()}
+          <div className="pointer-events-none select-none" aria-hidden="true">
+            {step.renderVisual()}
+          </div>
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle bg-void/60 px-5 py-3">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle bg-void/40 px-6 py-3">
           <div className="flex items-center gap-1.5" aria-label="Tutorial steps">
             {TUTORIAL_STEPS.map((item, idx) => (
               <button
@@ -374,14 +297,22 @@ export function SimulatorTutorialModal({ open, onClose }: SimulatorTutorialModal
                 onClick={() => setStepIndex(idx)}
                 aria-label={`Go to step ${idx + 1}: ${item.shortTitle}`}
                 aria-current={idx === stepIndex ? 'step' : undefined}
-                className={`h-2 rounded-full transition-all ${
-                  idx === stepIndex ? 'w-6 bg-brand' : 'w-2 bg-subtle hover:bg-secondary'
-                }`}
-              />
+                className="group inline-flex !min-h-0 !min-w-0 items-center justify-center rounded-full"
+              >
+                <span
+                  className={`inline-flex size-7 items-center justify-center rounded-full font-mono text-xs tabular-nums transition-colors ${
+                    idx === stepIndex
+                      ? 'bg-brand font-semibold text-hero'
+                      : 'bg-void/80 text-secondary ring-1 ring-subtle group-hover:text-primary group-hover:ring-label'
+                  }`}
+                >
+                  {idx + 1}
+                </span>
+              </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
