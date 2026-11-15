@@ -24,6 +24,8 @@ namespace FireSimulation
         float elapsed;
         bool initialized;
         Texture liveWindowTexture;
+        Transform airflowFan, fanRotor, fanStand, fanBase;
+        float fanSpeed, fanAngle;
         static readonly string[] Labels = { "ISS", "EARTH", "MOON", "MARS" };
 
         void OnEnable()
@@ -101,7 +103,87 @@ namespace FireSimulation
             var collider = window.GetComponent<Collider>();
             if (collider != null) collider.enabled = false;
             initialized = false;
+            BuildAirflowFan();
             Update();
+        }
+
+        void BuildAirflowFan()
+        {
+            var assembly = new GameObject("Airflow fan (generated)") { hideFlags = HideFlags.HideAndDontSave };
+            assembly.transform.SetParent(room.transform, false);
+            airflowFan = assembly.transform;
+            var rotor = new GameObject("Airflow driven rotor") { hideFlags = HideFlags.HideAndDontSave };
+            rotor.transform.SetParent(airflowFan, false);
+            fanRotor = rotor.transform;
+            // Local +Z is the exhaust, pointing from the fan towards the sample.
+            for (int side = -1; side <= 1; side += 2)
+            {
+                FanBlock("Fan housing side", airflowFan, new Vector3(side*.31f,0,0), new Vector3(.08f,.7f,.23f), trimMaterial);
+                FanBlock("Fan housing rail", airflowFan, new Vector3(0,side*.31f,0), new Vector3(.54f,.08f,.23f), trimMaterial);
+            }
+            for (int blade = 0; blade < 4; blade++)
+            {
+                float angle = blade*90;
+                Quaternion rotation = Quaternion.Euler(0,0,angle);
+                var part = FanBlock("Voxel fan blade", fanRotor, rotation*new Vector3(.13f,.035f,0), new Vector3(.22f,.095f,.035f), structureMaterial);
+                part.localRotation = rotation*Quaternion.Euler(18,0,0);
+                FanBlock("Blade tip marker", fanRotor, rotation*new Vector3(.225f,.035f,0), new Vector3(.035f,.06f,.04f), lightMaterial).localRotation = rotation;
+            }
+            FanBlock("Rotor hub", fanRotor, Vector3.zero, new Vector3(.11f,.11f,.1f), trimMaterial);
+            // Both guards are stationary; gaps keep the moving blades visible.
+            for (int side = -1; side <= 1; side += 2)
+                for (int bar = -2; bar <= 2; bar++)
+                    FanBlock("Safety grille", airflowFan, new Vector3(bar*.105f,0,side*.13f), new Vector3(.012f,.55f,.018f), trimMaterial);
+            FanBlock("Fan motor", airflowFan, new Vector3(0,0,-.18f), new Vector3(.15f,.15f,.13f), structureMaterial);
+            fanStand = CreateFanSupport("Fan support", new Vector3(.09f,1,.09f));
+            fanBase = CreateFanSupport("Fan anchored base", new Vector3(.52f,.06f,.48f));
+            fanSpeed = fanAngle = 0;
+            UpdateAirflowFan();
+        }
+
+        Transform CreateFanSupport(string label, Vector3 size)
+        {
+            return FanBlock(label, room.transform, Vector3.zero, size, trimMaterial);
+        }
+
+        Transform FanBlock(string label, Transform parent, Vector3 position, Vector3 size, Material appearance)
+        {
+            var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            block.name = label;
+            block.hideFlags = HideFlags.HideAndDontSave;
+            block.layer = gameObject.layer;
+            block.transform.SetParent(parent,false);
+            block.transform.localPosition = position;
+            block.transform.localScale = size;
+            block.GetComponent<Renderer>().sharedMaterial = appearance;
+            var collider = block.GetComponent<Collider>();
+            if (collider != null) collider.enabled = false;
+            return block.transform;
+        }
+
+        void UpdateAirflowFan()
+        {
+            if (airflowFan == null || fire == null) return;
+            Vector3 direction = fire.transform.TransformDirection(fire.airflowDirection);
+            bool hasDirection = direction.sqrMagnitude > .000001f;
+            direction = hasDirection ? direction.normalized : fire.transform.right;
+            airflowFan.position = fire.transform.position-direction*1.15f;
+            airflowFan.rotation = Quaternion.LookRotation(direction, Mathf.Abs(Vector3.Dot(direction,Vector3.up))>.98f ? Vector3.forward : Vector3.up);
+            // The stand remains upright even when the fan head is tilted.
+            Vector3 foot = airflowFan.position;
+            foot.y = -.10f;
+            fanBase.position = foot;
+            float height = Mathf.Max(.05f,airflowFan.position.y-foot.y);
+            fanStand.position = foot+Vector3.up*(height*.5f);
+            fanStand.localScale = new Vector3(.09f,height,.09f);
+            float airflow = fire.payload?.inputs != null ? fire.payload.inputs.airflow_cm_s : 0;
+            if (float.IsNaN(airflow) || float.IsInfinity(airflow)) airflow = 0;
+            // Deliberately readable display speed, not a calibrated physical RPM model.
+            float target = hasDirection ? 240*Mathf.Log(1+Mathf.Max(0,airflow)*.1f) : 0;
+            if (!Application.isPlaying) return;
+            fanSpeed = Mathf.MoveTowards(fanSpeed,target,720*Time.deltaTime);
+            fanAngle = Mathf.Repeat(fanAngle+fanSpeed*Time.deltaTime,360);
+            fanRotor.localRotation = Quaternion.Euler(0,0,fanAngle);
         }
 
         const float WindowCellSize=.12f;
@@ -197,6 +279,7 @@ namespace FireSimulation
 
         void Update()
         {
+            UpdateAirflowFan();
             if (windowMaterial == null) return;
             if (followPayloadGravity && fire?.payload?.inputs != null) destination = FromGravity(fire.payload.inputs.gravity_g);
             if (!initialized)
