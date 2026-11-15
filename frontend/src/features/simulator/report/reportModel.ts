@@ -11,7 +11,7 @@ import { isCitationShown, shortCitationId } from '../results/resultHelpers'
 import { MOCK_TEXT_NOTE, TEMPLATE_TEXT_NOTE } from '../../../content/project'
 
 export const REPORT_TITLE = 'Scenario Fire Safety Analysis'
-export const PRODUCT_NAME = 'AstroFire'
+export const PRODUCT_NAME = 'AstroFire 3D'
 export const NOT_AVAILABLE = 'Not available'
 export const GUIDANCE_NOTE = 'Research guidance, not an operational procedure.'
 /** TODO(si): If the PINN is wired into /api/simulate, update this note to describe the ML prediction step. */

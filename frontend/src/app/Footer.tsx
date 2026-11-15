@@ -14,8 +14,8 @@ export function Footer() {
     <footer className="relative bg-hero">
       <div className="mx-auto flex max-w-[1920px] flex-col gap-2 px-4 py-4 text-xs text-[#7D8BA1] sm:px-6 md:flex-row md:items-center md:justify-between md:gap-6">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="inline-flex items-center gap-[5px]">
-            <BrandMark size={14} />
+          <span className="inline-flex items-center gap-1.5">
+            <BrandMark size={18} />
             <Wordmark className="text-xs" />
           </span>
           <span data-testid="footer-credit">© 2026 21 Pyro Rangers · Built for NASA Space Apps Challenge 2026</span>

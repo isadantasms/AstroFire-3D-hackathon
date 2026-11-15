@@ -2,26 +2,18 @@
 // Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
 // Reference: Olson et al., NASA/TM-20210011385 (2021); Saffire (NTRS-20170000230, NTRS-20240002981)
 /**
- * Documentation: a short page that meets the rules (sources, credits, access to the SI disclosure),
- * shows the investigation ranking and leads to the full technical PDF. Technical depth (model,
- * validation, architecture, equations) lives in the PDF and in docs/technical-notes.md, not here.
+ * Documentation: the minimum the rules ask for (NASA sources with links, credits and licenses, access
+ * to the SI disclosure) plus the way to the full technical PDF. Everything else (investigation ranking
+ * by habitat, model, validation, architecture) lives in the PDF and in docs/technical-notes.md.
  */
-import { lazy, Suspense, useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Link, useLocation } from 'react-router'
 import { ChevronDown, Download, ExternalLink, FileText } from 'lucide-react'
 import { Tag } from '../components/ConsolePanel'
 import { CreditsLedger } from '../components/CreditsLedger'
 import { Tooltip } from '../components/Tooltip'
 import { DOCUMENTATION_PDF_URL, DOCUMENTATION_SI_URL, LINKS } from '../app/routes'
-import {
-  HABITATS,
-  INVESTIGATIONS,
-  RELEVANCE_EXPLANATION,
-  relevanceOf,
-  type HabitatKey,
-  type Investigation,
-  type Relevance,
-} from '../content/investigations'
+import { INVESTIGATIONS } from '../content/investigations'
 import { REFERENCES } from '../content/references'
 // Lazy: keeps the BASS-II snapshot and API client out of the main bundle.
 const BassExperimentsSection = lazy(() =>
@@ -30,10 +22,9 @@ const BassExperimentsSection = lazy(() =>
 
 const SECTIONS = [
   { id: 'full-documentation', label: 'Full documentation' },
-  { id: 'investigations', label: 'Investigations' },
+  { id: 'research', label: 'NASA research' },
   { id: 'data', label: 'Data' },
-  // #references and #credits stay as anchors inside this section.
-  { id: 'sources', label: 'Sources & credits' },
+  { id: 'credits', label: 'Credits' },
 ] as const
 
 const SI_CHAPTER = 'Use of Super Intelligence (SI)'
@@ -61,9 +52,9 @@ export function DocumentationPage() {
       <DocumentationHeader />
       <div className="mx-auto max-w-6xl space-y-16 px-4 py-12 sm:px-6">
         <FullDocumentationCard />
-        <InvestigationsSection />
+        <ResearchSection />
         <BassDataSection />
-        <SourcesSection />
+        <CreditsSection />
       </div>
     </div>
   )
@@ -81,7 +72,7 @@ function DocumentationHeader() {
         </p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-primary sm:text-4xl">Documentation</h1>
         <p className="mt-4 max-w-3xl text-base leading-relaxed text-secondary">
-          The research, data and methods behind AstroFire.
+          The research, data and methods behind AstroFire 3D.
         </p>
         <nav aria-label="On this page" className="mt-8">
           <ul className="flex flex-wrap gap-2">
@@ -99,6 +90,18 @@ function DocumentationHeader() {
         </nav>
       </div>
     </header>
+  )
+}
+
+function Section({ id, label, title, children }: { id: string; label: string; title: string; children: ReactNode }) {
+  return (
+    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-20">
+      <p className="font-mono text-[0.6875rem] tracking-[0.18em] text-label uppercase">{label}</p>
+      <h2 id={`${id}-title`} className="mt-2 text-2xl font-semibold tracking-tight text-primary">
+        {title}
+      </h2>
+      <div className="mt-6">{children}</div>
+    </section>
   )
 }
 
@@ -121,7 +124,7 @@ function FullDocumentationCard() {
             Full documentation
           </p>
           <h2 id="full-documentation-title" className="mt-3 text-2xl font-semibold tracking-tight text-primary">
-            AstroFire · Technical Documentation
+            AstroFire 3D · Technical Documentation
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-secondary sm:text-[0.9375rem]">
             Everything about the project in one document: the science and calculations behind the simulator, the data and
@@ -212,172 +215,75 @@ function DocAction({
   )
 }
 
-function Section({ id, label, title, children }: { id: string; label: string; title: string; children: ReactNode }) {
-  return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-20">
-      <p className="font-mono text-[0.6875rem] tracking-[0.18em] text-label uppercase">{label}</p>
-      <h2 id={`${id}-title`} className="mt-2 text-2xl font-semibold tracking-tight text-primary">
-        {title}
-      </h2>
-      <div className="mt-6">{children}</div>
-    </section>
-  )
-}
-
-/** Inline citation linking to the numbered reference list. */
-function Cite({ refs }: { refs: number[] }) {
-  if (refs.length === 0) return null
-  return (
-    <span className="font-mono text-[0.6875rem]">
-      {refs.map((n) => (
-        <a key={n} href={`#ref-${n}`} className="text-focus hover:underline" aria-label={`Reference ${n}`}>
-          [{n}]
-        </a>
-      ))}
-    </span>
-  )
-}
-
 /* ------------------------------------------------------------------ */
-/* Investigations                                                      */
+/* NASA research                                                       */
 /* ------------------------------------------------------------------ */
 
-function InvestigationsSection() {
-  const [habitat, setHabitat] = useState<HabitatKey>('lunar_base')
-  const ranked = [...INVESTIGATIONS].sort((a, b) => b.scores[habitat] - a.scores[habitat])
+/**
+ * The NASA experiments behind AstroFire 3D, one plain line each, with a link to the source.
+ * The full citations are collapsed under "Full references" (#references); links to #references or
+ * #ref-n open it automatically.
+ */
+function ResearchSection() {
+  const { hash } = useLocation()
+  const [refsOpen, setRefsOpen] = useState(false)
+  useEffect(() => {
+    if (hash === '#references' || hash.startsWith('#ref-')) setRefsOpen(true)
+  }, [hash])
 
   return (
-    <Section id="investigations" label="Investigations" title="Which experiments matter for your habitat?">
-      <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Target habitat">
-        {HABITATS.map((h) => {
-          const active = habitat === h.key
-          return (
-            <button
-              key={h.key}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => setHabitat(h.key)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
-                active
-                  ? 'border-focus bg-elevated font-medium text-primary'
-                  : 'border-subtle bg-panel text-secondary hover:text-primary'
-              }`}
-            >
-              {h.label}
-            </button>
-          )
-        })}
-      </div>
-      <p className="mt-3 max-w-3xl text-xs leading-relaxed text-secondary">
-        {RELEVANCE_EXPLANATION}
-      </p>
-
-      <ol className="mt-6 grid gap-4 md:grid-cols-2">
-        {ranked.map((inv, idx) => (
-          <InvestigationCard key={inv.id} inv={inv} rank={idx + 1} relevance={relevanceOf(inv, habitat)} />
-        ))}
-      </ol>
-    </Section>
-  )
-}
-
-const RELEVANCE_TONE: Record<Relevance, string> = {
-  High: 'border-focus/60 text-focus',
-  Medium: 'border-subtle text-secondary',
-}
-
-function InvestigationCard({ inv, rank, relevance }: { inv: Investigation; rank: number; relevance: Relevance }) {
-  return (
-    <li className={`${PANEL} flex flex-col p-5`}>
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="min-w-0 text-base leading-snug font-semibold text-primary">
-          <span className="mr-1.5 font-mono text-xs font-normal text-muted">#{rank}</span>
-          <span>{inv.name}</span>
-        </h3>
-        <span
-          data-testid="relevance"
-          title="Team-assigned relevance"
-          className={`shrink-0 rounded-md border px-2 py-0.5 text-xs ${RELEVANCE_TONE[relevance]}`}
-        >
-          <span className="sr-only">Team-assigned relevance: </span>
-          {relevance}
-        </span>
-      </div>
-
-      <p className="mt-2">
-        <span
-          data-testid="site"
-          title={inv.facility}
-          className="inline-block rounded-md border border-subtle bg-void/60 px-1.5 py-0.5 font-mono text-[0.6875rem] tracking-[0.06em] text-label"
-        >
-          {inv.site}
-        </span>
-      </p>
-
-      <div className="mt-4">
-        <p className="text-xs text-muted">Why it matters</p>
-        <p className="mt-0.5 text-sm leading-relaxed text-secondary">{inv.why}</p>
-      </div>
-
-      <details className="group mt-4 border-t border-subtle pt-3">
-        <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-secondary hover:text-primary [&::-webkit-details-marker]:hidden">
-          <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden />
-          Details
-        </summary>
-        <div className="mt-3 space-y-2 text-xs leading-relaxed text-secondary">
-          <p>
-            <strong className="font-medium text-primary">Facility:</strong> {inv.facility} · <span className="font-mono">{inv.code}</span>
-          </p>
-          <p>
-            <strong className="font-medium text-primary">Conditions tested:</strong>{' '}
-            <span className="font-mono tabular-nums">{inv.conditions ?? 'See source'}</span>
-          </p>
-          <p>
-            <strong className="font-medium text-primary">Materials:</strong> {inv.materials}
-          </p>
-          <p>
-            <strong className="font-medium text-primary">Similarity:</strong> {inv.similarity}
-          </p>
-          <p>
-            <strong className="font-medium text-primary">Key distinction:</strong> {inv.difference}
-          </p>
-          <div className="mt-3 rounded-lg border border-subtle bg-void p-3">
-            <p className="font-mono text-[0.625rem] tracking-[0.08em] text-muted uppercase">
-              SI-assisted guidance · research only, not an operational procedure
-            </p>
-            <div className="mt-2 space-y-1">
-              <p>
-                <span className="font-medium text-nominal">Prevention: </span>
-                {inv.prevention}
-              </p>
-              <p>
-                <span className="font-medium text-warning">Detection: </span>
-                {inv.detection}
-              </p>
-              <p>
-                <span className="font-medium text-critical">Suppression: </span>
-                {inv.suppression}
-              </p>
+    <Section id="research" label="NASA research" title="The NASA research behind AstroFire 3D">
+      <ul className={`${PANEL} divide-y divide-subtle`}>
+        {INVESTIGATIONS.map((inv) => (
+          <li key={inv.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-6 sm:px-5">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-semibold text-primary">{inv.name}</h3>
+              <p className="mt-0.5 text-sm leading-relaxed text-secondary">{inv.plain}</p>
             </div>
-          </div>
-        </div>
-      </details>
+            <a
+              href={inv.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex shrink-0 items-center gap-1 text-xs text-focus hover:underline"
+            >
+              View source
+              <ExternalLink className="size-3.5" aria-hidden />
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          </li>
+        ))}
+      </ul>
 
-      <div className="mt-auto flex items-center justify-between gap-3 border-t border-subtle pt-3 text-xs">
-        <Cite refs={inv.refs} />
-        <a
-          href={inv.url}
-          target="_blank"
-          rel="noreferrer"
-          className="ml-auto inline-flex items-center gap-1 text-focus hover:underline"
-        >
-          View source
-          <ExternalLink className="size-3.5" aria-hidden />
-          <span className="sr-only">(opens in a new tab)</span>
-        </a>
-      </div>
-    </li>
+      <details
+        id="references"
+        className="group mt-4 scroll-mt-20"
+        open={refsOpen}
+        onToggle={(e) => setRefsOpen(e.currentTarget.open)}
+      >
+        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm text-secondary hover:text-primary [&::-webkit-details-marker]:hidden">
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+          Full references ({REFERENCES.length})
+        </summary>
+        <ol className="mt-3 space-y-3">
+          {REFERENCES.map((r) => (
+            <li key={r.n} id={`ref-${r.n}`} className="flex scroll-mt-20 gap-3 text-xs leading-relaxed">
+              <span className="shrink-0 font-mono text-muted tabular-nums">[{r.n}]</span>
+              <span className="min-w-0 text-secondary">
+                {r.text}{' '}
+                <a href={r.url} target="_blank" rel="noreferrer" className="text-focus [overflow-wrap:anywhere] hover:underline">
+                  {r.url}
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 text-xs text-muted">
+          NASA data is CC0-1.0 and NASA technical reports are U.S. Government public domain. <Tag>To verify</Tag> Full
+          references for FLEX and SPICE, and the license of the SoFIE web page.
+        </p>
+      </details>
+    </Section>
   )
 }
 
@@ -389,8 +295,8 @@ function BassDataSection() {
   return (
     <Section id="data" label="Data" title="The experimental data">
       <p className="max-w-3xl text-sm leading-relaxed text-secondary">
-        BASS-II tests run aboard the ISS, as recorded in the NASA PSI dataset <Cite refs={[2]} /> and the summary report{' '}
-        <Cite refs={[1]} />.
+        The fire tests NASA ran aboard the ISS for the BASS-II experiment, as published in the NASA PSI open data
+        repository.
       </p>
       {/* Data notes, in one line: open licenses only, and Moon/Mars are estimates. */}
       <p data-testid="data-notes" className="mt-2 mb-4 max-w-3xl text-xs leading-relaxed text-muted">
@@ -405,41 +311,14 @@ function BassDataSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Sources & credits                                                   */
+/* Credits & licenses                                                  */
 /* ------------------------------------------------------------------ */
 
-/** Numbered NASA references on top (the [n] on the cards point here), then the credits table. */
-function SourcesSection() {
+function CreditsSection() {
   return (
-    <Section id="sources" label="Sources & credits" title="Sources & credits">
-      <div id="references" className="scroll-mt-20">
-        <h3 className="text-base font-semibold text-primary">References</h3>
-        <p className="mt-1 text-xs text-muted">
-          NASA data (CC0-1.0) and technical reports (U.S. Government public domain) behind the cards and the simulator.
-        </p>
-        <ol className={`mt-4 ${PANEL} divide-y divide-subtle`}>
-          {REFERENCES.map((r) => (
-            <li key={r.n} id={`ref-${r.n}`} className="flex scroll-mt-20 gap-3 p-4 text-sm leading-relaxed">
-              <span className="shrink-0 font-mono text-xs text-muted tabular-nums">[{r.n}]</span>
-              <span className="min-w-0 text-secondary">
-                {r.text}{' '}
-                <a href={r.url} target="_blank" rel="noreferrer" className="text-focus [overflow-wrap:anywhere] hover:underline">
-                  {r.url}
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              </span>
-            </li>
-          ))}
-        </ol>
-        <p className="mt-3 text-xs text-muted">
-          <Tag>To verify</Tag> The FLEX and SPICE cards link to the NASA PSI repository; their full references are still to
-          be added. The license of the SoFIE web page [6] is to verify.
-        </p>
-      </div>
-
-      <div className="mt-10">
-        <CreditsLedger />
-      </div>
+    <Section id="licenses" label="Credits" title="Credits & licenses">
+      {/* The footer "Credits" link lands on #credits (the table below). */}
+      <CreditsLedger />
     </Section>
   )
 }

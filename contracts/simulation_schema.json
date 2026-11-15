@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://spaceapps2026.org/contracts/simulation_schema.json",
-  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina, Celina & Esquivel — AstroFire | Grounded on NASA PSI BASS-II (PSI-25, DOI: 10.60555/4qc4-de67, CC0-1.0) and NASA/TM-20210011385 (PSI-10 strictly excluded).",
+  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina, Celina & Esquivel — AstroFire 3D | Grounded on NASA PSI BASS-II (PSI-25, DOI: 10.60555/4qc4-de67, CC0-1.0) and NASA/TM-20210011385 (PSI-10 strictly excluded).",
   "title": "MicrogravitySimulationContract",
-  "description": "Unified 80/20 JSON contract for AstroFire connecting FastAPI, the Three.js Microgravity Simulator (Esquivel), and the 3-Column Telemetry Console (Rocha, Dantas & Celina) with explicit NASA PSI/NTRS scientific grounding.",
+  "description": "Unified 80/20 JSON contract for AstroFire 3D connecting FastAPI, the Three.js Microgravity Simulator (Esquivel), and the 3-Column Telemetry Console (Rocha, Dantas & Celina) with explicit NASA PSI/NTRS scientific grounding.",
   "type": "object",
   "additionalProperties": false,
   "required": [

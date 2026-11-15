@@ -3,15 +3,14 @@ import { ExternalLink } from 'lucide-react'
 import { CREDITS_LEDGER } from '../content/credits'
 
 /**
- * Software, tools, assets and SI tools with their licenses (Documentation → Sources & credits).
- * NASA data and reports are the numbered references shown above it, so they are not repeated here.
+ * Software, tools, assets and SI tools with their licenses (Documentation → Credits & licenses).
+ * NASA data and reports are listed under "The NASA research" with full references, so they are not repeated here.
  * The footer "Credits" link lands here (#credits).
  */
 export function CreditsLedger() {
   return (
-    <div id="credits" className="scroll-mt-20">
-      <h3 className="text-base font-semibold text-primary">Credits &amp; licenses</h3>
-      <p className="mt-1 text-xs text-muted">Software, tools, assets and SI tools used to build AstroFire.</p>
+    <div id="credits" className="scroll-mt-24">
+      <p className="text-xs text-muted">Software, tools, assets and SI tools used to build AstroFire 3D.</p>
       <div className="relative mt-4 overflow-x-auto rounded-2xl border border-subtle bg-panel px-4">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="border-b border-subtle text-xs text-muted">

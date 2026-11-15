@@ -1,5 +1,5 @@
 <!-- SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha -->
-# AstroFire — Technical Notes
+# AstroFire 3D — Technical Notes
 
 Working notes for the technical documentation PDF. This content was moved out of the Research & Data page (now Documentation),
 which now only shows the evidence (NASA data, investigation comparison and citations).
@@ -77,11 +77,11 @@ Full disclosure for the technical PDF. The Home shows only a short block (`SI_CO
 
 **Transparency & scientific integrity — Human-led science. AI-assisted development.**
 
-### 3.1 SI inside AstroFire
+### 3.1 SI inside AstroFire 3D
 
 NASA data → Rule-based engine → Results
 
-AstroFire does not run an AI model when you simulate. A deterministic engine matches your scenario to the 79 BASS-II records, or applies formulas bounded by NASA technical reports, and fills in the diagnosis and suppression text from templates. Those rules and templates were drafted with Gemini and reviewed by the team. In mock mode, results come from three sample payloads written with Gemini.
+AstroFire 3D does not run an AI model when you simulate. A deterministic engine matches your scenario to the 79 BASS-II records, or applies formulas bounded by NASA technical reports, and fills in the diagnosis and suppression text from templates. Those rules and templates were drafted with Gemini and reviewed by the team. In mock mode, results come from three sample payloads written with Gemini.
 
 What it does:
 - Computes telemetry from the BASS-II records or NASA-bounded formulas
@@ -99,14 +99,14 @@ In the Simulator and the PDF report, these texts carry the label "Diagnosis text
 
 ### 3.2 AI-assisted development
 
-- ChatGPT (OpenAI): planning, development support and 3D modeling support
+- ChatGPT (OpenAI): planning, development support, 3D modeling support and the logo concept
 - Codex (OpenAI): Unity scripts and shaders for the 3D chamber
 - Gemini (Google): refining the team's business rules, backend integration and test data
 - Claude / Claude Code (Anthropic): front-end code and interface, planning, visual design, documentation, pitch script and reference review
-- AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.
+- AstroFire 3D logo: concept generated with ChatGPT; simplified vector artwork recreated with Claude Code (SI-assisted) and reviewed by the team. The ChatGPT image itself is not used in the project.
 - Demo video narration generated with [VOICE TOOL].
 
-> TODO(logo): when the team redesigns the logo, change the logo line to "AstroFire logo designed by the team; initial concept explored with Claude Code (SI-assisted)."
+> TODO(logo): if the team redraws the logo by hand, change the logo line to "AstroFire 3D logo designed by the team; initial concept explored with ChatGPT and Claude Code (SI-assisted)."
 > TODO(voice-tool): replace [VOICE TOOL] with the name of the narration tool.
 
 ### 3.3 Human review & responsibility
@@ -115,7 +115,14 @@ The team conceived the solution, chose the NASA data and methods, made every des
 
 "Super Intelligence (SI)" is the term used by the Space Apps challenge; ChatGPT, Codex, Gemini and Claude are tools we used for specific tasks.
 
-## 4. Known issues to fix before the PDF
+## 4. NASA investigations: comparison by habitat (for the PDF)
+
+The Documentation page now lists the six NASA investigations with one plain sentence and a source link each. The detailed comparison moved here for the PDF. Source of truth: `frontend/src/content/investigations.ts`.
+
+- For each investigation: code, facility, tested conditions (BASS-II ranges computed from the 79 records; the others "see source"), materials, similarity, key distinction, and SI-assisted prevention / detection / suppression guidance (research only, not an operational procedure).
+- Team-assigned relevance (High / Medium) per habitat (Lunar base, ISS, Martian habitat, crew cabin & pressurized rover). The criteria behind it are not documented yet (to verify); the internal ordering values are in the `scores` field.
+
+## 5. Known issues to fix before the PDF
 
 - Backend risk labels now follow the schema bands for 36–70 (Moderate Alert) and 71–100 (Critical Flashover Risk). The enum has no label for a burning flame scored 0–35 ("Safe" is reserved for extinguished flames), so those keep "Moderate Alert"; "High Risk" is unused (to verify with the team).
-- Investigation relevance on the Documentation page is team-assigned (High / Medium); the criteria are not documented yet (to verify).
+- Investigation relevance by habitat (section 4) is team-assigned; the criteria are not documented yet (to verify).

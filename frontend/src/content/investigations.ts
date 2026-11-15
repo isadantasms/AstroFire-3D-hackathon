@@ -43,6 +43,8 @@ export interface Investigation {
   /** Tested O2 and airflow, only when traceable to a source; otherwise null ("see source"). */
   conditions: string | null
   why: string
+  /** One plain-language sentence for the Documentation page (from the why/difference texts). */
+  plain: string
   materials: string
   similarity: string
   difference: string
@@ -62,12 +64,13 @@ const air = BASS2_RANGES.airflowCmS
 export const INVESTIGATIONS: readonly Investigation[] = [
   {
     id: 'BASS-II',
+    plain: 'How flames spread and go out on solid materials aboard the ISS. The simulator data comes from these tests.',
     code: 'PSI-25 · NASA/TM-20210011385',
     name: 'Burning and Suppression of Solids–II (BASS-II)',
     facility: 'ISS Microgravity Science Glovebox (MSG)',
     site: 'ISS · MSG',
     conditions: `${fmt(o2.min, 1)}–${fmt(o2.max, 1)}% O₂ · ${fmt(air.min, 1)}–${fmt(air.max, 1)} cm/s (79 tests)`,
-    why: 'Observed ISS flame-spread and extinction data for solid fuels under forced flow. AstroFire matches every scenario against these records.',
+    why: 'Observed ISS flame-spread and extinction data for solid fuels under forced flow. AstroFire 3D matches every scenario against these records.',
     materials: 'PMMA slabs, thin films and rods, SIBAL cotton-fiberglass fabric, Nomex III, Japan wax candle',
     similarity: 'Shares PMMA and SIBAL reference fuels with Saffire and SoFIE under controlled forced flow.',
     difference: 'Maps flame-spread and extinction behavior across the 79 BASS-II tests.',
@@ -80,6 +83,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SAFFIRE',
+    plain: 'Large fires on real spacecraft materials, burned inside an uncrewed cargo vehicle.',
     code: 'Saffire I–VI · NTRS-20170000230 & NTRS-20240002981',
     name: 'Spacecraft Fire Safety Demonstration Project (Saffire I–VI)',
     facility: 'Uncrewed Northrop Grumman Cygnus spacecraft',
@@ -98,6 +102,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SOFIE',
+    plain: 'How solid spacecraft materials catch fire and go out under different airflow, oxygen and pressure.',
     code: 'SoFIE · ISS Combustion Integrated Rack (CIR)',
     name: 'Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)',
     facility: 'ISS Combustion Integrated Rack (CIR)',
@@ -117,6 +122,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SAME',
+    plain: 'The smoke that overheated materials give off before flames appear, to improve smoke detection.',
     code: 'SAME · NTRS-20170007283',
     name: 'Smoke Aerosol Measurement Experiment (SAME)',
     facility: 'ISS Microgravity Science Glovebox (MSG)',
@@ -135,6 +141,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'FLEX',
+    plain: 'How burning fuel droplets go out in microgravity.',
     code: 'FLEX & FLEX-2 · ISS CIR',
     name: 'Flame Extinguishment Experiment (FLEX)',
     facility: 'ISS Combustion Integrated Rack (CIR)',
@@ -154,6 +161,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SPICE',
+    plain: 'When gas flames start to produce soot in microgravity.',
     code: 'SPICE · ISS MSG',
     name: 'Smoke Point In Co-flow Experiment (SPICE)',
     facility: 'ISS Microgravity Science Glovebox (MSG)',

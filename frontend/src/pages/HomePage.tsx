@@ -249,7 +249,7 @@ function SideHeader({ id, label, title }: { id: string; label: string; title: st
 }
 
 /**
- * "How AstroFire helps" as a step selector: the three steps on the left (joined by a vertical
+ * "How AstroFire 3D helps" as a step selector: the three steps on the left (joined by a vertical
  * connector), one panel on the right with the selected step. Keyboard: arrow keys move between steps.
  */
 function HelpsSection() {
@@ -282,11 +282,11 @@ function HelpsSection() {
     <section className="relative" aria-labelledby="helps-title">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_1fr] lg:gap-x-14 lg:gap-y-8 min-[1400px]:pt-6">
         <div>
-          <SideHeader id="helps" label="From research to answers" title="How AstroFire helps" />
+          <SideHeader id="helps" label="From research to answers" title="How AstroFire 3D helps" />
 
           <div
             role="tablist"
-            aria-label="How AstroFire helps"
+            aria-label="How AstroFire 3D helps"
             aria-orientation="vertical"
             data-reveal
             style={stagger(2)}
@@ -423,7 +423,7 @@ function SiUsageSection() {
         <div>
           <SideHeader id="si-usage" label="Transparency" title="How we use SI" />
           <p data-reveal style={stagger(2)} className="reveal mt-4 max-w-xs text-sm leading-relaxed text-muted">
-            Where SI is used in AstroFire, and where the team is responsible.
+            Where SI is used in AstroFire 3D, and where the team is responsible.
           </p>
         </div>
 

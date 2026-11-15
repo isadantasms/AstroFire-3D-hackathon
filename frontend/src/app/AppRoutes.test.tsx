@@ -1,6 +1,6 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { AppRoutes } from './AppRoutes'
 
@@ -58,8 +58,7 @@ describe('site structure', () => {
 
   it('home hero exposes the brand, headline and the three calls to action', () => {
     renderAt('/')
-    expect(screen.getByRole('link', { name: 'AstroFire home' })).toBeInTheDocument()
-    expect(document.title === '' || !document.title.includes('3D')).toBe(true)
+    expect(screen.getByRole('link', { name: 'AstroFire 3D home' })).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { level: 1, name: 'Make the next giant leap safer.' }),
     ).toBeInTheDocument()
@@ -73,9 +72,9 @@ describe('site structure', () => {
   it('home follows problem -> approach -> solution, then a closing panel', () => {
     renderAt('/')
     expect(screen.getByText('From research to answers', { selector: 'p' }).className).toMatch(/font-mono/)
-    expect(screen.getByRole('heading', { level: 2, name: 'How AstroFire helps' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'How AstroFire 3D helps' })).toBeInTheDocument()
 
-    const steps = within(screen.getByRole('heading', { level: 2, name: 'How AstroFire helps' }).closest('section')!)
+    const steps = within(screen.getByRole('heading', { level: 2, name: 'How AstroFire 3D helps' }).closest('section')!)
     for (const name of ['The problem', 'Our approach', 'The solution']) {
       expect(steps.getAllByText(name).length).toBeGreaterThan(0)
     }
@@ -132,7 +131,7 @@ describe('site structure', () => {
     expect(closing.getByRole('link', { name: 'Explore Research' })).toHaveAttribute('href', '/documentation')
 
     // Old sections are gone.
-    for (const old of ['The science', 'How it works', 'What makes AstroFire different', 'Back on Earth']) {
+    for (const old of ['The science', 'How it works', 'What makes AstroFire 3D different', 'Back on Earth']) {
       expect(screen.queryByText(old)).toBeNull()
     }
   })
@@ -154,11 +153,11 @@ describe('site structure', () => {
     expect(screen.getByText('safer.', { selector: 'span.safer-in' })).toBeInTheDocument()
   })
 
-  it('uses the AstroFire name and wordmark', () => {
+  it('uses the AstroFire 3D name and wordmark', () => {
     renderAt('/')
-    const brand = screen.getByRole('link', { name: 'AstroFire home' })
-    expect(brand).toHaveTextContent('AstroFire')
-    expect(brand).not.toHaveTextContent('3D')
+    const brand = screen.getByRole('link', { name: 'AstroFire 3D home' })
+    expect(brand).toHaveTextContent('AstroFire 3D')
+    expect(within(brand).getByText('3D').className).toMatch(/9AA8BD/)
   })
 
   it('home keeps NASA out of the hero title and buttons', () => {
@@ -172,7 +171,7 @@ describe('site structure', () => {
     expect(screen.queryByRole('link', { name: 'About & SI Usage' })).toBeNull()
     const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
     expect(h2s).toEqual([
-      'How AstroFire helps',
+      'How AstroFire 3D helps',
       'How we use SI',
       'Built on real research',
       'Explore combustion beyond Earth.',
@@ -206,24 +205,95 @@ describe('site structure', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
   })
 
-  it('Sources & credits: numbered NASA references on top, then the credits table without NASA rows', async () => {
-    const { container } = renderAt('/documentation')
-    const sources = within(await screen.findByRole('region', { name: 'Sources & credits' }))
-    // Old anchors keep working inside the section.
-    const refs = container.querySelector('#references') as HTMLElement
-    const creditsEl = container.querySelector('#credits') as HTMLElement
-    expect(refs).not.toBeNull()
-    expect(creditsEl).not.toBeNull()
-    expect(refs.compareDocumentPosition(creditsEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(sources.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['References', 'Credits & licenses'])
+  it('Documentation: four parts with matching shortcuts and the full-documentation card', async () => {
+    renderAt('/documentation')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Documentation' })).toBeInTheDocument()
+    expect(screen.getByText('The research, data and methods behind AstroFire 3D.')).toBeInTheDocument()
+    const nav = within(screen.getByRole('navigation', { name: 'On this page' }))
+    expect(nav.getAllByRole('link').map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
+      ['Full documentation', '#full-documentation'],
+      ['NASA research', '#research'],
+      ['Data', '#data'],
+      ['Credits', '#credits'],
+    ])
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      'AstroFire 3D · Technical Documentation',
+      'The NASA research behind AstroFire 3D',
+      'The experimental data',
+      'Credits & licenses',
+    ])
 
-    const credits = within(creditsEl)
+    const card = within(document.getElementById('full-documentation')!)
+    expect(card.getByText(/Everything about the project in one document/)).toBeInTheDocument()
+    const contents = card.getByTestId('doc-contents')
+    expect(contents.className).toMatch(/sm:columns-2/)
+    expect(within(contents).getAllByRole('listitem')).toHaveLength(11)
+    expect(within(contents).getByRole('link', { name: 'Use of Super Intelligence (SI)' })).toHaveAttribute('href', '/#si-usage')
+    for (const name of ['Download full documentation (PDF)', 'Read the SI disclosure']) {
+      const action = card.getByRole('button', { name })
+      expect(action).toBeDisabled()
+      expect(action).toHaveAccessibleDescription('Coming soon')
+    }
+
+    // Data notes are one line inside the data section.
+    expect(screen.getByTestId('data-notes')).toHaveTextContent(/PSI-10 has no license listed and is not used/)
+    expect(document.getElementById('data')!.contains(screen.getByTestId('data-notes'))).toBe(true)
+
+    // Moved to the PDF (docs/technical-notes.md): ranking by habitat, relevance, card details, model, method.
+    expect(screen.queryByRole('radio')).toBeNull()
+    expect(screen.queryByTestId('relevance')).toBeNull()
+    expect(screen.queryByText('Details')).toBeNull()
+    expect(screen.queryByText(/Team-assigned relevance|Which experiments matter/)).toBeNull()
+    expect(document.getElementById('method')).toBeNull()
+    expect(screen.queryByText(/Ignition\/quench accuracy|Factor importance|cross-validation/i)).toBeNull()
+  })
+
+  it('NASA research: one plain line and a source link per investigation; full references collapsed', async () => {
+    const { container } = renderAt('/documentation')
+    const research = within(await screen.findByRole('region', { name: 'The NASA research behind AstroFire 3D' }))
+    const items = research.getAllByRole('listitem').filter((li) => li.querySelector('h3'))
+    expect(items.map((li) => li.querySelector('h3')!.textContent)).toEqual([
+      'Burning and Suppression of Solids–II (BASS-II)',
+      'Spacecraft Fire Safety Demonstration Project (Saffire I–VI)',
+      'Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)',
+      'Smoke Aerosol Measurement Experiment (SAME)',
+      'Flame Extinguishment Experiment (FLEX)',
+      'Smoke Point In Co-flow Experiment (SPICE)',
+    ])
+    expect(within(items[0]).getByText(/How flames spread and go out on solid materials aboard the ISS/)).toBeInTheDocument()
+    expect(within(items[0]).getByRole('link', { name: /View source/ })).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
+    for (const li of items) expect(within(li).getByRole('link', { name: /View source/ })).toBeInTheDocument()
+
+    // Full references: collapsed by default, numbered, with the license note.
+    const refs = container.querySelector('#references') as HTMLDetailsElement
+    expect(refs.tagName).toBe('DETAILS')
+    expect(refs.open).toBe(false)
+    expect(within(refs).getByText('Full references (7)')).toBeInTheDocument()
+    for (let n = 1; n <= 7; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
+    expect(within(refs).getByText(/NASA data is CC0-1\.0/)).toBeInTheDocument()
+    expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
+  })
+
+  it('a link to #references opens the full references', async () => {
+    const { container } = renderAt('/documentation#references')
+    await screen.findByRole('heading', { level: 1, name: 'Documentation' })
+    await waitFor(() => expect((container.querySelector('#references') as HTMLDetailsElement).open).toBe(true))
+  })
+
+  it('Credits & licenses: tools, assets and SI tools without repeating NASA sources', async () => {
+    const { container } = renderAt('/documentation')
+    await screen.findByRole('heading', { level: 2, name: 'Credits & licenses' })
+    const credits = within(container.querySelector('#credits') as HTMLElement)
     expect(credits.queryByText(/BASS-II \(PSI-25\)|NASA\/TM-20210011385|NTRS-|Saffire|SoFIE|FLEX|SPICE/)).toBeNull()
     expect(credits.getByText(/IBM Plex Sans, IBM Plex Serif & IBM Plex Mono/)).toBeInTheDocument()
     expect(credits.getByText('MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher')).toBeInTheDocument()
-    expect(credits.getByText('AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.')).toBeInTheDocument()
+    expect(
+      credits.getByText(
+        'AstroFire 3D logo: concept generated with ChatGPT; simplified vector artwork recreated with Claude Code (SI-assisted) and reviewed by the team.',
+      ),
+    ).toBeInTheDocument()
     expect(credits.getByText('Unity (3D chamber engine and WebGL template)')).toBeInTheDocument()
-    expect(credits.getByText(/^ChatGPT \(OpenAI\)/)).toBeInTheDocument()
+    expect(credits.getByText(/^ChatGPT \(OpenAI\).*logo concept/)).toBeInTheDocument()
     expect(credits.getByText(/^Codex \(OpenAI\)/)).toBeInTheDocument()
     for (const name of [
       'Antigravity: coding environment used with Gemini',
@@ -233,100 +303,6 @@ describe('site structure', () => {
       const row = credits.getByText(name).closest('tr')!
       expect(within(row).getByText('To verify')).toBeInTheDocument()
     }
-  })
-
-  it('Documentation: header, four shortcuts, compact contents and section order', async () => {
-    renderAt('/documentation')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Documentation' })).toBeInTheDocument()
-    expect(screen.getByText('The research, data and methods behind AstroFire.')).toBeInTheDocument()
-    const nav = within(screen.getByRole('navigation', { name: 'On this page' }))
-    expect(nav.getAllByRole('link').map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
-      ['Full documentation', '#full-documentation'],
-      ['Investigations', '#investigations'],
-      ['Data', '#data'],
-      ['Sources & credits', '#sources'],
-    ])
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
-      'AstroFire · Technical Documentation',
-      'Which experiments matter for your habitat?',
-      'The experimental data',
-      'Sources & credits',
-    ])
-
-    const card = within(document.getElementById('full-documentation')!)
-    expect(card.getByText(/Everything about the project in one document/)).toBeInTheDocument()
-    const contents = card.getByTestId('doc-contents')
-    expect(contents.className).toMatch(/sm:columns-2/)
-    expect(within(contents).getAllByRole('listitem').map((li) => li.textContent?.replace(/^\d+/, ''))).toEqual([
-      'Problem and challenge alignment',
-      'Product overview',
-      'Using the simulator',
-      'Science and calculations',
-      'Data and curation',
-      'Model and validation',
-      'Architecture and data contract',
-      'Use of Super Intelligence (SI)',
-      'Limitations',
-      'Team and credits',
-      'References',
-    ])
-    // The SI chapter is a link (Home SI block until the PDF exists).
-    expect(within(contents).getByRole('link', { name: 'Use of Super Intelligence (SI)' })).toHaveAttribute('href', '/#si-usage')
-    // The PDF is not published yet: both actions are disabled with "Coming soon".
-    for (const name of ['Download full documentation (PDF)', 'Read the SI disclosure']) {
-      const action = card.getByRole('button', { name })
-      expect(action).toBeDisabled()
-      expect(action).toHaveAccessibleDescription('Coming soon')
-    }
-
-    // Data notes are one line inside the data section; no separate block.
-    expect(screen.getByTestId('data-notes')).toHaveTextContent(/PSI-10 has no license listed and is not used/)
-    expect(screen.getByTestId('data-notes')).toHaveTextContent(/no Moon or Mars combustion data/)
-    expect(document.getElementById('data')!.contains(screen.getByTestId('data-notes'))).toBe(true)
-    expect(document.getElementById('data-notes')).toBeNull()
-
-    // Removed from the page (kept in docs/technical-notes.md).
-    expect(document.getElementById('method')).toBeNull()
-    expect(screen.queryByText(/Method, in short|Two regimes, one console|Hybrid PINN Loss Convergence/)).toBeNull()
-    expect(screen.queryByText(/Ignition\/quench accuracy|Factor importance|cross-validation/i)).toBeNull()
-  })
-
-  it('investigation cards: name, relevance, site badge, why it matters and source; the rest in Details', async () => {
-    renderAt('/documentation')
-    const sofie = (await screen.findByText('Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)')).closest('li')!
-    expect(within(sofie).getByTestId('site')).toHaveTextContent('ISS · CIR')
-    expect(within(sofie).getByText('See source')).toBeInTheDocument()
-    expect(within(sofie).getByText(/Several SoFIE principal investigators also authored the BASS-II summary report/)).toBeInTheDocument()
-    expect(screen.queryByText(/Direct successor to BASS-II/)).toBeNull()
-    expect(screen.queryByText(/15\.0% – 40\.0%|10 kW|370–550 ppm/)).toBeNull()
-
-    const sites = screen.getAllByTestId('site').map((b) => b.textContent)
-    expect(new Set(sites)).toEqual(new Set(['ISS · MSG', 'ISS · CIR', 'Cygnus']))
-
-    // BASS-II range is computed from the 79 dataset records and sits in Details.
-    const bass = screen.getByText('Burning and Suppression of Solids–II (BASS-II)').closest('li')!
-    const details = bass.querySelector('details')!
-    expect(within(details).getByText('13.6–22.2% O₂ · 0.6–47.0 cm/s (79 tests)')).toBeInTheDocument()
-    expect(within(details).getByText(/^Conditions tested:/)).toBeInTheDocument()
-    expect(within(details).getByText('SI-assisted guidance · research only, not an operational procedure')).toBeInTheDocument()
-    expect(within(bass).getByTestId('site')).toHaveTextContent('ISS · MSG')
-    expect(within(bass).getByText('Why it matters')).toBeInTheDocument()
-    expect(within(bass).getByRole('link', { name: /View source/ })).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
-    expect(within(bass).getByRole('link', { name: 'Reference 1' })).toHaveAttribute('href', '#ref-1')
-  })
-
-  it('the habitat selector re-ranks the investigations', async () => {
-    renderAt('/documentation')
-    expect(await screen.findByText(/Team-assigned relevance \(High \/ Medium\)/)).toBeInTheDocument()
-    expect(screen.queryByText(/\/100/)).toBeNull()
-    expect(screen.getAllByTestId('relevance').map((b) => b.textContent?.replace('Team-assigned relevance: ', ''))).toEqual([
-      'High', 'High', 'High', 'Medium', 'Medium', 'Medium',
-    ])
-    const first = () => within(screen.getAllByRole('listitem').find((li) => li.textContent?.startsWith('#1'))!).getByRole('heading', { level: 3 })
-    expect((await screen.findByRole('radio', { name: 'Lunar base (0.16 g)' })).getAttribute('aria-checked')).toBe('true')
-    expect(first()).toHaveTextContent('Saffire')
-    fireEvent.click(screen.getByRole('radio', { name: 'ISS orbital lab (0 g)' }))
-    expect(first()).toHaveTextContent('BASS-II')
   })
 
   it('the BASS-II table starts collapsed, then shows 10 rows until "Show all"', async () => {
@@ -347,13 +323,6 @@ describe('site structure', () => {
     expect(screen.getByText('Observed data · NASA PSI BASS-II')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Hide table' }))
     expect(data.queryByRole('table')).toBeNull()
-  })
-
-  it('references are numbered and the SAME credit no longer covers other investigations', async () => {
-    const { container } = renderAt('/documentation')
-    expect(await screen.findByRole('heading', { level: 3, name: 'References' })).toBeInTheDocument()
-    for (let n = 1; n <= 7; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
-    expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
   })
 
   it('/research redirects to /documentation, keeping the anchor', async () => {

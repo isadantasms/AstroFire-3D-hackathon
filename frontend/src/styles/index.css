@@ -1,6 +1,6 @@
 /* SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha */
 /*
- * AstroFire visual identity ("Rocket hero" direction).
+ * AstroFire 3D visual identity ("Rocket hero" direction).
  * Brand colors are kept separate from the risk colors (DESIGN.md section 1),
  * and from the physical flame colors returned by the backend contract.
  */
@@ -315,7 +315,7 @@
   }
 }
 
-/* Home "How AstroFire helps": content of the selected step eases in. */
+/* Home "How AstroFire 3D helps": content of the selected step eases in. */
 .step-in {
   animation: hero-rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }

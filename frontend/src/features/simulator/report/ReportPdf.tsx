@@ -4,16 +4,8 @@
  * @react-pdf/renderer. Loaded lazily (see downloadReportPdf.ts) so it stays out of the main bundle.
  * Plex fonts ship only the latin subset, so the PDF writes "O2" / "CO2" instead of subscript digits.
  */
-import { Defs, Document, Ellipse, LinearGradient, Link, Page, Path, Rect, Stop, StyleSheet, Svg, Text, View } from '@react-pdf/renderer'
-import {
-  BRAND_COLORS,
-  BRAND_FLAME_D,
-  BRAND_GAP_STROKE,
-  BRAND_ORBIT,
-  BRAND_ORBIT_FRONT_D,
-  BRAND_ORBIT_STROKE,
-  BRAND_SPARKLE_D,
-} from '../../../components/brandGeometry'
+import { Circle, Defs, Document, G, LinearGradient, Link, Page, Path, Rect, Stop, StyleSheet, Svg, Text, View } from '@react-pdf/renderer'
+import { BRAND, BRAND_COLORS, BRAND_VARIANT_COLORS } from '../../../components/brandGeometry'
 import { FIGURE_VIEWBOX, flameFigure } from './flameFigure'
 import {
   DISCLAIMER,
@@ -103,23 +95,28 @@ function monoSpaced(text: string) {
   return text.split(' ').flatMap((part, i) => (i === 0 ? [part] : [<Text key={i} style={{ fontFamily: 'Plex Serif' }}> </Text>, part]))
 }
 
+/** Light-background version of the logo (logo-icon-light.svg). */
 function Logo() {
-  const o = BRAND_ORBIT
+  const g = BRAND
+  const c = BRAND_COLORS
+  const v = BRAND_VARIANT_COLORS.light
+  const p = g.porthole
   return (
-    <Svg width={12} height={12} viewBox="0 0 32 32">
+    <Svg width={14} height={14} viewBox={`0 0 ${g.viewBox} ${g.viewBox}`}>
       <Defs>
         <LinearGradient id="pdf-flame" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={BRAND_COLORS.amber} />
-          <Stop offset="0.62" stopColor={BRAND_COLORS.orange} />
+          <Stop offset="0" stopColor={c.amber} />
+          <Stop offset="1" stopColor={c.orange} />
         </LinearGradient>
       </Defs>
-      {/* Light-background version (logo-icon-light.svg): orbit and sparkle in #0A101C. */}
-      <Ellipse cx={o.cx} cy={o.cy} rx={o.rx} ry={o.ry} transform={`rotate(${o.rotate} ${o.cx} ${o.cy})`} fill="none" stroke={BRAND_COLORS.ink} strokeWidth={BRAND_ORBIT_STROKE} />
-      <Path d={BRAND_FLAME_D} fill="url(#pdf-flame)" fillRule="evenodd" />
-      {/* White stroke = the gap where the orbit crosses the flame (the page is white). */}
-      <Path d={BRAND_ORBIT_FRONT_D} fill="none" stroke="#FFFFFF" strokeWidth={BRAND_GAP_STROKE} strokeLinecap="round" />
-      <Path d={BRAND_ORBIT_FRONT_D} fill="none" stroke={BRAND_COLORS.ink} strokeWidth={BRAND_ORBIT_STROKE} strokeLinecap="round" />
-      <Path d={BRAND_SPARKLE_D} fill={BRAND_COLORS.ink} />
+      <Path d={g.arc} fill="none" stroke={c.orange} strokeWidth={g.arcStroke} strokeLinecap="round" />
+      <G transform={g.rocketTransform}>
+        <Path d={g.flame} fill="url(#pdf-flame)" />
+        <Path d={g.finL} fill={c.orange} />
+        <Path d={g.finR} fill={c.orange} />
+        <Path d={g.body} fill={v.body} />
+        <Circle cx={p.cx} cy={p.cy} r={p.r} fill={v.porthole} />
+      </G>
     </Svg>
   )
 }

@@ -1,8 +1,8 @@
-# AstroFire — References & Super Intelligence (SI) Ledger
+# AstroFire 3D — References & Super Intelligence (SI) Ledger
 
 **2026 NASA Space Apps Challenge | Challenge:** *Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data*
 
-> **Compliance Notice:** Every NASA dataset, technical report, open-source library, 3D asset and Super Intelligence (SI) tool used in AstroFire is recorded below. No official NASA logos are used, and investigation `PSI-10` is excluded because it has no open license listed. Items marked "To verify" still need a full reference or license from the team.
+> **Compliance Notice:** Every NASA dataset, technical report, open-source library, 3D asset and Super Intelligence (SI) tool used in AstroFire 3D is recorded below. No official NASA logos are used, and investigation `PSI-10` is excluded because it has no open license listed. Items marked "To verify" still need a full reference or license from the team.
 
 ## Data and technical reports
 
@@ -44,10 +44,10 @@
 
 | Tool | Type | License / terms | Link | Used for |
 | --- | --- | --- | --- | --- |
-| ChatGPT (OpenAI) | SI tool | Provider terms | https://chatgpt.com | Planning, development support and 3D modeling support |
+| ChatGPT (OpenAI) | SI tool | Provider terms | https://chatgpt.com | Planning, development support, 3D modeling support and the logo concept (the ChatGPT image is not used in the project) |
 | Codex (OpenAI) | SI tool | Provider terms | https://developers.openai.com/codex | Unity scripts and shaders for the 3D chamber (`unity-fire-simulation/`, `SI-assisted` headers) |
 | Gemini (Google) | SI tool | Provider terms | https://gemini.google.com | Refining the team's business rules, backend integration and test data (`backend/`, `contracts/`, sample payloads) |
-| Claude / Claude Code (Anthropic) | SI tool | Provider terms | https://claude.com/product/claude-code | Front-end code and interface, planning, visual design, documentation, pitch script, reference review; AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team |
+| Claude / Claude Code (Anthropic) | SI tool | Provider terms | https://claude.com/product/claude-code | Front-end code and interface, planning, visual design, documentation, pitch script, reference review; vector logo recreated from the ChatGPT concept (SI-assisted) and reviewed by the team |
 | Antigravity | Coding environment (used with Gemini) | To verify | To verify | To verify (TODO: confirm use, license and link) |
 | Google Colab | Notebook environment | To verify | To verify | Model training and validation (TODO: confirm notebooks, license and link) |
 | [VOICE TOOL] | SI tool | To verify | To verify | Demo video narration (TODO: tool name, license and link) |

@@ -7,19 +7,19 @@
  * TODO(si): If the PINN is wired into /api/simulate, update these texts to describe the ML prediction step.
  */
 
-// TODO(logo): when the team redesigns the logo, change this line to
-// "AstroFire logo designed by the team; initial concept explored with Claude Code (SI-assisted)."
-export const LOGO_CREDIT = 'AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.'
+// TODO(logo): if the team redraws the logo by hand, change this line to
+// "AstroFire 3D logo designed by the team; initial concept explored with ChatGPT and Claude Code (SI-assisted)."
+export const LOGO_CREDIT = 'AstroFire 3D logo: concept generated with ChatGPT; simplified vector artwork recreated with Claude Code (SI-assisted) and reviewed by the team.'
 
 /**
  * Short "How we use SI" block on the Home.
- * TODO(logo): when the team redesigns the logo, update "Claude Code created the logo".
+ * TODO(logo): if the team redraws the logo by hand, update the logo sentence.
  * TODO(voice-tool): replace [VOICE TOOL] with the name of the narration tool.
  */
 export const SI_COMPACT = {
   product: 'A rule-based engine matches each scenario to NASA data. Its diagnosis texts were drafted with SI and reviewed by the team.',
   development:
-    'ChatGPT, Codex, Gemini and Claude Code supported code, 3D, data and interface. Claude Code created the logo; [VOICE TOOL] narrates the demo.',
+    'ChatGPT, Codex, Gemini and Claude Code supported code, 3D, data and interface. ChatGPT drafted the logo and Claude Code redrew it as vector art; [VOICE TOOL] narrates the demo.',
   human: 'The team conceived the solution, made every decision and reviewed all code, data and results.',
   linkLabel: 'Full SI disclosure in the documentation',
 } as const

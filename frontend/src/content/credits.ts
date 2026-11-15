@@ -59,7 +59,7 @@ export const CREDITS_LEDGER: CreditRow[] = [
     url: null,
   },
   {
-    resource: 'ChatGPT (OpenAI): planning, development support and 3D modeling support',
+    resource: 'ChatGPT (OpenAI): planning, development support, 3D modeling support and logo concept',
     type: 'SI Tool',
     license: 'Provider terms',
     url: 'https://chatgpt.com',
@@ -90,7 +90,7 @@ export const CREDITS_LEDGER: CreditRow[] = [
     url: null,
   },
   {
-    resource: 'Claude / Claude Code (Anthropic): front-end code, interface, documentation and logo',
+    resource: 'Claude / Claude Code (Anthropic): front-end code, interface, documentation and vector logo',
     type: 'SI Tool',
     license: 'Provider terms',
     url: 'https://claude.com/product/claude-code',
