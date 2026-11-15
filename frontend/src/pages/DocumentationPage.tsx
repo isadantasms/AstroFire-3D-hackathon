@@ -22,7 +22,7 @@ const BassExperimentsSection = lazy(() =>
 
 const SECTIONS = [
   { id: 'full-documentation', label: 'Full documentation' },
-  { id: 'research', label: 'NASA research' },
+  { id: 'research', label: 'Sources' },
   { id: 'data', label: 'Data' },
   { id: 'credits', label: 'Credits' },
 ] as const
@@ -216,7 +216,7 @@ function DocAction({
 }
 
 /* ------------------------------------------------------------------ */
-/* NASA research                                                       */
+/* Sources (the research behind AstroFire 3D)                        */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -235,7 +235,7 @@ function ResearchSection() {
   const filters = [{ key: 'all' as const, label: 'All' }, ...FIRE_SAFETY_USES]
 
   return (
-    <Section id="research" label="NASA research" title="The NASA research behind AstroFire 3D">
+    <Section id="research" label="Sources" title="The research behind AstroFire 3D">
       <div className="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label="Filter by fire-safety area">
         {filters.map((f) => {
           const active = use === f.key

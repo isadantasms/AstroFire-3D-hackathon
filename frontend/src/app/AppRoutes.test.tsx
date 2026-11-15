@@ -212,13 +212,13 @@ describe('site structure', () => {
     const nav = within(screen.getByRole('navigation', { name: 'On this page' }))
     expect(nav.getAllByRole('link').map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
       ['Full documentation', '#full-documentation'],
-      ['NASA research', '#research'],
+      ['Sources', '#research'],
       ['Data', '#data'],
       ['Credits', '#credits'],
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'AstroFire 3D · Technical Documentation',
-      'The NASA research behind AstroFire 3D',
+      'The research behind AstroFire 3D',
       'The experimental data',
       'Credits & licenses',
     ])
@@ -248,9 +248,9 @@ describe('site structure', () => {
     expect(screen.queryByText(/Ignition\/quench accuracy|Factor importance|cross-validation/i)).toBeNull()
   })
 
-  it('NASA research: one plain line and a source link per investigation; full references collapsed', async () => {
+  it('Sources: one plain line and a source link per investigation; full references collapsed', async () => {
     const { container } = renderAt('/documentation')
-    const research = within(await screen.findByRole('region', { name: 'The NASA research behind AstroFire 3D' }))
+    const research = within(await screen.findByRole('region', { name: 'The research behind AstroFire 3D' }))
     const items = research.getAllByRole('listitem').filter((li) => li.querySelector('h3'))
     expect(items.map((li) => li.querySelector('h3')!.textContent)).toEqual([
       'Burning and Suppression of Solids–II (BASS-II)',
@@ -274,9 +274,9 @@ describe('site structure', () => {
     expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
   })
 
-  it('NASA research: study tags and the Prevention / Detection / Suppression filter', async () => {
+  it('Sources: study tags and the Prevention / Detection / Suppression filter', async () => {
     renderAt('/documentation')
-    const research = within(await screen.findByRole('region', { name: 'The NASA research behind AstroFire 3D' }))
+    const research = within(await screen.findByRole('region', { name: 'The research behind AstroFire 3D' }))
     expect(research.getByText('Tags summarize what each investigation studied, based on its published objectives.')).toBeInTheDocument()
     const names = () => research.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
     const bass = research.getByText('Burning and Suppression of Solids–II (BASS-II)').closest('li')!
