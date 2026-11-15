@@ -10,10 +10,15 @@ interface ExperimentTableProps {
   source: CatalogSource
 }
 
-/** Read-only BASS-II record table (Research & Data), with a material filter. */
+/** Rows shown before "Show all". */
+const COLLAPSED_ROWS = 10
+
+/** Read-only BASS-II record table (Research & Data), with a material filter and a collapsed view. */
 export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
   const filterId = useId()
+  const tableId = useId()
   const [material, setMaterial] = useState('all')
+  const [expanded, setExpanded] = useState(false)
 
   const materials = useMemo(() => {
     const seen = new Map<string, string>()
@@ -25,18 +30,19 @@ export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
     () => (material === 'all' ? experiments : experiments.filter((r) => r.material_id === material)),
     [experiments, material],
   )
+  const visible = expanded ? rows : rows.slice(0, COLLAPSED_ROWS)
 
   return (
     <section
       id="experiments"
       aria-labelledby="experiments-title"
-      className="flex h-full min-h-0 flex-col border border-subtle bg-panel"
+      className="border border-subtle bg-panel"
     >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle px-4 py-2">
         <div className="flex items-center gap-2">
-          <h2 id="experiments-title" className="label-mono">
+          <h3 id="experiments-title" className="label-mono">
             BASS-II experiment matrix
-          </h2>
+          </h3>
           <span className="font-mono text-xs text-muted tabular-nums">
             {rows.length}/{experiments.length}
           </span>
@@ -58,15 +64,15 @@ export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
               </option>
             ))}
           </select>
-          <Tag tone="focus">Observed · NASA BASS-II</Tag>
+          <Tag tone="focus">Observed data · NASA PSI BASS-II</Tag>
           {source === 'snapshot' ? <Tag>Repository snapshot</Tag> : <Tag>Live API</Tag>}
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full border-collapse text-left text-xs">
+      <div className="overflow-x-auto">
+        <table id={tableId} className="w-full border-collapse text-left text-xs">
           <caption className="sr-only">BASS-II test records from the NASA PSI-25 dataset.</caption>
-          <thead className="sticky top-0 z-10 bg-elevated">
+          <thead className="bg-elevated">
             <tr className="text-secondary">
               <Th>Test ID</Th>
               <Th>Material</Th>
@@ -79,7 +85,7 @@ export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {visible.map((r) => (
               <tr key={r.test_id} className="border-b border-subtle hover:bg-elevated/60">
                 <Td mono>{r.test_id}</Td>
                 <Td>
@@ -103,7 +109,7 @@ export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
                   </span>
                 </Td>
                 <Td>
-                  <span className="block max-w-40 truncate text-muted" title={`${r.source_table} · PI: ${r.pi_group}`}>
+                  <span className="block max-w-40 truncate text-[0.625rem] text-muted" title={`${r.source_table} · PI: ${r.pi_group}`}>
                     {r.source_table.replace('NASA/TM-20210011385 ', '')}
                   </span>
                 </Td>
@@ -115,8 +121,24 @@ export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
           <p className="px-4 py-6 text-center text-sm text-muted">No BASS-II records for this material.</p>
         ) : null}
       </div>
+      {rows.length > COLLAPSED_ROWS ? (
+        <div className="border-t border-subtle px-4 py-2">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={tableId}
+            onClick={() => setExpanded((v) => !v)}
+            className="text-xs font-medium text-focus hover:underline"
+          >
+            {expanded ? 'Show fewer' : `Show all ${rows.length}`}
+          </button>
+        </div>
+      ) : null}
       <p className="border-t border-subtle px-4 py-1.5 text-[0.6875rem] text-muted">
-        Source: NASA PSI BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0 · tables from NASA/TM-20210011385.
+        Source: NASA PSI BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0 · Olson et al., NASA/TM-20210011385{' '}
+        <a href="#ref-1" className="text-focus hover:underline">
+          [1]
+        </a>
       </p>
     </section>
   )

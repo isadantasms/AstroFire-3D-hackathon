@@ -17,13 +17,12 @@ export function BrandMark({ size = 24 }: { size?: number }) {
   )
 }
 
-/** "Astro" in primary text, "Fire" in brand orange, "3D" in muted text and slightly smaller (IBM Plex Sans 600, -0.01em). */
+/** "Astro" in primary text, "Fire" in brand orange (IBM Plex Sans 600, -0.01em). */
 export function Wordmark({ className = '' }: { className?: string }) {
   return (
     <span className={`font-sans font-semibold tracking-[-0.01em] ${className}`}>
       <span className="text-[#E6ECF5]">Astro</span>
       <span className="text-[#F28C28]">Fire</span>
-      <span className="ml-[0.28em] text-[0.82em] text-[#9AA8BD]">3D</span>
     </span>
   )
 }

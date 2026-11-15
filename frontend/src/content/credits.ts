@@ -33,10 +33,29 @@ export const CREDITS_LEDGER: CreditRow[] = [
     url: 'https://ntrs.nasa.gov/citations/20170000230',
   },
   {
-    resource: 'SAME / SoFIE / FLEX / SPICE (NTRS-20170007283)',
-    type: 'NASA Data & Report',
+    resource: 'SAME: Spacecraft Fire Safety Research at NASA Glenn Research Center (Meyer, 2016, NTRS-20170007283)',
+    type: 'NASA Technical Report',
     license: 'CC0-1.0 / Public Domain',
     url: 'https://ntrs.nasa.gov/citations/20170007283',
+  },
+  {
+    resource: 'SoFIE: Solid Fuel Ignition and Extinction (NASA Glenn Research Center)',
+    type: 'NASA Web Page',
+    license: 'To verify',
+    url: 'https://www.nasa.gov/glenn/glenn-expertise-space-exploration/physical-sciences-program/combustion-science/solid-fuel-ignition-and-extinction-sofie/',
+  },
+  // TODO(references): FLEX and SPICE need full references in docs/references.md.
+  {
+    resource: 'FLEX: Flame Extinguishment Experiment',
+    type: 'NASA Data',
+    license: 'To verify',
+    url: 'https://psi.nasa.gov/physci/repo/search?q=FLEX',
+  },
+  {
+    resource: 'SPICE: Smoke Point In Co-flow Experiment',
+    type: 'NASA Data',
+    license: 'To verify',
+    url: 'https://psi.nasa.gov/physci/repo/search?q=SPICE',
   },
   {
     resource: 'React 19, TypeScript, Vite & Tailwind CSS',

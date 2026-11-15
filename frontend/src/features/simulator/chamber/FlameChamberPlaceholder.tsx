@@ -159,7 +159,7 @@ export function FlameChamberPlaceholder({
               <iframe
                 ref={iframeRef}
                 src={`${WEBGL_BASE_URL}?embed=1`}
-                title="AstroFire 3D Unity WebGL fire simulation"
+                title="AstroFire Unity WebGL fire simulation"
                 sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups"
                 allow="fullscreen"
                 className={`size-full border-0 transition-opacity ${stale || loading ? 'opacity-60' : 'opacity-100'}`}

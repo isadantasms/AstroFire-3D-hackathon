@@ -4,6 +4,7 @@ import { Check, ChevronDown, Play } from 'lucide-react'
 import type { MaterialInfo } from '../../../types/catalog'
 import { clamp, fmt } from '../../../lib/format'
 import { AIRFLOW_SLIDER, GRAVITY_OPTIONS, O2_SLIDER } from '../presets'
+import { BASS2_RANGES } from '../../../data/experimentsSnapshot'
 import type { DraftInputs, SimulationAction } from '../state/simulationReducer'
 
 interface MissionControlsProps {
@@ -182,6 +183,7 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
           value={draft.o2_pct}
           slider={O2_SLIDER}
           digits={1}
+          tested={BASS2_RANGES.o2Pct}
           onChange={(v) => dispatch({ type: 'setOxygen', o2_pct: v })}
         />
 
@@ -192,6 +194,7 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
           value={draft.airflow_cm_s}
           slider={AIRFLOW_SLIDER}
           digits={1}
+          tested={BASS2_RANGES.airflowCmS}
           onChange={(v) => dispatch({ type: 'setAirflow', airflow_cm_s: v })}
         />
       </div>
@@ -219,11 +222,13 @@ interface RangeControlProps {
   value: number
   slider: { min: number; max: number; step: number }
   digits: number
+  /** Min–max tested in the 79 BASS-II records (the same range shown on Research & Data). */
+  tested?: { min: number; max: number }
   onChange: (value: number) => void
 }
 
 /** Slider + numeric field. Values are clamped to the schema bounds (0–100). */
-function RangeControl({ label, unit, ariaUnit, value, slider, digits, onChange }: RangeControlProps) {
+function RangeControl({ label, unit, ariaUnit, value, slider, digits, tested, onChange }: RangeControlProps) {
   const id = useId()
   const commit = (raw: string) => {
     const parsed = Number.parseFloat(raw)
@@ -264,6 +269,11 @@ function RangeControl({ label, unit, ariaUnit, value, slider, digits, onChange }
         <span>{slider.min}</span>
         <span>{slider.max}</span>
       </div>
+      {tested ? (
+        <p className="mt-0.5 font-mono text-[0.625rem] text-muted tabular-nums">
+          BASS-II tested: {fmt(tested.min, 1)}–{fmt(tested.max, 1)} {unit}
+        </p>
+      ) : null}
     </div>
   )
 }

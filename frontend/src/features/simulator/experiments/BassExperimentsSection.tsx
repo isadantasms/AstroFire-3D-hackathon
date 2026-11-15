@@ -10,7 +10,7 @@ export function BassExperimentsSection({ client = defaultApiClient }: { client?:
   const { catalogState } = useCatalog(client, noop)
 
   return (
-    <div className="h-[32rem]">
+    <div>
       {catalogState.status === 'ready' ? (
         <ExperimentTable experiments={catalogState.catalog.experiments} source={catalogState.catalog.source} />
       ) : catalogState.status === 'error' ? (

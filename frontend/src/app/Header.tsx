@@ -7,7 +7,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-subtle bg-hero/95 backdrop-blur-sm lg:h-14">
       <div className="mx-auto flex max-w-[1920px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-6 lg:h-full lg:py-0">
-        <Link to="/" className="flex items-center gap-2.5" aria-label="AstroFire 3D home">
+        <Link to="/" className="flex items-center gap-2.5" aria-label="AstroFire home">
           <BrandMark size={26} />
           <Wordmark className="text-[0.9375rem]" />
         </Link>

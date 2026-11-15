@@ -16,7 +16,7 @@ export function ConsolePanel({ title, aside, children, className = '', bodyClass
   const headingId = id ? `${id}-title` : undefined
   return (
     <section id={id} aria-labelledby={headingId} className={`border border-subtle bg-panel ${className}`}>
-      <header className="flex min-h-9 items-center justify-between gap-2 border-b border-subtle px-4 py-2">
+      <header className="flex min-h-9 flex-wrap items-center justify-between gap-2 border-b border-subtle px-4 py-2">
         <h2 id={headingId} className="label-mono">
           {title}
         </h2>

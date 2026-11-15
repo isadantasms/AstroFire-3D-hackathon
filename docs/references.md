@@ -9,7 +9,10 @@
 | BASS-II (PSI-25): *Burning and Suppression of Solids - II* | NASA data | CC0-1.0 | https://doi.org/10.60555/4qc4-de67 | `backend/data/`, Empirical Physics Engine |
 | NASA/TM-20210011385: *BASS-II Summary Report* (Olson et al., 2021) | NASA technical report | US Gov Public Domain | https://ntrs.nasa.gov/citations/20210011385 | Limiting Oxygen Index (LOI) & forced-flow models |
 | Saffire I–VI (NTRS-20170000230): *Operation and Development Status of the Spacecraft Fire Experiments (Saffire)* | NASA technical report | CC0-1.0 / Public Domain | https://ntrs.nasa.gov/citations/20170000230 | Exploration cabin atmosphere & partial-gravity bounds |
-| FLEX / SoFIE / SPICE / SAME | NASA data | CC0-1.0 | https://psi.nasa.gov/ | Spherical `0g` flame ball geometry & smoke detector spinoffs |
+| NTRS-20240002981: *Preliminary Results from the Saffire VI Experiment* (Urban, Ruff, Ferkul, et al., ICES 2024) | NASA technical report | US Gov Public Domain | https://ntrs.nasa.gov/citations/20240002981 | Research & Data investigation ranking (Saffire) |
+| NTRS-20170007283: *Spacecraft Fire Safety Research at NASA Glenn Research Center* (Meyer, 2016; covers SAME) | NASA technical report | US Gov Public Domain | https://ntrs.nasa.gov/citations/20170007283 | Research & Data investigation ranking (SAME) |
+| *Solid Fuel Ignition and Extinction (SoFIE)*, NASA Glenn Research Center | NASA web page | To verify | https://www.nasa.gov/glenn/glenn-expertise-space-exploration/physical-sciences-program/combustion-science/solid-fuel-ignition-and-extinction-sofie/ | Research & Data investigation ranking (SoFIE) |
+| FLEX / SPICE | NASA data | To verify (TODO: full reference) | https://psi.nasa.gov/ | Research & Data investigation ranking |
 | FastAPI | Library | MIT License | https://fastapi.tiangolo.com | `backend/` |
 | Pydantic V2 | Library | MIT License | https://docs.pydantic.dev | `backend/`, `contracts/simulation_schema.json` |
 | Three.js | Library | MIT License | https://threejs.org | `frontend/` (3D Microgravity Chamber) |

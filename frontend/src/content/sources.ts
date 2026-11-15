@@ -35,8 +35,8 @@ export const PRIMARY_SOURCES: readonly NasaSource[] = [
     url: 'https://ntrs.nasa.gov/citations/20170000230',
   },
   {
-    id: 'SAME / SoFIE / FLEX / SPICE (NTRS-20170007283)',
-    title: 'Spacecraft Fire Safety & Smoke Aerosol Research at NASA Glenn',
+    id: 'SAME (NTRS-20170007283)',
+    title: 'Spacecraft Fire Safety Research at NASA Glenn Research Center (Meyer, 2016)',
     kind: 'NASA technical report',
     license: 'CC0-1.0 / Public Domain',
     url: 'https://ntrs.nasa.gov/citations/20170007283',

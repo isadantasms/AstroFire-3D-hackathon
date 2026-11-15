@@ -197,7 +197,7 @@ const STEPS: Step[] = [
     marker: 'border-2 border-[#F28C28] bg-[#F28C28] text-[#0A101C]',
     nameColor: 'text-[#F28C28]',
     dashColor: 'text-[#F28C28]',
-    title: 'AstroFire 3D turns it into a clear answer in seconds.',
+    title: 'AstroFire turns it into a clear answer in seconds.',
     items: [
       { text: 'Set material, gravity, oxygen and airflow' },
       { text: 'See the flame in 3D and its fire risk' },
@@ -215,7 +215,7 @@ function HelpsSection() {
     <section className="relative" aria-labelledby="helps-title">
       {/* First section under the planet arc: ~96px of breathing room from the arc. */}
       <div className="mx-auto max-w-6xl px-4 pt-12 pb-20 sm:px-6 min-[1400px]:pt-6">
-        <SectionHeader id="helps" label="From research to answers" title="How AstroFire 3D helps" />
+        <SectionHeader id="helps" label="From research to answers" title="How AstroFire helps" />
 
         <div data-reveal style={stagger(2)} className={`reveal relative mt-12 p-6 text-left sm:p-8 lg:p-10 ${PANEL}`}>
           {/* Horizontal connector through the three markers (desktop). */}

@@ -7,7 +7,7 @@ const LINK = 'transition-colors hover:text-primary'
 
 /**
  * One discreet line. Sources, licenses and credits live in Research & Data,
- * SI usage and the team on the Home, and research disclaimers next to the content they qualify.
+ * SI usage on the Home, and research disclaimers next to the content they qualify.
  */
 export function Footer() {
   return (
