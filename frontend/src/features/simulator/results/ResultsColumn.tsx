@@ -1,12 +1,16 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { useState, type ReactNode } from 'react'
-import { AlertTriangle, ChevronRight, ExternalLink, Info, RotateCcw } from 'lucide-react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { AlertTriangle, ChevronRight, Download, ExternalLink, FileText, Info, RotateCcw } from 'lucide-react'
 import { Tooltip } from '../../../components/Tooltip'
 import { GROUNDING } from '../../../content/grounding'
 import { fmt } from '../../../lib/format'
 import type { SimulationResponse } from '../../../types/contract'
 import { isCitationShown, MOCK_TOOLTIP, riskBand, shortCitationId } from './resultHelpers'
 import type { SimulationState } from '../state/simulationReducer'
+import { buildReport } from '../report/reportModel'
+import { ReportPanel } from '../report/ReportPanel'
+
+const NEEDS_RUN = 'Run a simulation first'
 
 interface ResultsColumnProps {
   state: SimulationState
@@ -17,6 +21,30 @@ interface ResultsColumnProps {
 
 export function ResultsColumn({ state, stale, mock, onRun }: ResultsColumnProps) {
   const { status, result, error } = state
+  const valid = status === 'success' && result !== null
+  // Report timestamp: when this result was received.
+  const report = useMemo(
+    () => (valid && result ? buildReport(result, { mock, generatedAt: new Date() }) : null),
+    [valid, result, mock],
+  )
+  const [open, setOpen] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const close = useCallback(() => setOpen(false), [])
+
+  const download = useCallback(async () => {
+    if (!report) return
+    setDownloading(true)
+    setDownloadError(null)
+    try {
+      const { downloadReportPdf } = await import('../report/downloadReportPdf')
+      await downloadReportPdf(report)
+    } catch {
+      setDownloadError('Could not generate the PDF. Please try again.')
+    } finally {
+      setDownloading(false)
+    }
+  }, [report])
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -35,6 +63,22 @@ export function ResultsColumn({ state, stale, mock, onRun }: ResultsColumnProps)
             )}
           </Tooltip>
         ) : null}
+        <span className="ml-auto">
+          <Tooltip label={valid ? 'Open detailed analysis' : NEEDS_RUN} align="end" side="bottom" focusable={!valid}>
+            {(id) => (
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                disabled={!valid}
+                aria-describedby={id}
+                className="inline-flex items-center gap-1.5 rounded-md border border-subtle px-2 py-1 text-xs text-secondary transition-colors hover:border-label hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-subtle disabled:hover:text-secondary"
+              >
+                <FileText className="size-3.5" aria-hidden />
+                Full report
+              </button>
+            )}
+          </Tooltip>
+        </span>
       </header>
 
       <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1 pb-2" aria-live="polite">
@@ -54,6 +98,46 @@ export function ResultsColumn({ state, stale, mock, onRun }: ResultsColumnProps)
           </>
         ) : null}
       </div>
+
+      <div className="flex shrink-0 gap-2 border-t border-subtle pt-3" data-testid="report-actions">
+        <Tooltip label={valid ? null : NEEDS_RUN} align="start" focusable={!valid}>
+          {(id) => (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              disabled={!valid}
+              aria-describedby={id}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-xs font-semibold text-hero transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <FileText className="size-3.5" aria-hidden />
+              Open full report
+            </button>
+          )}
+        </Tooltip>
+        <Tooltip label={valid ? null : NEEDS_RUN} align="start" focusable={!valid}>
+          {(id) => (
+            <button
+              type="button"
+              onClick={download}
+              disabled={!valid || downloading}
+              aria-describedby={id}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-subtle px-3.5 py-2 text-xs text-primary transition-colors hover:border-label disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Download className="size-3.5" aria-hidden />
+              {downloading ? 'Preparing PDF…' : 'Download PDF'}
+            </button>
+          )}
+        </Tooltip>
+      </div>
+      {downloadError && !open ? (
+        <p role="alert" className="pt-2 text-xs text-critical">
+          {downloadError}
+        </p>
+      ) : null}
+
+      {open && report ? (
+        <ReportPanel report={report} onClose={close} onDownload={download} downloading={downloading} downloadError={downloadError} />
+      ) : null}
     </div>
   )
 }

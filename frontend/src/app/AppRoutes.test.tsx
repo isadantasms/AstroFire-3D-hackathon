@@ -177,7 +177,7 @@ describe('site structure', () => {
     expect(credits.getByRole('heading', { level: 2, name: 'Data & credits' })).toBeInTheDocument()
     expect(credits.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['NASA data', 'Software & assets'])
     expect(credits.getByText('BASS-II (PSI-25): Burning and Suppression of Solids - II')).toBeInTheDocument()
-    expect(credits.getByText(/IBM Plex Sans & IBM Plex Mono/)).toBeInTheDocument()
+    expect(credits.getByText(/IBM Plex Sans, IBM Plex Serif & IBM Plex Mono/)).toBeInTheDocument()
     expect(credits.getByText('Voxel rocket 3D model (MagicaVoxel)')).toBeInTheDocument()
     expect(credits.queryByText(/UFSC|VSB-30/)).toBeNull()
   })

@@ -64,13 +64,19 @@ export const CREDITS_LEDGER: CreditRow[] = [
     url: 'https://react.dev',
   },
   {
+    resource: '@react-pdf/renderer (scenario report PDF)',
+    type: 'Open-Source Library',
+    license: 'MIT License',
+    url: 'https://react-pdf.org',
+  },
+  {
     resource: 'FastAPI & Pydantic V2 (+ Python 3.12 stdlib fallback)',
     type: 'Open-Source Libraries',
     license: 'MIT License',
     url: 'https://fastapi.tiangolo.com',
   },
   {
-    resource: 'Ajv, Lucide Icons, IBM Plex Sans & IBM Plex Mono (@fontsource)',
+    resource: 'Ajv, Lucide Icons, IBM Plex Sans, IBM Plex Serif & IBM Plex Mono (@fontsource)',
     type: 'UI & Validation Assets',
     license: 'MIT / ISC / SIL OFL 1.1',
     url: 'https://ajv.js.org',

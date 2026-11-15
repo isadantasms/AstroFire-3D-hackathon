@@ -6,6 +6,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // react-pdf is imported lazily; pre-bundle it so the dev server does not reload the page on first use.
+  optimizeDeps: { include: ['@react-pdf/renderer'] },
   server: {
     port: 5173,
     // The app imports ../contracts/simulation_schema.json and ../backend/data/*.json (monorepo).
