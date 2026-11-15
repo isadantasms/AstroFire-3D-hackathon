@@ -1,29 +1,45 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
+import { useId } from 'react'
+import { BRAND as G, BRAND_COLORS as C, BRAND_VARIANT_COLORS, type BrandVariant } from './brandGeometry'
+
 /**
- * AstroFire mark: an orange flame with a blue microgravity flame-ball core.
+ * AstroFire 3D mark: a simple rocket inside an orange ring, legible at small sizes.
+ * Logo concept generated with ChatGPT; simplified vector artwork recreated with Claude Code and
+ * reviewed by the team. Deliberately unrelated to any NASA insignia.
  * Decorative next to the wordmark (the link carries the accessible name).
- * Deliberately unrelated to any NASA insignia.
  */
-export function BrandMark({ size = 24 }: { size?: number }) {
+export function BrandMark({ size = 24, variant = 'dark' }: { size?: number; variant?: BrandVariant }) {
+  const flameId = `af-flame-${useId().replace(/:/g, '')}`
+  const v = BRAND_VARIANT_COLORS[variant]
+  const p = G.porthole
+
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      <path
-        d="M16 3C19 8 25 11 25 19A9 9 0 1 1 7 19C7 13 11 10 13 6C13.5 9 15 10.5 16.5 11C16 8 16 5 16 3Z"
-        fill="#F28C28"
-      />
-      <circle cx="16" cy="20" r="4.5" fill="#0A101C" />
-      <circle cx="16" cy="20" r="2.2" fill="#4C8DFF" />
+    <svg width={size} height={size} viewBox={`0 0 ${G.viewBox} ${G.viewBox}`} aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id={flameId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={C.amber} />
+          <stop offset="1" stopColor={C.orange} />
+        </linearGradient>
+      </defs>
+      <path d={G.arc} fill="none" stroke={C.orange} strokeWidth={G.arcStroke} strokeLinecap="round" />
+      <g transform={G.rocketTransform}>
+        <path d={G.flame} fill={`url(#${flameId})`} />
+        <path d={G.finL} fill={C.orange} />
+        <path d={G.finR} fill={C.orange} />
+        <path d={G.body} fill={v.body} />
+        <circle cx={p.cx} cy={p.cy} r={p.r} fill={v.porthole} />
+      </g>
     </svg>
   )
 }
 
-/** "Astro" in primary text, "Fire" in brand orange, "3D" in muted text and slightly smaller (IBM Plex Sans 600, -0.01em). */
+/** "Astro" in primary text, "Fire" in brand orange, "3D" muted and slightly smaller (IBM Plex Sans 600, -0.01em). */
 export function Wordmark({ className = '' }: { className?: string }) {
   return (
     <span className={`font-sans font-semibold tracking-[-0.01em] ${className}`}>
       <span className="text-[#E6ECF5]">Astro</span>
       <span className="text-[#F28C28]">Fire</span>
-      <span className="ml-[0.28em] text-[0.82em] text-[#9AA8BD]">3D</span>
+      <span className="text-[0.82em] text-[#9AA8BD]">{' 3D'}</span>
     </span>
   )
 }

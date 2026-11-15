@@ -1,16 +1,15 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Elias
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { defaultApiClient, type ApiClient, type Catalog } from '../services/api/client'
 import { MissionControls } from '../features/simulator/controls/MissionControls'
 import { FlameChamberPlaceholder } from '../features/simulator/chamber/FlameChamberPlaceholder'
 import { toChamberSuppression } from '../features/simulator/chamber/types'
-import { CycleBar } from '../features/simulator/CycleBar'
 import { ResultsColumn } from '../features/simulator/results/ResultsColumn'
-import { cycleStep } from '../features/simulator/state/simulationReducer'
 import { useCatalog, useSimulation } from '../features/simulator/state/useSimulation'
+import type { ScenarioPreset } from '../features/simulator/presets'
+import { shouldAutoOpenTutorial } from '../features/simulator/tutorial/tutorialConfig'
 import {
-  shouldAutoOpenTutorial,
   SimulatorHelpButton,
   SimulatorHelpModal,
   SimulatorTutorialModal,
@@ -30,6 +29,31 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
   const mock = client.mode === 'mock'
   const catalog = catalogState.status === 'ready' ? catalogState.catalog : null
   const loading = state.status === 'loading'
+
+  // Sample scenarios: fill the controls; in mock mode they also run (the result is that sample payload).
+  const [pendingRun, setPendingRun] = useState(false)
+  const applyPreset = useCallback(
+    (preset: ScenarioPreset, andRun: boolean) => {
+      dispatch({
+        type: 'applyPreset',
+        draft: {
+          material_id: preset.material_id,
+          gravity_g: preset.gravity_g,
+          o2_pct: preset.o2_pct,
+          airflow_cm_s: preset.airflow_cm_s,
+        },
+        material: catalog?.materials.find((m) => m.material_id === preset.material_id),
+      })
+      if (andRun) setPendingRun(true)
+    },
+    [catalog, dispatch],
+  )
+  // `run` is rebuilt with the new draft on the next render, so the preset is what gets simulated.
+  useEffect(() => {
+    if (!pendingRun) return
+    setPendingRun(false)
+    run()
+  }, [pendingRun, run])
   const standbyMaterial = useMemo(() => {
     const found = catalog?.materials.find((m) => m.material_id === state.draft.material_id)
     return {
@@ -43,7 +67,6 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
   return (
     <div className="flex flex-col bg-void lg:h-[calc(100dvh-3.5rem)]">
       <h1 className="sr-only">Simulator</h1>
-      <CycleBar current={cycleStep(state)} />
 
       <div className="grid min-h-0 flex-1 gap-5 p-4 lg:grid-cols-[300px_minmax(0,1fr)_360px] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:px-6 xl:grid-cols-[300px_minmax(0,1fr)_400px]">
         {/* Left: Mission controls */}
@@ -75,6 +98,7 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
               running={loading}
               dispatch={dispatch}
               onRun={run}
+              onPreset={(preset) => applyPreset(preset, mock)}
             />
           ) : null}
         </aside>

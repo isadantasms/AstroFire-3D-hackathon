@@ -15,10 +15,6 @@ import {
   X,
 } from 'lucide-react'
 
-export function shouldAutoOpenTutorial(): boolean {
-  return import.meta.env.MODE !== 'test'
-}
-
 interface TutorialStepDef {
   id: string
   shortTitle: string
@@ -39,7 +35,7 @@ function PointerBadge({ label, direction = 'down' }: { label: string; direction?
   )
 }
 
-export const TUTORIAL_STEPS: TutorialStepDef[] = [
+const TUTORIAL_STEPS: TutorialStepDef[] = [
   {
     id: 'welcome',
     shortTitle: 'Overview',

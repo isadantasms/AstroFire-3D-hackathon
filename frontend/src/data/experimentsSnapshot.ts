@@ -17,3 +17,16 @@ export const DATASET_META = {
   license: dataset.license,
   count: dataset.records_count,
 } as const
+
+function minMax(values: number[]) {
+  return { min: Math.min(...values), max: Math.max(...values) }
+}
+
+/**
+ * Tested ranges computed from the 79 BASS-II records (min–max of initial O2 and airflow).
+ * Shared by the Documentation page and the Simulator so both always show the same numbers.
+ */
+export const BASS2_RANGES = {
+  o2Pct: minMax(EXPERIMENTS_SNAPSHOT.map((r) => r.initial_o2_pct)),
+  airflowCmS: minMax(EXPERIMENTS_SNAPSHOT.map((r) => r.airflow_cm_s)),
+} as const

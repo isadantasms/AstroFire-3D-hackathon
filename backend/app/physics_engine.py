@@ -520,10 +520,12 @@ def run_simulation(req: SimulationRequest) -> SimulationContractResponse:
             )
         )
         flammability_score = min(100, max(18, raw_score))
-        if flammability_score <= 35:
+        # Bands from contracts/simulation_schema.json (flammability_score): 36-70 Moderate Alert, 71-100 Critical.
+        # The enum has no "nominal" label for a burning flame ("Safe" is reserved for extinguished flames),
+        # so scores of 35 or less with a sustained flame keep the conservative "Moderate Alert" label.
+        # TODO(team): confirm the label for burning scenarios scored 0-35 ("High Risk" is currently unused).
+        if flammability_score <= 70:
             risk_label = "Moderate Alert"
-        elif flammability_score <= 70:
-            risk_label = "High Risk"
         else:
             risk_label = "Critical Flashover Risk"
 

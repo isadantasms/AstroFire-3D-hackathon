@@ -125,6 +125,7 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
     case 'applyPreset':
       return {
         ...state,
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 },
         draft: {
           ...action.draft,
           thickness_mm: action.material?.nominal_thickness_mm ?? null,
@@ -244,14 +245,6 @@ export function dischargeBlockedReason(state: SimulationState): string | null {
   if (seconds === undefined) return SUPPRESSION_UNAVAILABLE
   if (seconds <= 0) return 'The suppression estimate reports no discharge for this run.'
   return null
-}
-
-/** Current step of the Simulate -> Measure risk -> Suppress cycle (1-based). */
-export function cycleStep(state: SimulationState): 1 | 2 | 3 {
-  if (!state.result || state.status === 'loading' || isResultStale(state)) return 1
-  const { phase, extinguishedBy } = state.chamber
-  if (phase === 'suppressing' || (phase === 'extinguished' && extinguishedBy === 'suppression')) return 3
-  return 2
 }
 
 /** True when a result is on screen but the controls no longer match the run that produced it. */

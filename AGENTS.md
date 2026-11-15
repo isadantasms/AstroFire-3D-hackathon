@@ -1,4 +1,4 @@
-# AGENTS.md — [PROJECT_NAME] (NASA Space Apps Challenge 2026)
+# AGENTS.md — AstroFire 3D (NASA Space Apps Challenge 2026)
 
 > **1. TOP-PRIORITY GLOBAL LANGUAGE MANDATE (ALWAYS ACTIVE):**
 > - **Team Interaction (Portuguese PT-BR):** The 6 team members (**Elias, Pina, Dantas, Esquivel, Celina, Rocha**) send prompts in **Portuguese (PT-BR)**. Always reply to the user in the chat in **Portuguese (PT-BR)**.
@@ -10,10 +10,10 @@
 ---
 
 ## 1. Mission & 80/20 Architecture (*Flame in Freefall*)
-**`[PROJECT_NAME]`** is an interactive 3D microgravity combustion simulator and SI-powered fire-safety copilot for spacecraft cabins and Lunar/Martian habitats. It connects empirical NASA PSI data (**BASS-II / PSI-25**, *Saffire*, *FLEX*, *SoFIE*, *SPICE*, *SAME*) and NTRS technical reports (`NASA/TM-20210011385`) to a **3D Microgravity Flame Simulator** and a **3-Column Aerospace Telemetry Console**.
+**`AstroFire 3D`** is an interactive 3D microgravity combustion simulator and SI-powered fire-safety copilot for spacecraft cabins and Lunar/Martian habitats. It connects empirical NASA PSI data (**BASS-II / PSI-25**, *Saffire*, *FLEX*, *SoFIE*, *SPICE*, *SAME*) and NTRS technical reports (`NASA/TM-20210011385`) to a **3D Microgravity Flame Simulator** and a **3-Column Aerospace Telemetry Console**.
 
 ### Core Rules
-1. **Git Isolation & Pre-09:00 Cleanliness:** NEVER stage `./arquivos a separar/` or `./NASA SPACE APPS - 2026/` into Git. Keep the project name as `[PROJECT_NAME]` until the team officially names it after Saturday 09:00.
+1. **Git Isolation & Pre-09:00 Cleanliness:** NEVER stage `./arquivos a separar/` or `./NASA SPACE APPS - 2026/` into Git. The official project name is **AstroFire 3D**.
 2. **Dataset License Guard:** Use only `CC0-1.0` NASA PSI datasets (such as `BASS-II / PSI-25`). **NEVER use `PSI-10` (ACME/Flame Design)** as it lacks an open license declaration.
 3. **Zero-`.env` Deterministic Engine First:** Compute physical telemetry and safety insights deterministically/locally from `BASS-II` data and `NASA/TM-20210011385` in **< 5ms**, requiring zero paid external API keys to stay 100% online for NASA Global Judging.
 4. **Contract-First Synergy:** Backend, 3D Simulator, and Frontend communicate strictly through `contracts/simulation_schema.json`.

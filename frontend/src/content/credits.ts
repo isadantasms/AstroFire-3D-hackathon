@@ -1,6 +1,6 @@
 // SI-assisted: generated with Gemini & Claude, reviewed and edited by Rocha, Elias, Pina & Dantas
-// Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
-/** Data, library and asset credits (Research & Data → Data & credits). */
+/** Library, tool, asset and SI-tool credits (Documentation → Sources & credits). */
+import { LOGO_CREDIT, SHOW_UNVERIFIED, VOICE_TOOL } from './project'
 
 export interface CreditRow {
   resource: string
@@ -10,39 +10,23 @@ export interface CreditRow {
 }
 
 /*
- * NASA data and library rows are kept as they were (IDs and DOIs unchanged).
- * The UFSC (VSB-30) study is added only once it is registered in docs/references.md.
+ * Software, tools, assets and SI tools with their licenses. NASA data and reports are not repeated
+ * here: they are the numbered references (content/references.ts) shown right above this table.
+ * Rows marked "To verify" still need details from the team; nothing is filled in for them. They show only
+ * in development builds (SHOW_UNVERIFIED) until the team confirms them.
  */
-export const CREDITS_LEDGER: CreditRow[] = [
-  {
-    resource: 'BASS-II (PSI-25): Burning and Suppression of Solids - II',
-    type: 'NASA Data',
-    license: 'CC0-1.0',
-    url: 'https://doi.org/10.60555/4qc4-de67',
-  },
-  {
-    resource: 'NASA/TM-20210011385: BASS-II Summary Report (Olson et al., 2021)',
-    type: 'NASA Technical Report',
-    license: 'US Gov Public Domain',
-    url: 'https://ntrs.nasa.gov/citations/20210011385',
-  },
-  {
-    resource: 'Saffire I–VI (NTRS-20170000230 & NTRS-20240002981)',
-    type: 'NASA Technical Report',
-    license: 'CC0-1.0 / Public Domain',
-    url: 'https://ntrs.nasa.gov/citations/20170000230',
-  },
-  {
-    resource: 'SAME / SoFIE / FLEX / SPICE (NTRS-20170007283)',
-    type: 'NASA Data & Report',
-    license: 'CC0-1.0 / Public Domain',
-    url: 'https://ntrs.nasa.gov/citations/20170007283',
-  },
+const ALL_CREDITS: (CreditRow | false)[] = [
   {
     resource: 'React 19, TypeScript, Vite & Tailwind CSS',
     type: 'Open-Source Libraries',
     license: 'MIT / Apache-2.0',
     url: 'https://react.dev',
+  },
+  {
+    resource: '@react-pdf/renderer (scenario report PDF)',
+    type: 'Open-Source Library',
+    license: 'MIT License',
+    url: 'https://react-pdf.org',
   },
   {
     resource: 'FastAPI & Pydantic V2 (+ Python 3.12 stdlib fallback)',
@@ -56,18 +40,77 @@ export const CREDITS_LEDGER: CreditRow[] = [
     license: 'MIT / ISC / SIL OFL 1.1',
     url: 'https://ajv.js.org',
   },
-  // TODO(credits): author and license of the voxel rocket model are not in assets/CREDITS.md yet.
   {
-    resource: 'Voxel rocket 3D model (MagicaVoxel)',
-    type: '3D Model',
-    license: 'To verify',
+    resource: 'Unity (3D chamber engine and WebGL template)',
+    type: 'Engine',
+    license: 'Unity Terms of Service',
+    url: 'https://unity.com/legal/terms-of-service',
+  },
+  {
+    resource: '3D voxel models created by the team with MagicaVoxel',
+    type: '3D Models',
+    license: 'MIT License (this repository)',
+    url: 'https://ephtracy.github.io/',
+  },
+  {
+    resource: LOGO_CREDIT,
+    type: 'Logo',
+    license: 'MIT License (this repository)',
     url: null,
   },
-  // TODO(voice-tool): name, license and link of the narration tool.
   {
-    resource: '[VOICE TOOL]: demo video narration',
+    resource: 'ChatGPT (OpenAI): planning, development support, 3D modeling support and logo concept',
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://chatgpt.com',
+  },
+  {
+    resource: 'Codex (OpenAI): Unity scripts and shaders for the 3D chamber',
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://developers.openai.com/codex',
+  },
+  {
+    resource: "Gemini (Google): refining the team's business rules, backend integration and test data",
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://gemini.google.com',
+  },
+  {
+    resource: 'Antigravity: coding environment used with Gemini',
+    type: 'Development Tool',
+    license: 'Google Terms of Service',
+    url: 'https://policies.google.com/terms',
+  },
+  {
+    resource: 'Google Colab: model training and validation',
+    type: 'Development Tool',
+    license: 'Google Terms of Service',
+    url: 'https://policies.google.com/terms',
+  },
+  {
+    resource: 'Claude / Claude Code (Anthropic): front-end code, interface, documentation and vector logo',
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://claude.com/product/claude-code',
+  },
+  // TODO(voice-tool): license and link of the narration tool (the name comes from VOICE_TOOL).
+  Boolean(VOICE_TOOL) && {
+    resource: `${VOICE_TOOL}: demo video narration`,
     type: 'SI Tool',
     license: 'To verify',
     url: null,
   },
+  // TODO(references): the UFSC/INPE VSB-30 study is listed by name only until the team confirms the reference.
+  SHOW_UNVERIFIED && {
+    resource: 'UFSC/INPE · VSB-30 sounding-rocket study',
+    type: 'Research Study',
+    license: 'To verify',
+    url: null,
+  },
 ]
+
+/** Credits shown on the Documentation page; unconfirmed licenses are hidden in production builds. */
+export const CREDITS_LEDGER: CreditRow[] = ALL_CREDITS.filter(
+  (row): row is CreditRow => row !== false && (SHOW_UNVERIFIED || row.license !== 'To verify'),
+)
