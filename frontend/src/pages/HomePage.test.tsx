@@ -23,13 +23,15 @@ async function renderHome(docsUrl: string | null) {
 }
 
 describe('Home SI disclosure', () => {
-  it('keeps the detailed version while the technical PDF does not exist', async () => {
+  it('shows the short block without the documentation link while the technical PDF does not exist', async () => {
     await renderHome(null)
-    expect(screen.getByRole('heading', { level: 2, name: 'Human-led science. AI-assisted development.' })).toBeInTheDocument()
-    expect(screen.queryByTestId('si-compact')).toBeNull()
+    const si = within(screen.getByTestId('si-compact'))
+    expect(si.getByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
+    expect(si.getAllByRole('term').map((dt) => dt.textContent)).toEqual(['In the product', 'In development', 'Human responsibility'])
+    expect(si.queryByRole('link')).toBeNull()
   })
 
-  it('switches to the compact block once the technical PDF link is set', async () => {
+  it('adds the documentation link once the technical PDF link is set', async () => {
     await renderHome('https://example.org/astrofire-technical-docs.pdf')
     const si = within(screen.getByTestId('si-compact'))
     expect(screen.getByTestId('si-compact')).toHaveAttribute('id', 'si-usage')
@@ -48,6 +50,5 @@ describe('Home SI disclosure', () => {
       'href',
       'https://example.org/astrofire-technical-docs.pdf',
     )
-    expect(screen.queryByText('Human-led science. AI-assisted development.')).toBeNull()
   })
 })

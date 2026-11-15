@@ -10,7 +10,7 @@ import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences
 import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
 import { EXPERIMENTS_SNAPSHOT } from '../data/experimentsSnapshot'
 import { INVESTIGATIONS } from '../content/investigations'
-import { DEV_TOOLS, HUMAN_REVIEW, LOGO_CREDIT, SI_COMPACT, SI_IN_PRODUCT, SI_TERM_NOTE, VOICE_CREDIT } from '../content/project'
+import { SI_COMPACT } from '../content/project'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
@@ -309,14 +309,10 @@ function HelpsSection() {
 
 /**
  * How SI is used (NASA Space Apps disclosure); the footer "SI Usage" link lands here (#si-usage).
- * The full disclosure moves to the technical PDF: once TECHNICAL_DOCS_PDF_URL is set, the Home shows the
- * compact block with a link to it. Until then the detailed version stays on the Home.
+ * Short on purpose: the full disclosure lives in docs/technical-notes.md (for the technical PDF).
+ * The documentation link appears once TECHNICAL_DOCS_PDF_URL is set.
  */
 function SiUsageSection() {
-  return TECHNICAL_DOCS_PDF_URL ? <CompactSiUsage docsUrl={TECHNICAL_DOCS_PDF_URL} /> : <DetailedSiUsage />
-}
-
-function CompactSiUsage({ docsUrl }: { docsUrl: string }) {
   const rows = [
     { name: 'In the product', text: SI_COMPACT.product },
     { name: 'In development', text: SI_COMPACT.development },
@@ -335,98 +331,20 @@ function CompactSiUsage({ docsUrl }: { docsUrl: string }) {
               </div>
             ))}
           </dl>
-          <a
-            href={docsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-6 inline-flex items-center gap-1.5 text-sm text-focus hover:underline"
-          >
-            {SI_COMPACT.linkLabel}
-            <ArrowRight className="size-3.5" aria-hidden />
-          </a>
+          {TECHNICAL_DOCS_PDF_URL ? (
+            <a
+              href={TECHNICAL_DOCS_PDF_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 inline-flex items-center gap-1.5 text-sm text-focus hover:underline"
+            >
+              {SI_COMPACT.linkLabel}
+              <ArrowRight className="size-3.5" aria-hidden />
+            </a>
+          ) : null}
         </div>
       </div>
     </section>
-  )
-}
-
-/** Detailed disclosure, shown on the Home until the technical PDF is published. */
-function DetailedSiUsage() {
-  return (
-    <section id="si-usage" className="relative scroll-mt-16" aria-labelledby="si-usage-title">
-      <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
-        <SectionHeader id="si-usage" label="Transparency & scientific integrity" title="Human-led science. AI-assisted development." />
-
-        {/* Featured: what SI does (and does not do) inside the product. */}
-        <div data-reveal style={stagger(2)} className={`reveal mt-12 p-6 sm:p-8 lg:p-10 ${PANEL}`} data-testid="si-in-product">
-          <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">SI inside AstroFire</h3>
-          <ol className="mt-5 flex flex-wrap items-center gap-2" aria-label="How a result is produced">
-            {SI_IN_PRODUCT.flow.map((step, i) => (
-              <li key={step} className="flex items-center gap-2">
-                <span className="rounded-lg border border-subtle bg-void/60 px-3 py-1.5 text-sm font-medium text-primary">{step}</span>
-                {i < SI_IN_PRODUCT.flow.length - 1 ? (
-                  <ArrowRight className="size-4 text-label" aria-label="then" />
-                ) : null}
-              </li>
-            ))}
-          </ol>
-          <p className="mt-5 max-w-3xl text-base leading-relaxed text-secondary">{SI_IN_PRODUCT.text}</p>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2">
-            <ChecklistBlock title="What it does" items={SI_IN_PRODUCT.does} tone="text-nominal" mark="✓" />
-            <ChecklistBlock title="What it does not do" items={SI_IN_PRODUCT.doesNot} tone="text-muted" mark="×" />
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <div data-reveal style={stagger(3)} className={`reveal p-6 sm:p-8 ${PANEL}`}>
-            <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">AI-assisted development</h3>
-            <ul className="mt-4 space-y-3" data-testid="dev-tools">
-              {DEV_TOOLS.map((t) => (
-                <DashItem key={t.tool}>
-                  <span className="font-medium text-primary">{t.tool}:</span> {t.use}
-                </DashItem>
-              ))}
-              <DashItem>{LOGO_CREDIT}</DashItem>
-              <DashItem>{VOICE_CREDIT}</DashItem>
-            </ul>
-          </div>
-          <div data-reveal style={stagger(4)} className={`reveal p-6 sm:p-8 ${PANEL}`}>
-            <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">Human review &amp; responsibility</h3>
-            <p className="mt-4 text-sm leading-relaxed text-primary">{HUMAN_REVIEW}</p>
-            <p className="mt-4 border-t border-subtle pt-4 text-xs leading-relaxed text-muted">{SI_TERM_NOTE}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function DashItem({ children }: { children: ReactNode }) {
-  return (
-    <li className="flex gap-3 text-sm leading-relaxed text-secondary">
-      <span className="shrink-0 text-[#F28C28]" aria-hidden="true">
-        —
-      </span>
-      <span>{children}</span>
-    </li>
-  )
-}
-
-function ChecklistBlock({ title, items, tone, mark }: { title: string; items: readonly string[]; tone: string; mark: string }) {
-  return (
-    <div>
-      <h4 className="text-sm font-medium text-primary">{title}</h4>
-      <ul className="mt-3 space-y-2">
-        {items.map((item) => (
-          <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-secondary">
-            <span className={`shrink-0 font-mono ${tone}`} aria-hidden="true">
-              {mark}
-            </span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
   )
 }
 

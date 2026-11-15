@@ -71,9 +71,9 @@ The per-epoch curve (25 points, epochs 1–120: train MSE, validation MSE, physi
 
 ## 3. SI disclosure
 
-Full disclosure for the technical PDF. The Home keeps this detailed version until the PDF is published
-(`TECHNICAL_DOCS_PDF_URL` in `frontend/src/app/routes.ts`); then it switches to a compact block that links here.
-Source of truth for the wording: `frontend/src/content/project.ts`.
+Full disclosure for the technical PDF. The Home shows only a short block (`SI_COMPACT` in
+`frontend/src/content/project.ts`); its "Full SI disclosure in the documentation" link appears once
+`TECHNICAL_DOCS_PDF_URL` is set in `frontend/src/app/routes.ts`. Keep this section and the Home block in sync.
 
 **Transparency & scientific integrity — Human-led science. AI-assisted development.**
 

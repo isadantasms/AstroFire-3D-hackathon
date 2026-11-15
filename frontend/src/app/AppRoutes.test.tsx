@@ -159,36 +159,19 @@ describe('site structure', () => {
     const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
     expect(h2s).toEqual([
       'How AstroFire helps',
-      'Human-led science. AI-assisted development.',
+      'How we use SI',
       'Built on real research',
       'Explore combustion beyond Earth.',
     ])
 
-    const si = within(document.getElementById('si-usage')!)
-    expect(si.getByText('Transparency & scientific integrity', { selector: 'p' })).toBeInTheDocument()
-    for (const name of ['SI inside AstroFire', 'AI-assisted development', 'Human review & responsibility']) {
-      expect(si.getByRole('heading', { level: 3, name })).toBeInTheDocument()
-    }
-    const product = within(si.getByTestId('si-in-product'))
-    expect(product.getAllByRole('listitem').slice(0, 3).map((li) => li.textContent)).toEqual(['NASA data', 'Rule-based engine', 'Results'])
-    expect(product.getByText(/does not run an AI model when you simulate/)).toBeInTheDocument()
-    expect(product.getByText(/three sample payloads written with Gemini/)).toBeInTheDocument()
-    expect(product.getByRole('heading', { level: 4, name: 'What it does' })).toBeInTheDocument()
-    expect(product.getByRole('heading', { level: 4, name: 'What it does not do' })).toBeInTheDocument()
-    expect(product.getByText('Run a live AI model')).toBeInTheDocument()
-    const tools = si.getByTestId('dev-tools')
-    for (const line of [
-      'ChatGPT (OpenAI): planning, development support and 3D modeling support',
-      'Codex (OpenAI): Unity scripts and shaders for the 3D chamber',
-      "Gemini (Google): refining the team's business rules, backend integration and test data",
-      'Claude / Claude Code (Anthropic): front-end code and interface',
-      'AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.',
-      'Demo video narration generated with [VOICE TOOL].',
-    ]) {
-      expect(tools).toHaveTextContent(line)
-    }
+    // Short SI block (the full disclosure is in docs/technical-notes.md).
+    const si = within(screen.getByTestId('si-compact'))
+    expect(screen.getByTestId('si-compact')).toHaveAttribute('id', 'si-usage')
+    expect(si.getByText('Transparency', { selector: 'p' })).toBeInTheDocument()
+    expect(si.getByText(/a rule-based engine matches your scenario to NASA BASS-II data/)).toBeInTheDocument()
+    expect(si.getByText(/ChatGPT, Codex, Gemini and Claude \/ Claude Code/)).toBeInTheDocument()
+    expect(si.getByText(/\[VOICE TOOL\]/)).toBeInTheDocument()
     expect(si.getByText(/The team conceived the solution/)).toBeInTheDocument()
-    expect(si.getByText(/term used by the Space Apps challenge/)).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/recreated by the team|SI interprets the experimental data/)
 
     // Evidence strip: counts come from the data, plus the badge legend.
@@ -206,7 +189,7 @@ describe('site structure', () => {
 
   it('/about redirects to the SI usage section of the Home', async () => {
     renderAt('/about')
-    expect(await screen.findByRole('heading', { level: 2, name: 'Human-led science. AI-assisted development.' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
   })
 
   it('Data & credits now live at the end of Research & Data', async () => {
