@@ -159,13 +159,32 @@ interface Step {
   nameColor: string
   dashColor: string
   title: string
-  items: { text: string; badge?: string }[]
+  items: { id: string; content: ReactNode }[]
+}
+
+const NUMBER_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
+
+/** "Six" for 6: spelled-out count for the start of a sentence (digits above twelve). */
+function countWord(n: number): string {
+  return NUMBER_WORDS[n] ?? String(n)
+}
+
+function MonoBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="ml-1.5 inline-block rounded-md border border-subtle bg-void/60 px-1.5 py-0.5 align-middle font-mono text-[0.6875rem] tracking-[0.06em] whitespace-nowrap text-label">
+      {children}
+    </span>
+  )
 }
 
 /*
- * TODO(references): add this item to "Our approach" once the UFSC (VSB-30) study is
- * registered in docs/references.md (it is not there yet, so it is not shown):
- *   { text: 'Brazilian sounding-rocket research', badge: 'UFSC · VSB-30' }
+ * TODO(references): mention the UFSC (VSB-30) study in "Our approach" once it is
+ * registered in docs/references.md (it is not there yet, so it is not shown).
+ *
+ * TODO(suppression): the water-mist extinguisher estimate is shown only when the engine returns
+ * suppression_estimate. The published mock payloads do not include it, so the solution bullet does
+ * not mention it. When it works in the Simulator, use:
+ *   'Get prevention, detection and suppression guidance, including a water-mist extinguisher estimate.'
  */
 const STEPS: Step[] = [
   {
@@ -174,11 +193,11 @@ const STEPS: Step[] = [
     marker: 'border-2 border-[#4C8DFF] bg-panel text-[#8CB4FF]',
     nameColor: 'text-[#8CB4FF]',
     dashColor: 'text-[#8CB4FF]',
-    title: 'Fire behaves differently in space, and the data to plan for it is hard to use.',
+    title: 'Fire behaves differently in space, and the data to understand it is scattered.',
     items: [
-      { text: 'Without gravity, flames turn round, slow and hard to see.' },
-      { text: 'Cabin airflow and oxygen-richer habitats change how materials burn.' },
-      { text: 'Decades of experiments are spread across reports and raw tables.' },
+      { id: 'gravity', content: 'Without gravity, hot gases don’t rise, so flames can become slow, round and hard to see.' },
+      { id: 'oxygen', content: 'Oxygen concentration and cabin airflow change how materials burn.' },
+      { id: 'scattered', content: 'NASA’s experimental findings are spread across datasets and technical reports.' },
     ],
   },
   {
@@ -189,9 +208,25 @@ const STEPS: Step[] = [
     dashColor: 'text-[#B98A5A]',
     title: 'We bring the research together.',
     items: [
-      { text: 'NASA combustion experiments', badge: 'PSI · BASS-II' },
-      { text: 'NASA technical reports', badge: 'NTRS' },
-      { text: 'A rule-based engine that matches each scenario to these records' },
+      {
+        id: 'data',
+        content: (
+          <>
+            Experimental combustion data from NASA PSI (BASS-II)
+            <MonoBadge>PSI · BASS-II</MonoBadge> and NASA technical reports (NTRS)
+            <MonoBadge>NTRS</MonoBadge>.
+          </>
+        ),
+      },
+      {
+        id: 'investigations',
+        content: `${countWord(INVESTIGATIONS.length)} NASA investigations summarized, ranked and interpreted for each habitat: spacecraft, space stations, lunar and Martian bases, and pressurized rovers.`,
+      },
+      {
+        id: 'engine',
+        content:
+          'A rule-based engine matches each scenario to the research; diagnosis and guidance texts were drafted with Super Intelligence (SI) and reviewed by the team.',
+      },
     ],
   },
   {
@@ -200,13 +235,13 @@ const STEPS: Step[] = [
     marker: 'border-2 border-[#F28C28] bg-[#F28C28] text-[#0A101C]',
     nameColor: 'text-[#F28C28]',
     dashColor: 'text-[#F28C28]',
-    title: 'AstroFire turns it into a clear answer in seconds.',
+    title: 'Explore fire behavior, backed by science.',
     items: [
-      { text: 'Set material, gravity, oxygen and airflow' },
-      { text: 'See the flame in 3D and its fire risk' },
-      { text: 'Size the ISS water-mist extinguisher for that fire' },
-      { text: 'Open a detailed report and download it as PDF' },
-      { text: 'See the sources behind each result' },
+      { id: 'configure', content: 'Configure material, gravity, oxygen and airflow.' },
+      { id: 'visualize', content: 'Visualize the flame in 3D and examine risk indicators.' },
+      { id: 'guidance', content: 'Get prevention, detection and suppression guidance.' },
+      { id: 'report', content: 'Export a detailed PDF report with the source behind each result.' },
+      { id: 'earth', content: 'See how this research also supports fire safety on Earth.' },
     ],
   },
 ]
@@ -255,18 +290,11 @@ function HelpsSection() {
                 <h3 className="mt-3 text-[22px] leading-snug font-semibold text-primary lg:mt-6">{step.title}</h3>
                 <ul className="mt-5 space-y-3">
                   {step.items.map((item) => (
-                    <li key={item.text} className="flex gap-3 text-sm leading-relaxed text-secondary">
+                    <li key={item.id} className="flex gap-3 text-sm leading-relaxed text-secondary">
                       <span className={`shrink-0 ${step.dashColor}`} aria-hidden="true">
                         —
                       </span>
-                      <span>
-                        {item.text}
-                        {item.badge ? (
-                          <span className="ml-2 inline-block rounded-md border border-subtle bg-void/60 px-1.5 py-0.5 align-middle font-mono text-[0.6875rem] tracking-[0.06em] whitespace-nowrap text-label">
-                            {item.badge}
-                          </span>
-                        ) : null}
-                      </span>
+                      <span>{item.content}</span>
                     </li>
                   ))}
                 </ul>

@@ -80,27 +80,35 @@ describe('site structure', () => {
       expect(steps.getAllByText(name).length).toBeGreaterThan(0)
     }
     for (const title of [
-      'Fire behaves differently in space, and the data to plan for it is hard to use.',
+      'Fire behaves differently in space, and the data to understand it is scattered.',
       'We bring the research together.',
-      'AstroFire turns it into a clear answer in seconds.',
+      'Explore fire behavior, backed by science.',
     ]) {
       expect(steps.getByRole('heading', { level: 3, name: title })).toBeInTheDocument()
     }
     for (const item of [
-      'Without gravity, flames turn round, slow and hard to see.',
-      'Cabin airflow and oxygen-richer habitats change how materials burn.',
-      'Decades of experiments are spread across reports and raw tables.',
-      'A rule-based engine that matches each scenario to these records',
-      'Set material, gravity, oxygen and airflow',
-      'See the flame in 3D and its fire risk',
-      'Size the ISS water-mist extinguisher for that fire',
-      'Open a detailed report and download it as PDF',
-      'See the sources behind each result',
+      'Without gravity, hot gases don’t rise, so flames can become slow, round and hard to see.',
+      'Oxygen concentration and cabin airflow change how materials burn.',
+      'NASA’s experimental findings are spread across datasets and technical reports.',
+      // "Six" comes from the number of investigations in the ranking.
+      'Six NASA investigations summarized, ranked and interpreted for each habitat: spacecraft, space stations, lunar and Martian bases, and pressurized rovers.',
+      'A rule-based engine matches each scenario to the research; diagnosis and guidance texts were drafted with Super Intelligence (SI) and reviewed by the team.',
+      'Configure material, gravity, oxygen and airflow.',
+      'Visualize the flame in 3D and examine risk indicators.',
+      // The mock payloads have no suppression estimate, so the extinguisher is not promised here.
+      'Get prevention, detection and suppression guidance.',
+      'Export a detailed PDF report with the source behind each result.',
+      'See how this research also supports fire safety on Earth.',
     ]) {
       expect(steps.getByText(item)).toBeInTheDocument()
     }
-    expect(steps.getByText('PSI · BASS-II')).toBeInTheDocument()
-    expect(steps.getByText('NTRS')).toBeInTheDocument()
+    expect(steps.getByText(/^Experimental combustion data from NASA PSI \(BASS-II\)/)).toHaveTextContent(
+      'Experimental combustion data from NASA PSI (BASS-II)PSI · BASS-II and NASA technical reports (NTRS)NTRS.',
+    )
+    expect(steps.getByText('PSI · BASS-II').className).toMatch(/font-mono/)
+    expect(steps.getByText('NTRS').className).toMatch(/font-mono/)
+    expect(screen.queryByText(/water-mist extinguisher estimate/)).toBeNull()
+    expect(screen.getAllByText(/fire safety on Earth/)).toHaveLength(1)
     // The UFSC (VSB-30) item stays hidden until its reference is in docs/references.md.
     expect(screen.queryByText(/UFSC|VSB-30|Brazilian/)).toBeNull()
 
