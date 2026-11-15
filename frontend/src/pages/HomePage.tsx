@@ -280,7 +280,11 @@ const SI_BLOCKS = [
     name: 'In the product',
     text: 'SI interprets the experimental data for each scenario and writes the diagnosis and suppression guidance. These texts are labeled as SI-generated in the results and in the PDF report, and always come with their sources.',
   },
-  { name: 'In development', tools: DEV_TOOLS },
+  {
+    name: 'In development',
+    tools: DEV_TOOLS,
+    note: 'Logo concept explored with SI image tools; final vector artwork recreated by the team.',
+  },
   {
     name: 'Human review',
     text: 'The team reviewed every SI-assisted file, checked all references against their original sources and validated the results before publishing.',
@@ -310,6 +314,12 @@ function SiUsageSection() {
                         </span>
                       </li>
                     ))}
+                    <li className="flex gap-3 text-sm leading-relaxed text-secondary">
+                      <span className="shrink-0 text-[#F28C28]" aria-hidden="true">
+                        —
+                      </span>
+                      <span>{block.note}</span>
+                    </li>
                   </ul>
                 ) : (
                   <p className="mt-4 text-sm leading-relaxed text-secondary">{block.text}</p>

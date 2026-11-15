@@ -158,6 +158,7 @@ describe('site structure', () => {
     expect(tools).toHaveTextContent('Claude: code, interface design and website copy')
     expect(tools).toHaveTextContent('Gemini: code assistance and test data generation')
     expect(tools).toHaveTextContent('[VOICE TOOL]: narration of the demo video')
+    expect(tools).toHaveTextContent('Logo concept explored with SI image tools; final vector artwork recreated by the team.')
 
     // The team section was removed.
     expect(document.getElementById('team')).toBeNull()

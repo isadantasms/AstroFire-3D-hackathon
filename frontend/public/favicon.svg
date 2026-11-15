@@ -1,5 +1,8 @@
-<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AstroFire">
-  <path d="M16 3C19 8 25 11 25 19A9 9 0 1 1 7 19C7 13 11 10 13 6C13.5 9 15 10.5 16.5 11C16 8 16 5 16 3Z" fill="#F28C28"/>
-  <circle cx="16" cy="20" r="4.5" fill="#0A101C"/>
-  <circle cx="16" cy="20" r="2.2" fill="#4C8DFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="AstroFire">
+  <!-- AstroFire logo. Original vector artwork recreated by the team (MIT License, this repository). -->
+  <defs><linearGradient id="af-flame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2B544"/><stop offset="0.62" stop-color="#F28C28"/></linearGradient><mask id="af-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32"><rect width="32" height="32" fill="#fff"/><path d="M2.09 25.56A14.8 4.5 -20 0 0 29.91 15.44" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask></defs>
+  <ellipse cx="16" cy="20.5" rx="14.8" ry="4.5" transform="rotate(-20 16 20.5)" fill="none" stroke="#E6ECF5" stroke-width="1.5"/>
+  <path mask="url(#af-gap)" fill="url(#af-flame)" fill-rule="evenodd" d="M16 30.5A9.5 9.5 0 0 1 6.5 21C6.5 17 7.6 14 9.6 11.2C10 13.4 11 14.6 12.2 15C11.8 11.2 13.4 8.6 14.6 6.4C15.4 5 15.6 3.6 15.2 2.2C18.6 4.4 20.4 7.6 20 11C21.4 10.2 22.4 8.8 22.6 7.4C24.8 10.4 25.5 15 25.5 21A9.5 9.5 0 0 1 16 30.5ZM20.9 21A4.9 4.9 0 1 0 11.1 21A4.9 4.9 0 1 0 20.9 21Z"/>
+  <path d="M2.09 25.56A14.8 4.5 -20 0 0 29.91 15.44" fill="none" stroke="#E6ECF5" stroke-width="1.5" stroke-linecap="round"/>
+  <path fill="#FFFFFF" d="M16 18.1Q16.55 20.45 18.9 21Q16.55 21.55 16 23.9Q15.45 21.55 13.1 21Q15.45 20.45 16 18.1Z"/>
 </svg>
