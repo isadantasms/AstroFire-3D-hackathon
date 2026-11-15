@@ -108,30 +108,39 @@ export function FlameChamberPlaceholder({
     if (!target || unity !== 'ready' || !payload) return
     if (phase !== 'burning' && !(phase === 'extinguished' && extinguishedBy === 'no_sustained_flame')) return
     focusUnityIframeSafely(iframeRef.current)
+    sendUnityCommand(target, 'Fire Extinguisher', 'CancelForTravel')
     target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload }, '*')
     sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
     sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
 
-    let raf2 = 0
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
-        sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
-      })
-    })
-    const timer1 = setTimeout(() => {
+    const syncRunState = () => {
+      sendUnityCommand(target, 'Fire Extinguisher', 'CancelForTravel')
       sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
       sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
-    }, 40)
-    const timer2 = setTimeout(() => {
-      sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
-    }, 120)
+    }
+
+    let rafId = 0
+    let remainingFrames = 5
+    const stepRaf = () => {
+      syncRunState()
+      remainingFrames -= 1
+      if (remainingFrames > 0) {
+        rafId = requestAnimationFrame(stepRaf)
+      }
+    }
+    rafId = requestAnimationFrame(stepRaf)
+
+    const timer1 = setTimeout(syncRunState, 40)
+    const timer2 = setTimeout(syncRunState, 120)
+    const timer3 = setTimeout(syncRunState, 260)
+    const timer4 = setTimeout(syncRunState, 450)
 
     return () => {
-      cancelAnimationFrame(raf1)
-      cancelAnimationFrame(raf2)
+      if (rafId) cancelAnimationFrame(rafId)
       clearTimeout(timer1)
       clearTimeout(timer2)
+      clearTimeout(timer3)
+      clearTimeout(timer4)
     }
   }, [payload, phase, extinguishedBy, unity])
 
@@ -177,7 +186,9 @@ export function FlameChamberPlaceholder({
         oxygen_factor: 0,
       },
     }
+    sendUnityCommand(target, 'Fire Extinguisher', 'CancelForTravel')
     target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload: standbyPayload }, '*')
+    sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
   }, [
     loading,
     phase,
@@ -216,13 +227,17 @@ export function FlameChamberPlaceholder({
       timer2 = setTimeout(() => {
         sendUnityCommand(target, 'Fire Extinguisher', 'UseExtinguisher')
       }, 120)
-    } else if (phase === 'burning') {
+    } else if (phase === 'burning' || phase === 'idle') {
+      sendUnityCommand(target, 'Fire Extinguisher', 'CancelForTravel')
+      sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
       raf1 = requestAnimationFrame(() => {
         raf2 = requestAnimationFrame(() => {
+          sendUnityCommand(target, 'Fire Extinguisher', 'CancelForTravel')
           sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
         })
       })
       timer1 = setTimeout(() => {
+        sendUnityCommand(target, 'Fire Extinguisher', 'CancelForTravel')
         sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
       }, 40)
     }

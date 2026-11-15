@@ -140,24 +140,30 @@
           var lastChamberPhase = null;
           var skipTimer1 = null;
           var skipTimer2 = null;
+          var skipTimer3 = null;
+          var skipTimer4 = null;
           var extinguishTimer = null;
-          var rafOuterId = null;
-          var rafInnerId = null;
+          var rafChainId = null;
           function clearPendingTimers() {
             if (skipTimer1) { clearTimeout(skipTimer1); skipTimer1 = null; }
             if (skipTimer2) { clearTimeout(skipTimer2); skipTimer2 = null; }
+            if (skipTimer3) { clearTimeout(skipTimer3); skipTimer3 = null; }
+            if (skipTimer4) { clearTimeout(skipTimer4); skipTimer4 = null; }
             if (extinguishTimer) { clearTimeout(extinguishTimer); extinguishTimer = null; }
-            if (rafOuterId) { cancelAnimationFrame(rafOuterId); rafOuterId = null; }
-            if (rafInnerId) { cancelAnimationFrame(rafInnerId); rafInnerId = null; }
+            if (rafChainId) { cancelAnimationFrame(rafChainId); rafChainId = null; }
           }
-          function scheduleDoubleRaf(fn) {
-            rafOuterId = requestAnimationFrame(function() {
-              rafOuterId = null;
-              rafInnerId = requestAnimationFrame(function() {
-                rafInnerId = null;
-                fn();
-              });
-            });
+          function scheduleMultiRaf(frames, fn) {
+            if (rafChainId) { cancelAnimationFrame(rafChainId); rafChainId = null; }
+            var remaining = frames;
+            function step() {
+              rafChainId = null;
+              fn();
+              remaining -= 1;
+              if (remaining > 0) {
+                rafChainId = requestAnimationFrame(step);
+              }
+            }
+            rafChainId = requestAnimationFrame(step);
           }
           window.addEventListener("message", function(event) {
             if (!event.data) return;
@@ -172,23 +178,22 @@
                 : JSON.stringify(event.data.payload);
               var isStandby = Boolean(payloadObj && typeof payloadObj.scenario_id === "string" && payloadObj.scenario_id.indexOf("standby_") === 0);
               lastChamberPhase = null;
-              // Finish any previous in-flight rocket journey before applying the new destination/payload.
+              // Cancel any active extinguisher animation and finish any previous rocket journey before applying the new payload.
+              unityInstance.SendMessage("Fire Extinguisher", "CancelForTravel");
               unityInstance.SendMessage("FireSimulation", "SkipAnimation");
               unityInstance.SendMessage("FireSimulation", "ApplyJson", jsonStr);
               unityInstance.SendMessage("FireSimulation", "ResetSuppression");
               if (!isStandby) {
-                // Redundant double-rAF + timers ensure SkipAnimation and ResetSuppression execute across frame boundaries.
-                scheduleDoubleRaf(function() {
+                var syncRun = function() {
+                  unityInstance.SendMessage("Fire Extinguisher", "CancelForTravel");
                   unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                   unityInstance.SendMessage("FireSimulation", "ResetSuppression");
-                });
-                skipTimer1 = setTimeout(function() {
-                  unityInstance.SendMessage("FireSimulation", "SkipAnimation");
-                  unityInstance.SendMessage("FireSimulation", "ResetSuppression");
-                }, 40);
-                skipTimer2 = setTimeout(function() {
-                  unityInstance.SendMessage("FireSimulation", "SkipAnimation");
-                }, 120);
+                };
+                scheduleMultiRaf(5, syncRun);
+                skipTimer1 = setTimeout(syncRun, 40);
+                skipTimer2 = setTimeout(syncRun, 120);
+                skipTimer3 = setTimeout(syncRun, 260);
+                skipTimer4 = setTimeout(syncRun, 450);
               }
             } else if (event.data.type === "APPLY_CHAMBER_STATE") {
               var nextPhase = event.data.phase || null;
@@ -197,7 +202,7 @@
                 focusUnityCanvas();
                 unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                 unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
-                scheduleDoubleRaf(function() {
+                scheduleMultiRaf(2, function() {
                   unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                   unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
                 });
@@ -205,12 +210,11 @@
                   unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                   unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
                 }, 120);
-              } else if (nextPhase === "burning" && lastChamberPhase === "extinguished") {
+              } else if (nextPhase === "burning" || nextPhase === "idle") {
+                if (extinguishTimer) { clearTimeout(extinguishTimer); extinguishTimer = null; }
                 focusUnityCanvas();
+                unityInstance.SendMessage("Fire Extinguisher", "CancelForTravel");
                 unityInstance.SendMessage("FireSimulation", "ResetSuppression");
-                scheduleDoubleRaf(function() {
-                  unityInstance.SendMessage("FireSimulation", "ResetSuppression");
-                });
               }
               lastChamberPhase = nextPhase;
             } else if (event.data.type === "UNITY_SEND_MESSAGE" && event.data.gameObject && event.data.method) {

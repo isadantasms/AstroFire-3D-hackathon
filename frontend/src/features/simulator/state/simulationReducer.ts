@@ -119,9 +119,23 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
         draft: { ...state.draft, gravity_g: action.gravity_g, test_id: null },
       }
     case 'setOxygen':
-      return { ...state, draft: { ...state.draft, o2_pct: action.o2_pct, test_id: null } }
+      return {
+        ...state,
+        chamber:
+          state.chamber.phase === 'extinguished' || state.chamber.phase === 'suppressing'
+            ? { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 }
+            : state.chamber,
+        draft: { ...state.draft, o2_pct: action.o2_pct, test_id: null },
+      }
     case 'setAirflow':
-      return { ...state, draft: { ...state.draft, airflow_cm_s: action.airflow_cm_s, test_id: null } }
+      return {
+        ...state,
+        chamber:
+          state.chamber.phase === 'extinguished' || state.chamber.phase === 'suppressing'
+            ? { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 }
+            : state.chamber,
+        draft: { ...state.draft, airflow_cm_s: action.airflow_cm_s, test_id: null },
+      }
     case 'applyPreset':
       return {
         ...state,
@@ -135,6 +149,7 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
     case 'selectExperiment':
       return {
         ...state,
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 },
         draft: {
           material_id: action.record.material_id,
           thickness_mm: action.record.thickness_mm,

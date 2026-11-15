@@ -17,10 +17,18 @@ describe('contract validation (contracts/simulation_schema.json)', () => {
     for (const s of SAMPLE_SCENARIOS) expect(ids.has(s.inputs.material_id)).toBe(true)
   })
 
-  it('the three presets are the three fixture scenarios', () => {
-    expect(SCENARIO_PRESETS.map((p) => p.name)).toEqual(['ISS · quiescent', 'Lunar habitat · ventilated', 'ISS · low oxygen'])
+  it('the four presets cover all four gravity regimes with valid catalog materials', () => {
+    const materialIds = new Set(MATERIALS_SNAPSHOT.map((m) => m.material_id))
+    expect(SCENARIO_PRESETS.map((p) => p.name)).toEqual([
+      'ISS · PMMA Slab',
+      'Moon · SIBAL Fabric',
+      'Mars · PMMA Rod',
+      'Earth · Wax Candle',
+    ])
+    expect(SCENARIO_PRESETS.map((p) => p.gravity_g)).toEqual([0, 0.16, 0.38, 1])
     for (const p of SCENARIO_PRESETS) {
-      expect(mockSimulate({ ...p }).scenario_id).toBe(p.id)
+      expect(materialIds.has(p.material_id)).toBe(true)
+      expect(() => assertSimulationResponse(mockSimulate({ ...p }))).not.toThrow()
     }
   })
 

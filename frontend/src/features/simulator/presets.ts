@@ -1,9 +1,9 @@
-// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Pina
 /**
- * Scenario presets: the input conditions of the three sample payloads (src/mocks).
- * Presets without a matching scenario (e.g. a Mars habitat) stay out until data exists.
+ * Scenario presets: one validated active-combustion scenario per gravity regime
+ * (ISS 0.00g, Moon 0.16g, Mars 0.38g, Earth 1.00g) paired with its primary NASA
+ * BASS-II / Saffire reference material.
  */
-import { presetName, SAMPLE_SCENARIOS } from '../../mocks/scenarios'
 
 export interface GravityOption {
   value: number
@@ -28,14 +28,40 @@ export interface ScenarioPreset {
   airflow_cm_s: number
 }
 
-export const SCENARIO_PRESETS: readonly ScenarioPreset[] = SAMPLE_SCENARIOS.map((s) => ({
-  id: s.scenario_id,
-  name: presetName(s.scenario_id),
-  material_id: s.inputs.material_id,
-  gravity_g: s.inputs.gravity_g,
-  o2_pct: s.inputs.o2_pct,
-  airflow_cm_s: s.inputs.airflow_cm_s,
-}))
+export const SCENARIO_PRESETS: readonly ScenarioPreset[] = [
+  {
+    id: 'scenario_01_iss_quiescent_0g_blue_sphere',
+    name: 'ISS · PMMA Slab',
+    material_id: 'pmma_clear_slab',
+    gravity_g: 0,
+    o2_pct: 21,
+    airflow_cm_s: 0.5,
+  },
+  {
+    id: 'scenario_02_lunar_ventilated_elongated_soot',
+    name: 'Moon · SIBAL Fabric',
+    material_id: 'cotton_fiberglass_sibal',
+    gravity_g: 0.16,
+    o2_pct: 30,
+    airflow_cm_s: 15,
+  },
+  {
+    id: 'scenario_03_martian_habitat_pmma_rod',
+    name: 'Mars · PMMA Rod',
+    material_id: 'pmma_rod',
+    gravity_g: 0.38,
+    o2_pct: 24,
+    airflow_cm_s: 6,
+  },
+  {
+    id: 'scenario_04_earth_baseline_wax_candle',
+    name: 'Earth · Wax Candle',
+    material_id: 'japan_wax_candle',
+    gravity_g: 1,
+    o2_pct: 21,
+    airflow_cm_s: 5,
+  },
+]
 
 /** UI slider bounds (inputs remain within the schema limits of 0–100). */
 export const O2_SLIDER = { min: 10, max: 40, step: 0.1 } as const

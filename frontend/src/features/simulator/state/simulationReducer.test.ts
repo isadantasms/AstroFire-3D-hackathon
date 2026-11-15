@@ -78,10 +78,9 @@ describe('simulationReducer', () => {
   })
 
   it('the low-oxygen scenario (oxygen_factor 0) is extinguished and cannot be discharged', () => {
-    const lowOxygen = SCENARIO_PRESETS[2]
     let state = simulationReducer(initialSimulationState(), {
       type: 'applyPreset',
-      draft: { material_id: lowOxygen.material_id, gravity_g: lowOxygen.gravity_g, o2_pct: lowOxygen.o2_pct, airflow_cm_s: lowOxygen.airflow_cm_s },
+      draft: { material_id: 'nomex_iii_fabric', gravity_g: 0, o2_pct: 13.5, airflow_cm_s: 2 },
       material: undefined,
     })
     state = runToSuccess(state, (r) => withTestEstimate(r))
@@ -89,6 +88,28 @@ describe('simulationReducer', () => {
     expect(state.chamber).toMatchObject({ phase: 'extinguished', extinguishedBy: 'no_sustained_flame' })
     expect(dischargeBlockedReason(state)).toBe('No active flame to suppress.')
     expect(simulationReducer(state, { type: 'dischargeStarted', at: 0 }).chamber.phase).toBe('extinguished')
+  })
+
+  it('resets chamber from extinguished to idle when applying any of the 4 destination presets', () => {
+    let state = runToSuccess(initialSimulationState(), (r) => withTestEstimate(r))
+    state = simulationReducer(state, { type: 'dischargeStarted', at: 1000 })
+    state = simulationReducer(state, { type: 'dischargeCompleted', cycle: state.chamber.cycle })
+    expect(state.chamber.phase).toBe('extinguished')
+
+    for (const preset of SCENARIO_PRESETS) {
+      const next = simulationReducer(state, {
+        type: 'applyPreset',
+        draft: {
+          material_id: preset.material_id,
+          gravity_g: preset.gravity_g,
+          o2_pct: preset.o2_pct,
+          airflow_cm_s: preset.airflow_cm_s,
+        },
+        material: undefined,
+      })
+      expect(next.chamber.phase).toBe('idle')
+      expect(next.chamber.extinguishedBy).toBeNull()
+    }
   })
 
   it('a zero burn rate also means extinguished, even with a positive oxygen factor', () => {
