@@ -29,7 +29,7 @@
         "co2_pct": 1.2
       },
       "safety_copilot": {
-        "diagnosis": "Quiescent 0g regime (gravity_g = 0.0g, airflow_cm_s < 1.0 cm/s). Buoyancy is absent; oxygen transport occurs strictly via slow molecular diffusion, forming a stationary spherical blue flame ball around the acrylic sample.",
+        "diagnosis": "Quiescent 0g regime (gravity_g = 0.0g, airflow_cm_s < 1.0 cm/s). Buoyancy is absent; oxygen transport occurs via slow molecular diffusion, forming a stationary spherical blue flame ball around the acrylic sample.",
         "suppression_action": "Keep cabin ventilation OFF to prevent advective oxygen feeding; apply localized fine water mist or inert N2/CO2 flood into the containment glovebox.",
         "terrestrial_spinoff": "Optical sensor calibration for clean, low-soot blue diffusion flames that evade conventional terrestrial photoelectric smoke detectors.",
         "scientific_limitations": "Direct empirical regime from NASA PSI BASS-II (PSI-25) microgravity glovebox tests. Valid for quiescent/ultra-low forced flow (< 1.0 cm/s) at 1 atm cabin pressure."
@@ -121,7 +121,7 @@
         "co2_pct": 0.1
       },
       "safety_copilot": {
-        "diagnosis": "Ambient oxygen concentration (13.5% O2) is strictly below the material's Limiting Oxygen Index / Minimum Oxygen Concentration (LOI/MOC = 17.5% O2). Heat losses exceed chemical heat release, quenching the reaction.",
+        "diagnosis": "Ambient oxygen concentration (13.5% O2) is below the material's Limiting Oxygen Index / Minimum Oxygen Concentration (LOI/MOC = 17.5% O2). Heat losses exceed chemical heat release, quenching the reaction.",
         "suppression_action": "No active extinguishant required; maintain hypoxic atmosphere below 17.5% O2 and vent residual pyrolysis smoke through HEPA/charcoal filtration.",
         "terrestrial_spinoff": "Hypoxic fire-prevention systems (normobaric nitrogen-enriched atmospheres) for server data centers and archival vaults.",
         "scientific_limitations": "Empirical extinction boundary grounded in NASA BASS-II Limiting Oxygen Index (LOI) determinations (NASA/TM-20210011385). Re-ignition remains possible if cabin O2 is restored while the sample core exceeds pyrolysis temperature."
