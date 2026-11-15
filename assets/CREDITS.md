@@ -11,5 +11,6 @@ In accordance with the 2026 NASA Space Apps Challenge rules, all third-party ico
 | **AstroFire 3D logo & favicon** | Original vector mark (orange flame with blue flame-ball core) | MIT License (this repository) | `frontend/public/favicon.svg`, `frontend/src/components/BrandMark.tsx` | Header, footer, browser tab |
 | **Home sky, rocket and planet horizon** | Original animated inline SVG/CSS illustration (fixed star layers, shooting stars, rocket fly-by, planet horizon, hero orbit and glow) | MIT License (this repository) | `frontend/src/components/home/`, `frontend/src/components/RocketHeroBackdrop.tsx` | Home page |
 | **Flame regime schematic & problem diagrams** | Original inline SVG illustrations | MIT License (this repository) | `frontend/src/components/FlameRegimeSchematic.tsx`, `frontend/src/pages/HomePage.tsx` | Home page, Research & Data |
+| **Voxel Flame Emblem** (`logo_voxel_*.png`) | Project Emblem & App Icons | MIT License | Team Creation / SI-assisted | `assets/`, Unity UI, and web interface |
 
 > **Compliance Note:** Zero official NASA logos, seals, or restricted mission insignias are included in this repository. Any AI-generated visual asset carries the visible watermark `"Generated with SI (<tool>)"`.

@@ -50,7 +50,7 @@ namespace FireSimulation.Editor
             if(stage==null) return;
             Selection.activeGameObject=stage;
             if(SceneView.lastActiveSceneView!=null)
-                SceneView.lastActiveSceneView.LookAt(new Vector3(300,-30,80),Quaternion.Euler(23,-25,0),380);
+                SceneView.lastActiveSceneView.LookAt(new Vector3(1800,0,1000),Quaternion.Euler(23,-25,0),3700);
         }
 
         [MenuItem("Fire Simulation/Show cabin")]

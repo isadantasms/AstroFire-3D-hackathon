@@ -9,6 +9,7 @@ Shader "FireSimulation/DestinationWindow"
         _WindowView("Live destination",2D)="black" {}
         _UseWindowView("Use live view",Float)=0
         _EarthSurfaceView("Earth surface sky",Float)=0
+        _IssWindowView("Occasional ISS light trails",Float)=0
         _EarthViewOffset("Earth view parallax",Vector)=(0,0,0,0)
     }
     SubShader
@@ -29,6 +30,7 @@ Shader "FireSimulation/DestinationWindow"
             float _Travel, _Arrival;
             float _UseWindowView;
             float _EarthSurfaceView;
+            float _IssWindowView;
             float4 _EarthViewOffset;
             float4 _WindowView_TexelSize;
             CBUFFER_END
@@ -59,6 +61,27 @@ Shader "FireSimulation/DestinationWindow"
                 float3 cloudColor=lerp(float3(.77,.86,.92),float3(.98,.99,1),step(.68,cloudShape));
                 return lerp(sky,cloudColor,clouds*.88);
             }
+            float3 issLightTrail(float2 uv)
+            {
+                // One brief, softly fading streak every 9-15 seconds; confined to the ISS porthole.
+                float cycle=floor(_Time.y/12);
+                float startTime=2+hash(float2(cycle,17))*4;
+                float progress=(_Time.y-cycle*12-startTime)/1.1;
+                float visible=step(0,progress)*step(progress,1);
+                float2 direction=normalize(float2(.9,-.55-hash(float2(cycle,31))*.35));
+                float2 origin=float2(.05+hash(float2(cycle,8))*.4,1.08);
+                float2 head=origin+direction*progress*1.4;
+                float2 delta=uv-head;
+                float behind=dot(delta,-direction);
+                float across=abs(delta.x*direction.y-delta.y*direction.x);
+                float tail=saturate(1-behind/.22)*step(0,behind)*step(behind,.22);
+                float width=lerp(.0007,.003,tail);
+                float glow=exp(-across*across/(width*width))*tail;
+                float pointGlow=exp(-dot(delta,delta)/.000025);
+                float fade=smoothstep(0,.12,progress)*(1-smoothstep(.72,1,progress));
+                return float3(.65,.83,1)*(glow*.65+pointGlow)*visible*fade;
+            }
+
             half4 frag(V i):SV_Target
             {
                 if(_UseWindowView>.5)
@@ -76,6 +99,7 @@ Shader "FireSimulation/DestinationWindow"
                         float3 ground=lerp(live.rgb,float3(.68,.82,.87),haze);
                         image=lerp(sky,ground,saturate(live.a));
                     }
+                    if(_IssWindowView>.5) image+=issLightTrail(i.uv);
                     float edge=pow(saturate(length(i.uv*2-1)),12);
                     float reflection=pow(saturate(1-abs(i.uv.x+i.uv.y*.6-.75)*7),16)*.015;
                     return half4(image*float3(.97,.99,1)+float3(.08,.16,.22)*edge*.16+reflection,1);

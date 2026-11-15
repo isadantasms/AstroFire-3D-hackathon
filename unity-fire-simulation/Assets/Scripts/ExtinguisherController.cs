@@ -24,6 +24,7 @@ namespace FireSimulation
         public Vector3 hoseOutletModelDirection=Vector3.back;
         public bool IsUsing {get;private set;}
         public float Progress => progress;
+        public bool CanUse => Application.isPlaying && isActiveAndEnabled && !IsUsing && fire!=null && fire.HasVisibleFire && CabinAvailable && spray!=null;
         GameObject model,nozzle;
         Material bodyMaterial,jetMaterial;
         ParticleSystem spray;
@@ -144,7 +145,7 @@ namespace FireSimulation
 
         public void UseExtinguisher()
         {
-            if(!Application.isPlaying || IsUsing || fire==null || !fire.HasVisibleFire || !CabinAvailable || spray==null) return;
+            if(!CanUse) return;
             StartCoroutine(Extinguish());
         }
 
