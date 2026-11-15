@@ -5,9 +5,18 @@ import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { ChevronDown, ExternalLink } from 'lucide-react'
 import { Tag } from '../components/ConsolePanel'
 import { CreditsLedger } from '../components/CreditsLedger'
-import { HABITATS, INVESTIGATIONS, SCORE_EXPLANATION, type HabitatKey, type Investigation } from '../content/investigations'
+import { Tooltip } from '../components/Tooltip'
+import { TECHNICAL_DOCS_PDF_URL } from '../app/routes'
+import {
+  HABITATS,
+  INVESTIGATIONS,
+  RELEVANCE_EXPLANATION,
+  relevanceOf,
+  type HabitatKey,
+  type Investigation,
+  type Relevance,
+} from '../content/investigations'
 import { REFERENCES } from '../content/references'
-import pinnMetrics from '../../../backend/data/pinn_validation_metrics.json'
 // Lazy: keeps the BASS-II snapshot and API client out of the main bundle.
 const BassExperimentsSection = lazy(() =>
   import('../features/simulator/experiments/BassExperimentsSection').then((m) => ({ default: m.BassExperimentsSection })),
@@ -15,10 +24,10 @@ const BassExperimentsSection = lazy(() =>
 
 const SECTIONS = [
   { id: 'investigations', label: 'Investigations' },
-  { id: 'bass-ii-data', label: 'BASS-II data' },
+  { id: 'bass-ii-data', label: 'Data' },
   { id: 'method', label: 'Method' },
-  { id: 'data-notes', label: 'Data notes' },
   { id: 'references', label: 'References' },
+  { id: 'credits', label: 'Credits' },
 ] as const
 
 const PANEL = 'rounded-2xl border border-subtle bg-panel'
@@ -133,19 +142,24 @@ function InvestigationsSection() {
         })}
       </div>
       <p className="mt-3 max-w-3xl text-xs leading-relaxed text-secondary">
-        <strong className="font-medium text-primary">How the score works:</strong> {SCORE_EXPLANATION}
+        {RELEVANCE_EXPLANATION}
       </p>
 
       <ol className="mt-6 grid gap-4 md:grid-cols-2">
         {ranked.map((inv, idx) => (
-          <InvestigationCard key={inv.id} inv={inv} rank={idx + 1} score={inv.scores[habitat]} />
+          <InvestigationCard key={inv.id} inv={inv} rank={idx + 1} relevance={relevanceOf(inv, habitat)} />
         ))}
       </ol>
     </Section>
   )
 }
 
-function InvestigationCard({ inv, rank, score }: { inv: Investigation; rank: number; score: number }) {
+const RELEVANCE_TONE: Record<Relevance, string> = {
+  High: 'border-focus/60 text-focus',
+  Medium: 'border-subtle text-secondary',
+}
+
+function InvestigationCard({ inv, rank, relevance }: { inv: Investigation; rank: number; relevance: Relevance }) {
   return (
     <li className={`${PANEL} flex flex-col p-5`}>
       <div className="flex items-start justify-between gap-3">
@@ -155,8 +169,13 @@ function InvestigationCard({ inv, rank, score }: { inv: Investigation; rank: num
           </p>
           <h3 className="mt-1 text-base font-semibold text-primary">{inv.name}</h3>
         </div>
-        <span className="shrink-0 rounded-md border border-focus/60 px-2 py-0.5 font-mono text-xs text-focus tabular-nums">
-          {score}/100
+        <span
+          data-testid="relevance"
+          title="Team-assigned relevance"
+          className={`shrink-0 rounded-md border px-2 py-0.5 text-xs ${RELEVANCE_TONE[relevance]}`}
+        >
+          <span className="sr-only">Team-assigned relevance: </span>
+          {relevance}
         </span>
       </div>
 
@@ -253,75 +272,51 @@ function BassDataSection() {
 /* ------------------------------------------------------------------ */
 
 function MethodSection() {
-  const clf = pinnMetrics.classification_metrics
-  const reg = pinnMetrics.regression_metrics
-  const metrics = [
-    {
-      title: 'Ignition/quench accuracy',
-      value: `${clf.accuracy_pct.toFixed(2)}%`,
-      note: `TP ${clf.confusion_matrix.true_positives_sustained} · TN ${clf.confusion_matrix.true_negatives_quenched} · FP ${clf.confusion_matrix.false_positives} · FN ${clf.confusion_matrix.false_negatives}`,
-    },
-    {
-      title: 'Safety recall & F1',
-      value: `${clf.recall_pct.toFixed(1)}% / ${clf.f1_score_pct.toFixed(1)}%`,
-      note: 'Detection of sustained flames',
-    },
-    { title: 'Spread rate R²', value: reg.r2_score.toFixed(4), note: 'Flame spread rate (mm/s)' },
-    {
-      title: 'Spread rate error',
-      value: `${reg.rmse_mm_s.toFixed(3)} mm/s`,
-      note: `RMSE · MAE ${reg.mae_mm_s.toFixed(3)} mm/s`,
-    },
-  ]
-
   return (
-    <Section id="method" label="Method" title="How results are calculated">
-      <p className="max-w-3xl text-sm leading-relaxed text-secondary">
-        AstroFire matches each scenario to the BASS-II records and a physics-informed model trained on them{' '}
-        <Cite refs={[1, 2]} />. Moon and Mars results are interpolated between microgravity and Earth data.
-      </p>
-
-      <div className={`${PANEL} mt-6 p-5`}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-secondary">Team validation run · 5-fold cross-validation on 79 BASS-II tests</p>
-          {/* Measured wall-clock time of the validation run (backend/app/ml_pipeline.py). */}
-          <p className="font-mono text-[0.6875rem] text-muted tabular-nums">
-            Run time: {pinnMetrics.training_execution_ms.toFixed(2)} ms
-          </p>
-        </div>
-        <dl className="mt-4 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-subtle bg-subtle sm:grid-cols-2 lg:grid-cols-4">
-          {metrics.map((m) => (
-            <div key={m.title} className="bg-void p-4">
-              <dt className="text-xs text-muted">{m.title}</dt>
-              <dd className="mt-1 font-mono text-2xl text-primary tabular-nums">{m.value}</dd>
-              <p className="mt-1 font-mono text-[0.6875rem] text-muted tabular-nums">{m.note}</p>
-            </div>
-          ))}
-        </dl>
-
-        <div className="mt-6">
-          <h3 className="text-sm font-medium text-primary">Factor importance</h3>
-          <p className="mt-0.5 text-xs text-muted">Permutation sensitivity in the validation run</p>
-          <ul className="mt-4 space-y-3">
-            {pinnMetrics.feature_importance.map((feat) => (
-              <li key={feat.feature_key}>
-                <div className="flex items-baseline justify-between gap-3 text-xs">
-                  <span className="font-medium text-primary">{feat.feature_name}</span>
-                  <span className="font-mono text-focus tabular-nums">{feat.importance_pct.toFixed(1)}%</span>
-                </div>
-                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-elevated">
-                  <div
-                    className="h-full rounded-full bg-focus"
-                    style={{ width: `${Math.min(100, feat.importance_pct * 2.4)}%` }}
-                  />
-                </div>
-                <p className="mt-1 text-[0.6875rem] text-muted">{feat.physical_mechanism}</p>
-              </li>
-            ))}
-          </ul>
+    <Section id="method" label="Method" title="Method, in short">
+      <div className={`${PANEL} p-5`}>
+        <p className="max-w-3xl text-sm leading-relaxed text-secondary">
+          AstroFire calculates results with a deterministic, rule-based engine; no AI model runs when you simulate. When a
+          scenario matches one of the 79 BASS-II tests, it uses that measured record <Cite refs={[2]} />. Otherwise it
+          applies formulas bounded by NASA technical reports <Cite refs={[1]} />, and Moon and Mars results are interpolated
+          between microgravity and Earth data.
+        </p>
+        <div className="mt-4">
+          <TechnicalDocsButton />
         </div>
       </div>
     </Section>
+  )
+}
+
+function TechnicalDocsButton() {
+  const label = 'Read the technical documentation (PDF)'
+  if (TECHNICAL_DOCS_PDF_URL) {
+    return (
+      <a
+        href={TECHNICAL_DOCS_PDF_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-subtle px-3.5 py-2 text-xs text-primary transition-colors hover:border-label"
+      >
+        {label}
+        <ExternalLink className="size-3.5" aria-hidden />
+      </a>
+    )
+  }
+  return (
+    <Tooltip label="Coming soon" align="start" focusable>
+      {(id) => (
+        <button
+          type="button"
+          disabled
+          aria-describedby={id}
+          className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-subtle px-3.5 py-2 text-xs text-muted opacity-60"
+        >
+          {label}
+        </button>
+      )}
+    </Tooltip>
   )
 }
 

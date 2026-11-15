@@ -19,11 +19,19 @@ export const HABITATS: readonly { key: HabitatKey; label: string }[] = [
 ]
 
 /*
- * TODO(ranking): the scores below are fixed per habitat by the team. The criteria and weights
- * behind them are not documented in the code, so the page says so instead of describing them.
+ * TODO(ranking): the team ordered the investigations per habitat with internal values (scores below).
+ * The criteria behind them are not documented, so the page shows only a team-assigned relevance level
+ * (High / Medium) and never the number. Document the criteria to show more.
  */
-export const SCORE_EXPLANATION =
-  'Each score is a relevance value from 0 to 100 that the team assigned per habitat. The criteria and weights behind it are not documented yet (to verify).'
+export type Relevance = 'High' | 'Medium'
+
+/** Team-assigned relevance level derived from the internal ordering value (90 or more: High). */
+export function relevanceOf(inv: Investigation, habitat: HabitatKey): Relevance {
+  return inv.scores[habitat] >= 90 ? 'High' : 'Medium'
+}
+
+export const RELEVANCE_EXPLANATION =
+  'Team-assigned relevance (High / Medium) for each habitat. The criteria behind it are not documented yet (to verify).'
 
 export interface Investigation {
   id: string
@@ -42,6 +50,7 @@ export interface Investigation {
   /** Numbers of the entries in REFERENCES (content/references.ts). */
   refs: number[]
   url: string
+  /** Internal team ordering per habitat; used only to sort and to derive the relevance level, never shown. */
   scores: Record<HabitatKey, number>
 }
 

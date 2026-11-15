@@ -219,21 +219,28 @@ describe('site structure', () => {
     const nav = within(screen.getByRole('navigation', { name: 'On this page' }))
     expect(nav.getAllByRole('link').map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
       ['Investigations', '#investigations'],
-      ['BASS-II data', '#bass-ii-data'],
+      ['Data', '#bass-ii-data'],
       ['Method', '#method'],
-      ['Data notes', '#data-notes'],
       ['References', '#references'],
+      ['Credits', '#credits'],
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'Which experiments matter for your habitat?',
       'The experimental data',
-      'How results are calculated',
+      'Method, in short',
       'About the data',
       'References',
       'Data & credits',
     ])
     expect(screen.queryByText('Two regimes, one console')).toBeNull()
     expect(screen.queryByText(/Hybrid PINN Loss Convergence/)).toBeNull()
+    // PINN metrics, factor chart and architecture moved to docs/technical-notes.md.
+    expect(screen.queryByText(/Ignition\/quench accuracy|Factor importance|cross-validation/i)).toBeNull()
+    const method = within(document.getElementById('method')!)
+    expect(method.getByText(/deterministic, rule-based engine; no AI model runs when you simulate/)).toBeInTheDocument()
+    const docs = method.getByRole('button', { name: 'Read the technical documentation (PDF)' })
+    expect(docs).toBeDisabled()
+    expect(docs).toHaveAccessibleDescription('Coming soon')
   })
 
   it('investigation cards: corrected SoFIE text, sourced conditions only, guidance in Details', async () => {
@@ -254,6 +261,11 @@ describe('site structure', () => {
 
   it('the habitat selector re-ranks the investigations', async () => {
     renderAt('/research')
+    expect(await screen.findByText(/Team-assigned relevance \(High \/ Medium\)/)).toBeInTheDocument()
+    expect(screen.queryByText(/\/100/)).toBeNull()
+    expect(screen.getAllByTestId('relevance').map((b) => b.textContent?.replace('Team-assigned relevance: ', ''))).toEqual([
+      'High', 'High', 'High', 'Medium', 'Medium', 'Medium',
+    ])
     const first = () => within(screen.getAllByRole('listitem').find((li) => li.textContent?.startsWith('#1'))!).getByRole('heading', { level: 3 })
     expect((await screen.findByRole('radio', { name: 'Lunar base (0.16 g)' })).getAttribute('aria-checked')).toBe('true')
     expect(first()).toHaveTextContent('Saffire')
