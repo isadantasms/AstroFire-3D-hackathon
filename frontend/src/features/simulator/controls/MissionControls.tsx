@@ -222,7 +222,7 @@ interface RangeControlProps {
   value: number
   slider: { min: number; max: number; step: number }
   digits: number
-  /** Min–max tested in the 79 BASS-II records (the same range shown on Research & Data). */
+  /** Min–max tested in the 79 BASS-II records (the same range shown on the Documentation page). */
   tested?: { min: number; max: number }
   onChange: (value: number) => void
 }

@@ -1,6 +1,6 @@
 // SI-assisted: generated with Gemini & Claude, reviewed and edited by Rocha, Elias, Pina & Dantas
 // Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
-/** Data, library and asset credits (Research & Data → Data & credits). */
+/** Data, library and asset credits (Documentation → Credits & licenses). */
 import { LOGO_CREDIT } from './project'
 
 export interface CreditRow {
@@ -12,7 +12,7 @@ export interface CreditRow {
 
 /*
  * NASA data and library rows are kept as they were (IDs and DOIs unchanged).
- * The UFSC (VSB-30) study is added only once it is registered in docs/references.md.
+ * Rows marked "To verify" still need details from the team; nothing is filled in for them.
  */
 export const CREDITS_LEDGER: CreditRow[] = [
   {
@@ -50,6 +50,13 @@ export const CREDITS_LEDGER: CreditRow[] = [
     type: 'NASA Web Page',
     license: 'To verify',
     url: 'https://www.nasa.gov/glenn/glenn-expertise-space-exploration/physical-sciences-program/combustion-science/solid-fuel-ignition-and-extinction-sofie/',
+  },
+  // TODO(references): the UFSC/INPE VSB-30 study is listed by name only until the team confirms the reference.
+  {
+    resource: 'UFSC/INPE · VSB-30 sounding-rocket study',
+    type: 'Research Study',
+    license: 'To verify',
+    url: null,
   },
   // TODO(references): FLEX and SPICE need full references in docs/references.md.
   {
@@ -124,6 +131,19 @@ export const CREDITS_LEDGER: CreditRow[] = [
     type: 'SI Tool',
     license: 'Provider terms',
     url: 'https://gemini.google.com',
+  },
+  // TODO(credits): confirm the use, license and link of Antigravity and Google Colab.
+  {
+    resource: 'Antigravity: coding environment used with Gemini',
+    type: 'Development Tool',
+    license: 'To verify',
+    url: null,
+  },
+  {
+    resource: 'Google Colab: model training and validation',
+    type: 'Development Tool',
+    license: 'To verify',
+    url: null,
   },
   {
     resource: 'Claude / Claude Code (Anthropic): front-end code, interface, documentation and logo',

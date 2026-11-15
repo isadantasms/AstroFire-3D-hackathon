@@ -3,15 +3,17 @@ import { ExternalLink } from 'lucide-react'
 import { ConsolePanel } from './ConsolePanel'
 import { CREDITS_LEDGER, type CreditRow } from '../content/credits'
 
-const NASA_DATA = CREDITS_LEDGER.filter((c) => c.type.startsWith('NASA'))
-const SOFTWARE = CREDITS_LEDGER.filter((c) => !c.type.startsWith('NASA'))
+/** NASA data and reports plus research studies; everything else is software, tools and assets. */
+const isResearch = (c: CreditRow) => c.type.startsWith('NASA') || c.type.startsWith('Research')
+const DATA_RESEARCH = CREDITS_LEDGER.filter(isResearch)
+const SOFTWARE = CREDITS_LEDGER.filter((c) => !isResearch(c))
 
 /** Data, libraries and assets with their licenses; the footer "Credits" link lands here (#credits). */
 export function CreditsLedger() {
   return (
-    <ConsolePanel id="credits" title="Data & credits" className="scroll-mt-20">
+    <ConsolePanel id="credits" title="Credits & licenses" className="scroll-mt-20">
       <div className="space-y-6">
-        <CreditGroup title="NASA data" rows={NASA_DATA} />
+        <CreditGroup title="Data & research" rows={DATA_RESEARCH} />
         <CreditGroup title="Software & assets" rows={SOFTWARE} />
       </div>
     </ConsolePanel>

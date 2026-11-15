@@ -2,6 +2,7 @@
 // Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
 import { useId, useMemo, useState, type ReactNode } from 'react'
 import { Tag } from '../../../components/ConsolePanel'
+import { SOURCE_LINE } from './source'
 import { fmt } from '../../../lib/format'
 import type { CatalogSource, ExperimentRecord } from '../../../types/catalog'
 
@@ -13,7 +14,7 @@ interface ExperimentTableProps {
 /** Rows shown before "Show all". */
 const COLLAPSED_ROWS = 10
 
-/** Read-only BASS-II record table (Research & Data), with a material filter and a collapsed view. */
+/** Read-only BASS-II record table (Documentation page), with a material filter and a collapsed view. */
 export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
   const filterId = useId()
   const tableId = useId()
@@ -69,10 +70,11 @@ export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
         </div>
       </header>
 
-      <div className="overflow-x-auto">
+      {/* The table scrolls inside its own box (both axes) so the page stays short. */}
+      <div className="max-h-[30rem] overflow-auto">
         <table id={tableId} className="w-full border-collapse text-left text-xs">
           <caption className="sr-only">BASS-II test records from the NASA PSI-25 dataset.</caption>
-          <thead className="bg-elevated">
+          <thead className="sticky top-0 z-10 bg-elevated">
             <tr className="text-secondary">
               <Th>Test ID</Th>
               <Th>Material</Th>
@@ -135,7 +137,7 @@ export function ExperimentTable({ experiments, source }: ExperimentTableProps) {
         </div>
       ) : null}
       <p className="border-t border-subtle px-4 py-1.5 text-[0.6875rem] text-muted">
-        Source: NASA PSI BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0 · Olson et al., NASA/TM-20210011385{' '}
+        {SOURCE_LINE}{' '}
         <a href="#ref-1" className="text-focus hover:underline">
           [1]
         </a>

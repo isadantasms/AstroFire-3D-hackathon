@@ -1,7 +1,7 @@
 <!-- SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha -->
 # AstroFire — Technical Notes
 
-Working notes for the technical documentation PDF. This content was moved out of the Research & Data page,
+Working notes for the technical documentation PDF. This content was moved out of the Research & Data page (now Documentation),
 which now only shows the evidence (NASA data, investigation comparison and citations).
 Every number below is copied from a file in this repository; the source file is named in each section.
 
@@ -118,4 +118,4 @@ The team conceived the solution, chose the NASA data and methods, made every des
 ## 4. Known issues to fix before the PDF
 
 - Backend risk labels now follow the schema bands for 36–70 (Moderate Alert) and 71–100 (Critical Flashover Risk). The enum has no label for a burning flame scored 0–35 ("Safe" is reserved for extinguished flames), so those keep "Moderate Alert"; "High Risk" is unused (to verify with the team).
-- Investigation relevance on Research & Data is team-assigned (High / Medium); the criteria are not documented yet (to verify).
+- Investigation relevance on the Documentation page is team-assigned (High / Medium); the criteria are not documented yet (to verify).

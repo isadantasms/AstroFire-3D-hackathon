@@ -12,7 +12,8 @@ afterEach(() => {
 async function renderHome(docsUrl: string | null) {
   vi.doMock('../app/routes', async (importOriginal) => ({
     ...(await importOriginal<typeof import('../app/routes')>()),
-    TECHNICAL_DOCS_PDF_URL: docsUrl,
+    DOCUMENTATION_PDF_URL: docsUrl,
+    DOCUMENTATION_SI_URL: docsUrl ? `${docsUrl}#nameddest=si-disclosure` : null,
   }))
   const { HomePage } = await import('./HomePage')
   return render(
@@ -23,7 +24,7 @@ async function renderHome(docsUrl: string | null) {
 }
 
 describe('Home SI disclosure', () => {
-  it('shows three short rows and a direct documentation link (Research & Data until the PDF exists)', async () => {
+  it('shows three short rows and a direct documentation link (Documentation page until the PDF exists)', async () => {
     await renderHome(null)
     const section = screen.getByTestId('si-compact')
     const si = within(section)
@@ -42,15 +43,15 @@ describe('Home SI disclosure', () => {
     )
     expect(si.queryByText('Learn more')).toBeNull()
     expect(section.querySelector('details')).toBeNull()
-    expect(si.getByRole('link', { name: /Read the documentation/ })).toHaveAttribute('href', '/research')
+    expect(si.getByRole('link', { name: /Read the documentation/ })).toHaveAttribute('href', '/documentation#full-documentation')
   })
 
-  it('the documentation link opens the technical PDF once it is set', async () => {
+  it('the documentation link opens the SI section of the PDF once it is set', async () => {
     await renderHome('https://example.org/astrofire-technical-docs.pdf')
     const si = within(screen.getByTestId('si-compact'))
     expect(si.getByRole('link', { name: /Full SI disclosure in the documentation/ })).toHaveAttribute(
       'href',
-      'https://example.org/astrofire-technical-docs.pdf',
+      'https://example.org/astrofire-technical-docs.pdf#nameddest=si-disclosure',
     )
   })
 })

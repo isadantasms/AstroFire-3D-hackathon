@@ -22,12 +22,12 @@ describe('site structure', () => {
     expect(links.map((l) => l.textContent)).toEqual([
       'Home',
       'Simulator',
-      'Research & Data',
+      'Documentation',
     ])
     expect(links.map((l) => l.getAttribute('href'))).toEqual([
       '/',
       '/simulator',
-      '/research',
+      '/documentation',
     ])
   })
 
@@ -40,9 +40,9 @@ describe('site structure', () => {
     expect(within(footer).getByText('Fire')).toBeInTheDocument()
     const footerNav = screen.getByRole('navigation', { name: 'Footer' })
     expect(within(footerNav).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
-      ['Research & Data', '/research'],
+      ['Documentation', '/documentation'],
       ['SI Usage', '/#si-usage'],
-      ['Credits', '/research#credits'],
+      ['Credits', '/documentation#credits'],
     ])
     for (const removed of [
       /For research and education only/,
@@ -65,7 +65,7 @@ describe('site structure', () => {
     ).toBeInTheDocument()
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
     expect(within(hero).getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
-    expect(within(hero).getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/research')
+    expect(within(hero).getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/documentation')
     expect(within(hero).getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute('href', '#')
     expect(within(hero).queryByText(/Not a certified safety assessment/)).toBeNull()
   })
@@ -129,7 +129,7 @@ describe('site structure', () => {
     const closing = within(screen.getByRole('heading', { level: 2, name: 'Explore combustion beyond Earth.' }).closest('section')!)
     expect(closing.getByText('Configure a scenario, visualize flame behavior, and examine the evidence behind the analysis.')).toBeInTheDocument()
     expect(closing.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
-    expect(closing.getByRole('link', { name: 'Explore Research' })).toHaveAttribute('href', '/research')
+    expect(closing.getByRole('link', { name: 'Explore Research' })).toHaveAttribute('href', '/documentation')
 
     // Old sections are gone.
     for (const old of ['The science', 'How it works', 'What makes AstroFire different', 'Back on Earth']) {
@@ -193,7 +193,7 @@ describe('site structure', () => {
     expect(evidence.getByText('79 BASS-II tests from NASA PSI')).toBeInTheDocument()
     expect(evidence.getByText('6 NASA investigations compared by habitat')).toBeInTheDocument()
     expect(evidence.getByText('Every source cited')).toBeInTheDocument()
-    expect(evidence.getByRole('link', { name: /Explore the research/ })).toHaveAttribute('href', '/research')
+    expect(evidence.getByRole('link', { name: /Explore the research/ })).toHaveAttribute('href', '/documentation')
     expect(evidence.getByTestId('badge-legend')).toHaveTextContent(/NASA experimental data.*Estimate.*Illustrative/)
 
     // The team section was removed.
@@ -206,53 +206,79 @@ describe('site structure', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
   })
 
-  it('Data & credits now live at the end of Research & Data', async () => {
-    const { container } = renderAt('/research')
+  it('Credits & licenses close the Documentation page, with the to-verify rows', async () => {
+    const { container } = renderAt('/documentation')
     expect(await screen.findByRole('heading', { level: 2, name: 'References' })).toBeInTheDocument()
     const credits = within(container.querySelector('#credits') as HTMLElement)
-    expect(credits.getByRole('heading', { level: 2, name: 'Data & credits' })).toBeInTheDocument()
-    expect(credits.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['NASA data', 'Software & assets'])
+    expect(credits.getByRole('heading', { level: 2, name: 'Credits & licenses' })).toBeInTheDocument()
+    expect(credits.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Data & research', 'Software & assets'])
     expect(credits.getByText('BASS-II (PSI-25): Burning and Suppression of Solids - II')).toBeInTheDocument()
     expect(credits.getByText(/IBM Plex Sans, IBM Plex Serif & IBM Plex Mono/)).toBeInTheDocument()
     expect(credits.getByText('MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher')).toBeInTheDocument()
     expect(credits.getByText('AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.')).toBeInTheDocument()
     expect(credits.getByText('Unity (3D chamber engine and WebGL template)')).toBeInTheDocument()
     expect(credits.getByText(/^Codex \(OpenAI\)/)).toBeInTheDocument()
-    expect(credits.queryByText(/UFSC|VSB-30/)).toBeNull()
+    for (const name of [
+      'Antigravity: coding environment used with Gemini',
+      'Google Colab: model training and validation',
+      'UFSC/INPE · VSB-30 sounding-rocket study',
+    ]) {
+      const row = credits.getByText(name).closest('tr')!
+      expect(within(row).getByText('To verify')).toBeInTheDocument()
+    }
   })
 
-  it('Research & Data follows the new section order, without the Fig. 01 figure', async () => {
-    renderAt('/research')
-    expect(await screen.findByRole('heading', { level: 1, name: 'The research behind AstroFire' })).toBeInTheDocument()
+  it('Documentation: header, shortcuts, full-documentation card and section order', async () => {
+    renderAt('/documentation')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Documentation' })).toBeInTheDocument()
+    expect(screen.getByText('The research, data and methods behind AstroFire.')).toBeInTheDocument()
     const nav = within(screen.getByRole('navigation', { name: 'On this page' }))
     expect(nav.getAllByRole('link').map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
+      ['Full documentation', '#full-documentation'],
       ['Investigations', '#investigations'],
-      ['Data', '#bass-ii-data'],
-      ['Method', '#method'],
+      ['Data', '#data'],
       ['References', '#references'],
       ['Credits', '#credits'],
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      'AstroFire · Technical Documentation',
       'Which experiments matter for your habitat?',
       'The experimental data',
-      'Method, in short',
       'About the data',
       'References',
-      'Data & credits',
+      'Credits & licenses',
     ])
-    expect(screen.queryByText('Two regimes, one console')).toBeNull()
-    expect(screen.queryByText(/Hybrid PINN Loss Convergence/)).toBeNull()
-    // PINN metrics, factor chart and architecture moved to docs/technical-notes.md.
+
+    const card = within(document.getElementById('full-documentation')!)
+    expect(card.getByText(/Everything about the project in one document/)).toBeInTheDocument()
+    expect(within(card.getByTestId('doc-contents')).getAllByRole('listitem').map((li) => li.textContent?.replace(/^\d+/, ''))).toEqual([
+      'Problem and challenge alignment',
+      'Product overview',
+      'Using the simulator',
+      'Science and calculations',
+      'Data and curation',
+      'Model and validation',
+      'Architecture and data contract',
+      'Use of Super Intelligence (SI)',
+      'Limitations',
+      'Team and credits',
+      'References',
+    ])
+    // The PDF is not published yet: both actions are disabled with "Coming soon".
+    for (const name of ['Download full documentation (PDF)', 'Read the SI disclosure']) {
+      const action = card.getByRole('button', { name })
+      expect(action).toBeDisabled()
+      expect(action).toHaveAccessibleDescription('Coming soon')
+    }
+
+    // Removed from the page (kept in docs/technical-notes.md).
+    expect(document.getElementById('method')).toBeNull()
+    expect(screen.queryByText(/Method, in short|Two regimes, one console|Hybrid PINN Loss Convergence/)).toBeNull()
     expect(screen.queryByText(/Ignition\/quench accuracy|Factor importance|cross-validation/i)).toBeNull()
-    const method = within(document.getElementById('method')!)
-    expect(method.getByText(/deterministic, rule-based engine; no AI model runs when you simulate/)).toBeInTheDocument()
-    const docs = method.getByRole('button', { name: 'Read the technical documentation (PDF)' })
-    expect(docs).toBeDisabled()
-    expect(docs).toHaveAccessibleDescription('Coming soon')
   })
 
   it('investigation cards: corrected SoFIE text, sourced conditions only, guidance in Details', async () => {
-    renderAt('/research')
+    renderAt('/documentation')
     const sofie = (await screen.findByText('Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)')).closest('li')!
     expect(within(sofie).getByText('See source')).toBeInTheDocument()
     expect(within(sofie).getByText(/Several SoFIE principal investigators also authored the BASS-II summary report/)).toBeInTheDocument()
@@ -268,7 +294,7 @@ describe('site structure', () => {
   })
 
   it('the habitat selector re-ranks the investigations', async () => {
-    renderAt('/research')
+    renderAt('/documentation')
     expect(await screen.findByText(/Team-assigned relevance \(High \/ Medium\)/)).toBeInTheDocument()
     expect(screen.queryByText(/\/100/)).toBeNull()
     expect(screen.getAllByTestId('relevance').map((b) => b.textContent?.replace('Team-assigned relevance: ', ''))).toEqual([
@@ -281,27 +307,42 @@ describe('site structure', () => {
     expect(first()).toHaveTextContent('BASS-II')
   })
 
-  it('the BASS-II table shows 10 rows until "Show all 79"', async () => {
-    renderAt('/research')
-    expect(await screen.findByRole('heading', { level: 3, name: 'BASS-II experiment matrix' }, { timeout: 5000 })).toBeInTheDocument()
+  it('the BASS-II table starts collapsed, then shows 10 rows until "Show all"', async () => {
+    renderAt('/documentation')
+    // N comes from the records actually loaded.
+    const show = await screen.findByRole('button', { name: 'Show table (79 records)' }, { timeout: 5000 })
+    expect(show).toHaveAttribute('aria-expanded', 'false')
+    const data = within(document.getElementById('data')!)
+    expect(data.queryByRole('table')).toBeNull()
+    expect(data.getByText(/DOI 10\.60555\/4qc4-de67, CC0-1\.0 · Olson et al\., NASA\/TM-20210011385/)).toBeInTheDocument()
+
+    fireEvent.click(show)
     expect(await screen.findByText('BASS2-M1')).toBeInTheDocument()
     const table = screen.getByRole('table', { name: /BASS-II test records/ })
     expect(within(table).getAllByRole('row')).toHaveLength(11)
     fireEvent.click(screen.getByRole('button', { name: 'Show all 79' }))
     expect(within(table).getAllByRole('row')).toHaveLength(80)
     expect(screen.getByText('Observed data · NASA PSI BASS-II')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Hide table' }))
+    expect(data.queryByRole('table')).toBeNull()
   })
 
   it('references are numbered and the SAME credit no longer covers other investigations', async () => {
-    const { container } = renderAt('/research')
+    const { container } = renderAt('/documentation')
     expect(await screen.findByRole('heading', { level: 2, name: 'References' })).toBeInTheDocument()
     for (let n = 1; n <= 6; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
     expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
   })
 
+  it('/research redirects to /documentation, keeping the anchor', async () => {
+    renderAt('/research#credits')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Documentation' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Documentation', current: 'page' })).toHaveAttribute('href', '/documentation')
+  })
+
   it.each([
     ['/simulator', 'Simulator'],
-    ['/research', 'The research behind AstroFire'],
+    ['/documentation', 'Documentation'],
     ['/does-not-exist', 'Page not found'],
   ])('route %s renders its page title', async (path, title) => {
     renderAt(path)

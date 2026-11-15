@@ -24,7 +24,7 @@ function minMax(values: number[]) {
 
 /**
  * Tested ranges computed from the 79 BASS-II records (min–max of initial O2 and airflow).
- * Shared by Research & Data and the Simulator so both always show the same numbers.
+ * Shared by the Documentation page and the Simulator so both always show the same numbers.
  */
 export const BASS2_RANGES = {
   o2Pct: minMax(EXPERIMENTS_SNAPSHOT.map((r) => r.initial_o2_pct)),

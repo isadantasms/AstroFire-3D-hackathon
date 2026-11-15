@@ -6,7 +6,7 @@ import { LINKS } from './routes'
 const LINK = 'transition-colors hover:text-primary'
 
 /**
- * One discreet line. Sources, licenses and credits live in Research & Data,
+ * One discreet line. Sources, licenses and credits live in Documentation,
  * SI usage on the Home, and research disclaimers next to the content they qualify.
  */
 export function Footer() {
@@ -21,8 +21,8 @@ export function Footer() {
           <span data-testid="footer-credit">© 2026 21 Pyro Rangers · Built for NASA Space Apps Challenge 2026</span>
         </p>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-4 gap-y-1">
-          <Link to={LINKS.research} className={LINK}>
-            Research &amp; Data
+          <Link to={LINKS.documentation} className={LINK}>
+            Documentation
           </Link>
           <Link to={LINKS.siUsage} className={LINK}>
             SI Usage

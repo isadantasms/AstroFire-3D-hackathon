@@ -7,7 +7,7 @@ import { SkyLayer } from '../components/home/SkyLayer'
 import { PlanetHorizon } from '../components/home/PlanetHorizon'
 import { useReveal } from '../components/home/useReveal'
 import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences'
-import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
+import { DOCUMENTATION_SI_URL, LINKS } from '../app/routes'
 import { EXPERIMENTS_SNAPSHOT } from '../data/experimentsSnapshot'
 import { INVESTIGATIONS } from '../content/investigations'
 import { SI_COMPACT } from '../content/project'
@@ -44,16 +44,9 @@ export function HomePage() {
 function DocumentationButton() {
   const className =
     'inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label'
-  // Technical documentation PDF once published; until then, Research & Data.
-  if (TECHNICAL_DOCS_PDF_URL) {
-    return (
-      <a href={TECHNICAL_DOCS_PDF_URL} target="_blank" rel="noreferrer" className={className}>
-        Documentation
-      </a>
-    )
-  }
+  // The Documentation page gives access to the full technical PDF.
   return (
-    <Link to={LINKS.research} className={className}>
+    <Link to={LINKS.documentation} className={className}>
       Documentation
     </Link>
   )
@@ -460,19 +453,19 @@ function SiUsageSection() {
   )
 }
 
-/** Technical PDF once published; until then, Research & Data (same rule as the hero "Documentation" button). */
+/** SI section of the technical PDF once published; until then, the documentation card on the Documentation page. */
 function SiDocsLink() {
   const className = 'mt-5 inline-flex items-center gap-1.5 text-sm text-focus hover:underline'
-  if (TECHNICAL_DOCS_PDF_URL) {
+  if (DOCUMENTATION_SI_URL) {
     return (
-      <a href={TECHNICAL_DOCS_PDF_URL} target="_blank" rel="noreferrer" className={className}>
+      <a href={DOCUMENTATION_SI_URL} target="_blank" rel="noreferrer" className={className}>
         {SI_COMPACT.linkLabel}
         <ArrowRight className="size-3.5" aria-hidden />
       </a>
     )
   }
   return (
-    <Link to={LINKS.research} className={className}>
+    <Link to={LINKS.fullDocumentation} className={className}>
       Read the documentation
       <ArrowRight className="size-3.5" aria-hidden />
     </Link>
@@ -503,7 +496,7 @@ function EvidenceSection() {
               <li key={f}>{f}</li>
             ))}
           </ul>
-          <Link to={LINKS.research} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-focus hover:underline">
+          <Link to={LINKS.documentation} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-focus hover:underline">
             Explore the research
             <ArrowRight className="size-3.5" aria-hidden />
           </Link>
@@ -530,7 +523,7 @@ function LegendBadge({ tone, children }: { tone: string; children: ReactNode }) 
 function ExploreResearchButton() {
   return (
     <Link
-      to={LINKS.research}
+      to={LINKS.documentation}
       className="inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label"
     >
       Explore Research

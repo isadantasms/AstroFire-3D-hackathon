@@ -1,6 +1,6 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 /**
- * Numbered references for Research & Data. Cards and the method cite them as [1], [2]…
+ * Numbered references for the Documentation page. Cards and the method cite them as [1], [2]…
  * Every entry is registered in docs/references.md; authors, titles and dates were checked
  * against the NTRS citation records. Do not add an entry without a full reference there.
  *

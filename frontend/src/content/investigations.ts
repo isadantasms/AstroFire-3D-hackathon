@@ -2,7 +2,7 @@
 // Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
 // Reference: Olson et al., NASA/TM-20210011385 (2021); Saffire (NTRS-20170000230, NTRS-20240002981)
 /**
- * NASA investigations ranked on Research & Data.
+ * NASA investigations ranked on the Documentation page.
  * Numeric conditions appear only when they can be traced to a source: BASS-II ranges are
  * computed from the 79 dataset records; the other investigations show "see source".
  */
