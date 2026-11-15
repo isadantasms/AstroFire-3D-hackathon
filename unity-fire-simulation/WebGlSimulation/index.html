@@ -58,6 +58,23 @@
         document.body.classList.add("embedded");
       }
 
+      // Prevent Unity WebGL requestAnimationFrame loop from pausing when the user clicks React UI controls.
+      window.addEventListener("blur", function(e) { e.stopImmediatePropagation(); }, true);
+      window.addEventListener("focusout", function(e) { e.stopImmediatePropagation(); }, true);
+      document.addEventListener("visibilitychange", function(e) { e.stopImmediatePropagation(); }, true);
+      if (canvas) {
+        canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); });
+      }
+
+      function focusUnityCanvas() {
+        try {
+          window.focus();
+          if (canvas && typeof canvas.focus === "function") {
+            canvas.focus();
+          }
+        } catch (_) {}
+      }
+
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
         function updateBannerVisibility() {
@@ -113,6 +130,7 @@
         }).then((unityInstance) => {
           window.unityInstance = unityInstance;
           document.querySelector("#unity-loading-bar").style.display = "none";
+          focusUnityCanvas();
           var fsBtn = document.querySelector("#unity-fullscreen-button");
           if (fsBtn) {
             fsBtn.onclick = () => {
@@ -123,15 +141,29 @@
           var skipTimer1 = null;
           var skipTimer2 = null;
           var extinguishTimer = null;
+          var rafOuterId = null;
+          var rafInnerId = null;
           function clearPendingTimers() {
             if (skipTimer1) { clearTimeout(skipTimer1); skipTimer1 = null; }
             if (skipTimer2) { clearTimeout(skipTimer2); skipTimer2 = null; }
             if (extinguishTimer) { clearTimeout(extinguishTimer); extinguishTimer = null; }
+            if (rafOuterId) { cancelAnimationFrame(rafOuterId); rafOuterId = null; }
+            if (rafInnerId) { cancelAnimationFrame(rafInnerId); rafInnerId = null; }
+          }
+          function scheduleDoubleRaf(fn) {
+            rafOuterId = requestAnimationFrame(function() {
+              rafOuterId = null;
+              rafInnerId = requestAnimationFrame(function() {
+                rafInnerId = null;
+                fn();
+              });
+            });
           }
           window.addEventListener("message", function(event) {
             if (!event.data) return;
             if (event.data.type === "APPLY_FIRE_PAYLOAD" && event.data.payload) {
               clearPendingTimers();
+              focusUnityCanvas();
               var payloadObj = typeof event.data.payload === "string"
                 ? (function() { try { return JSON.parse(event.data.payload); } catch (_) { return {}; } })()
                 : event.data.payload;
@@ -145,7 +177,11 @@
               unityInstance.SendMessage("FireSimulation", "ApplyJson", jsonStr);
               unityInstance.SendMessage("FireSimulation", "ResetSuppression");
               if (!isStandby) {
-                // When the user presses Run Simulation, ensure the camera returns to the cabin at the target destination immediately.
+                // Redundant double-rAF + timers ensure SkipAnimation and ResetSuppression execute across frame boundaries.
+                scheduleDoubleRaf(function() {
+                  unityInstance.SendMessage("FireSimulation", "SkipAnimation");
+                  unityInstance.SendMessage("FireSimulation", "ResetSuppression");
+                });
                 skipTimer1 = setTimeout(function() {
                   unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                   unityInstance.SendMessage("FireSimulation", "ResetSuppression");
@@ -158,15 +194,31 @@
               var nextPhase = event.data.phase || null;
               if (nextPhase === "suppressing" && lastChamberPhase !== "suppressing") {
                 clearPendingTimers();
+                focusUnityCanvas();
                 unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                 unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
+                scheduleDoubleRaf(function() {
+                  unityInstance.SendMessage("FireSimulation", "SkipAnimation");
+                  unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
+                });
                 extinguishTimer = setTimeout(function() {
+                  unityInstance.SendMessage("FireSimulation", "SkipAnimation");
                   unityInstance.SendMessage("Fire Extinguisher", "UseExtinguisher");
                 }, 120);
               } else if (nextPhase === "burning" && lastChamberPhase === "extinguished") {
+                focusUnityCanvas();
                 unityInstance.SendMessage("FireSimulation", "ResetSuppression");
+                scheduleDoubleRaf(function() {
+                  unityInstance.SendMessage("FireSimulation", "ResetSuppression");
+                });
               }
               lastChamberPhase = nextPhase;
+            } else if (event.data.type === "UNITY_SEND_MESSAGE" && event.data.gameObject && event.data.method) {
+              unityInstance.SendMessage(
+                String(event.data.gameObject),
+                String(event.data.method),
+                event.data.parameter !== undefined ? event.data.parameter : undefined
+              );
             } else if (event.data.type === "TOGGLE_TELEMETRY" && typeof unityInstance.SetShowTelemetry === "function") {
               unityInstance.SetShowTelemetry(Boolean(event.data.show));
             }

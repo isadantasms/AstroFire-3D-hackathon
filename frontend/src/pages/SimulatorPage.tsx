@@ -1,4 +1,4 @@
-// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Elias
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { defaultApiClient, type ApiClient, type Catalog } from '../services/api/client'
@@ -8,9 +8,17 @@ import { toChamberSuppression } from '../features/simulator/chamber/types'
 import { ResultsColumn } from '../features/simulator/results/ResultsColumn'
 import { useCatalog, useSimulation } from '../features/simulator/state/useSimulation'
 import type { ScenarioPreset } from '../features/simulator/presets'
+import { shouldAutoOpenTutorial } from '../features/simulator/tutorial/tutorialConfig'
+import {
+  SimulatorHelpButton,
+  SimulatorHelpModal,
+  SimulatorTutorialModal,
+} from '../features/simulator/tutorial/SimulatorTutorial'
 
 export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClient }) {
   const { state, dispatch, run, discharge, stale, dischargeBlocked } = useSimulation(client)
+  const [tutorialOpen, setTutorialOpen] = useState(shouldAutoOpenTutorial)
+  const [helpOpen, setHelpOpen] = useState(false)
   const suppression = useMemo(() => toChamberSuppression(state.result), [state.result])
   const onCatalogLoaded = useCallback(
     (catalog: Catalog) => dispatch({ type: 'catalogLoaded', materials: catalog.materials }),
@@ -117,6 +125,17 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
           <ResultsColumn state={state} stale={stale} mock={mock} onRun={run} />
         </aside>
       </div>
+
+      <SimulatorHelpButton onClick={() => setHelpOpen(true)} />
+      <SimulatorTutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
+      <SimulatorHelpModal
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        onReplayTutorial={() => {
+          setHelpOpen(false)
+          setTutorialOpen(true)
+        }}
+      />
     </div>
   )
 }

@@ -249,6 +249,11 @@ namespace FireSimulation
             windowMaterial.SetVector("_EarthViewOffset",new Vector4(parallax.x,parallax.y,0,0));
         }
 
+        public void SetIssWindowView(bool enabled)
+        {
+            if(windowMaterial!=null) windowMaterial.SetFloat("_IssWindowView",enabled?1:0);
+        }
+
 
         void OnDisable()
         {

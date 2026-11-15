@@ -16,6 +16,8 @@ namespace FireSimulation
         public Vector3 airflowDirection = Vector3.right;
         [Min(.01f)] public float visualScale = 1;
         [Min(.01f)] public float transitionSeconds = .5f;
+        [Tooltip("Fine visual motion only; payload color, size, emission and combustion response remain authoritative.")]
+        [Range(0,1)] public float naturalFlameDetail = 1;
         [Tooltip("Optional guard using the received telemetry oxygen limit. No threshold is inferred locally.")]
         public bool enforceReceivedOxygenLimit = true;
         public Material flameMaterial;
@@ -26,6 +28,13 @@ namespace FireSimulation
         public float Suppression { get; private set; }
         public int Revision { get; private set; }
         public bool HasVisibleFire => IsValid(payload) && Evaluate(payload,airflowDirection,enforceReceivedOxygenLimit).burning && Suppression<.999f;
+        public bool NaturalFlameActive => ownedMaterial!=null && ownedMaterial.HasProperty("_FlameDetail") && ownedMaterial.GetFloat("_FlameDetail")>.001f;
+
+        public void SetNaturalFlameDetail(float amount)
+        {
+            naturalFlameDetail=Mathf.Clamp01(amount);
+            if(flame!=null) flame.Clear();
+        }
 
         public void SetSuppression(float amount)
         {
@@ -34,6 +43,7 @@ namespace FireSimulation
             {
                 flame.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
                 if(flameLight!=null) flameLight.intensity=0;
+                GetComponent<FireSecondaryEffects>()?.Extinguish();
             }
         }
 
@@ -44,6 +54,7 @@ namespace FireSimulation
         }
 
         ParticleSystem flame;
+        ParticleSystemRenderer flameRenderer;
         Material ownedMaterial;
         float intensity, rate, elongation;
         Color color = new Color(.23f, .51f, .96f);
@@ -85,6 +96,7 @@ namespace FireSimulation
 
         void Awake()
         {
+            Application.runInBackground = true;
             if (specimen == null) specimen = GetComponent<MaterialSampleView>();
             if (materialSample == null)
                 materialSample = GameObject.Find("Material sample")?.transform;
@@ -99,15 +111,23 @@ namespace FireSimulation
             main.maxParticles = 1800;
             main.gravityModifier = 0;
             var renderer = emitter.GetComponent<ParticleSystemRenderer>();
+            flameRenderer=renderer;
             renderer.renderMode = ParticleSystemRenderMode.Billboard;
-            if (flameMaterial != null) renderer.sharedMaterial = flameMaterial;
+            // An instance is essential: this shader/material is also used by stars and rocket exhaust.
+            if (flameMaterial != null) ownedMaterial = new Material(flameMaterial);
             else
             {
                 var shader = Shader.Find("FireSimulation/SoftFlame");
                 if (shader == null) { Debug.LogError("Assign a SoftFlame material before building.", this); enabled = false; return; }
                 ownedMaterial = new Material(shader);
-                renderer.sharedMaterial = ownedMaterial;
             }
+            ownedMaterial.name="Experiment flame (runtime)";
+            renderer.sharedMaterial=ownedMaterial;
+            var noise=flame.noise;
+            noise.quality=ParticleSystemNoiseQuality.Medium;
+            noise.separateAxes=true;noise.damping=true;
+            noise.octaveCount=2;noise.octaveMultiplier=.5f;noise.octaveScale=2;
+            noise.positionAmount=.5f;noise.rotationAmount=0;noise.sizeAmount=0;
             var size = flame.sizeOverLifetime;
             size.enabled = true;
             size.size = new ParticleSystem.MinMaxCurve(1, new AnimationCurve(
@@ -241,6 +261,25 @@ namespace FireSimulation
             // Wind and gravity always apply, including when the received geometry is spherical.
             Vector3 drift = response.drift * scale;
             velocity.x = drift.x; velocity.y = drift.y; velocity.z = drift.z;
+            // Small, zero-mean eddies soften the motion without replacing the data-driven advection.
+            float detail=Mathf.Clamp01(naturalFlameDetail);
+            float buoyancy=Mathf.Clamp01(elongation*.45f);
+            float turbulence=scale*response.radius*Mathf.Lerp(.10f,.35f,buoyancy)*detail*(1-Suppression);
+            var noise=flame.noise;
+            noise.enabled=detail>0 && burning;
+            noise.strengthX=turbulence;noise.strengthY=turbulence;noise.strengthZ=turbulence;
+            noise.frequency=Mathf.Lerp(.65f,1.15f,buoyancy);
+            noise.scrollSpeed=Mathf.Lerp(.18f,.65f,buoyancy);
+            if(ownedMaterial.HasProperty("_FlameDetail"))
+            {
+                ownedMaterial.SetFloat("_FlameDetail",detail);
+                ownedMaterial.SetFloat("_FlameStretch",buoyancy);
+                ownedMaterial.SetFloat("_FlameFlowSpeed",Mathf.Lerp(.35f,1.1f,buoyancy)+Mathf.Min(i.airflow_cm_s,30)*.012f);
+                // Additive stacks wash out detail. Alpha composition keeps the new tongues readable.
+                if(ownedMaterial.HasProperty("_FlameDstBlend"))
+                    ownedMaterial.SetFloat("_FlameDstBlend",(float)(detail>.001f?UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha:UnityEngine.Rendering.BlendMode.One));
+                flameRenderer.sortMode=detail>.001f?ParticleSystemSortMode.Distance:ParticleSystemSortMode.None;
+            }
             var fade = flame.colorOverLifetime;
             fade.enabled = true;
             colorKeys[0] = new GradientColorKey(Color.white, 0);
@@ -250,7 +289,13 @@ namespace FireSimulation
             alphaKeys[2] = new GradientAlphaKey(0, 1);
             particleGradient.SetKeys(colorKeys, alphaKeys);
             fade.color = particleGradient;
-            if (flameLight != null) { flameLight.color = color; flameLight.intensity = intensity * (1 + rate); }
+            if (flameLight != null)
+            {
+                float flickerDetail=detail*Mathf.Lerp(.25f,1,buoyancy);
+                float flicker=1+(Mathf.PerlinNoise(Time.time*7.3f,4.2f)-.5f)*.14f*flickerDetail
+                    +(Mathf.PerlinNoise(Time.time*2.7f,9.1f)-.5f)*.06f*flickerDetail;
+                flameLight.color=color;flameLight.intensity=intensity*(1+rate)*flicker;
+            }
             if (!hasSpecimen && materialSample != null)
             {
                 // Display magnification: 5 mm corresponds to the original sample thickness.

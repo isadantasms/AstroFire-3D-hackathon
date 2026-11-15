@@ -183,6 +183,41 @@ describe('SimulatorPage', () => {
     expect(within(alert).getByRole('button', { name: 'Retry' })).toBeInTheDocument()
     expect(screen.queryByTestId('mock-badge')).not.toBeInTheDocument()
   })
+
+  it('opens the help modal via the ? button, displays all static step cards, and replays the step-by-step tutorial', async () => {
+    renderSimulator()
+    const helpBtn = await screen.findByTestId('simulator-help-button')
+    fireEvent.click(helpBtn)
+
+    const helpModal = screen.getByTestId('simulator-help-modal')
+    expect(helpModal).toHaveTextContent('Simulator Help & Step-by-Step Guide')
+    expect(screen.getByTestId('help-card-material')).toBeInTheDocument()
+    expect(screen.getByTestId('help-card-gravity')).toBeInTheDocument()
+    expect(screen.getByTestId('help-card-atmosphere')).toBeInTheDocument()
+    expect(screen.getByTestId('help-card-flame')).toBeInTheDocument()
+    expect(screen.getByTestId('help-card-suppress')).toBeInTheDocument()
+    expect(screen.getByTestId('help-card-results')).toBeInTheDocument()
+
+    // Replay the interactive tutorial from the help modal.
+    fireEvent.click(within(helpModal).getByRole('button', { name: /Replay tutorial/i }))
+    expect(screen.queryByTestId('simulator-help-modal')).not.toBeInTheDocument()
+
+    const tutorial = screen.getByTestId('simulator-tutorial')
+    expect(tutorial).toHaveTextContent('Welcome to AstroFire 3D')
+    expect(within(tutorial).getByRole('button', { name: 'Previous step' })).toBeDisabled()
+
+    // Step forward through the screens and back.
+    fireEvent.click(within(tutorial).getByRole('button', { name: 'Next step' }))
+    expect(tutorial).toHaveTextContent('Step 1 · Select Material')
+    fireEvent.click(within(tutorial).getByRole('button', { name: 'Next step' }))
+    expect(tutorial).toHaveTextContent('Step 2 · Choose Gravity Regime')
+    fireEvent.click(within(tutorial).getByRole('button', { name: 'Previous step' }))
+    expect(tutorial).toHaveTextContent('Step 1 · Select Material')
+
+    // Close tutorial.
+    fireEvent.click(within(tutorial).getByRole('button', { name: 'Close tutorial' }))
+    expect(screen.queryByTestId('simulator-tutorial')).not.toBeInTheDocument()
+  })
 })
 
 describe('simulator helpers', () => {

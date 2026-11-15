@@ -2,7 +2,7 @@
 
 SI-assisted: generated with Codex; pending human review.
 
-The Unity view no longer renders telemetry panels, material selectors, destination buttons, extinguisher buttons, instructions or skip progress bars. The cinematic black fade is retained as a transition effect. Existing Inspector fields and mouse/keyboard camera controls remain available for development. The previous UI walkthroughs in module notes no longer apply.
+The only in-game UI is the small hold-E-to-skip progress indicator in the bottom-right during destination travel. Test panels, destination/material selectors and extinguisher buttons have been removed. The cinematic black fade remains a transition effect. Inspector fields, public control methods and full-viewport mouse/keyboard camera controls remain available.
 
 The application's server integration can call these public Unity methods on the main thread. This change does not create HTTP routes, poll a server or invent endpoint URLs.
 
