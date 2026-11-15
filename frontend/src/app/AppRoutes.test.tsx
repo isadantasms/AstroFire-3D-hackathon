@@ -209,7 +209,10 @@ describe('site structure', () => {
     expect(credits.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['NASA data', 'Software & assets'])
     expect(credits.getByText('BASS-II (PSI-25): Burning and Suppression of Solids - II')).toBeInTheDocument()
     expect(credits.getByText(/IBM Plex Sans, IBM Plex Serif & IBM Plex Mono/)).toBeInTheDocument()
-    expect(credits.getByText('Voxel rocket 3D model (MagicaVoxel)')).toBeInTheDocument()
+    expect(credits.getByText('MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher')).toBeInTheDocument()
+    expect(credits.getByText('AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.')).toBeInTheDocument()
+    expect(credits.getByText('Unity (3D chamber engine and WebGL template)')).toBeInTheDocument()
+    expect(credits.getByText(/^Codex \(OpenAI\)/)).toBeInTheDocument()
     expect(credits.queryByText(/UFSC|VSB-30/)).toBeNull()
   })
 

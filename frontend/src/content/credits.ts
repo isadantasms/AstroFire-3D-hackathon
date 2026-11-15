@@ -1,6 +1,7 @@
 // SI-assisted: generated with Gemini & Claude, reviewed and edited by Rocha, Elias, Pina & Dantas
 // Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
 /** Data, library and asset credits (Research & Data → Data & credits). */
+import { LOGO_CREDIT } from './project'
 
 export interface CreditRow {
   resource: string
@@ -31,6 +32,12 @@ export const CREDITS_LEDGER: CreditRow[] = [
     type: 'NASA Technical Report',
     license: 'CC0-1.0 / Public Domain',
     url: 'https://ntrs.nasa.gov/citations/20170000230',
+  },
+  {
+    resource: 'NTRS-20260001600: Spacecraft Fire Safety Predictions using Verified Saffire Model (Niehaus et al., 2026)',
+    type: 'NASA Technical Report',
+    license: 'US Gov Public Domain',
+    url: 'https://ntrs.nasa.gov/citations/20260001600',
   },
   {
     resource: 'SAME: Spacecraft Fire Safety Research at NASA Glenn Research Center (Meyer, 2016, NTRS-20170007283)',
@@ -81,12 +88,48 @@ export const CREDITS_LEDGER: CreditRow[] = [
     license: 'MIT / ISC / SIL OFL 1.1',
     url: 'https://ajv.js.org',
   },
-  // TODO(credits): author and license of the voxel rocket model are not in assets/CREDITS.md yet.
   {
-    resource: 'Voxel rocket 3D model (MagicaVoxel)',
-    type: '3D Model',
+    resource: 'Unity (3D chamber engine and WebGL template)',
+    type: 'Engine',
+    license: 'Unity Terms of Service (edition to verify)',
+    url: 'https://unity.com/legal/terms-of-service',
+  },
+  // TODO(credits): author and license of the MagicaVoxel models are not confirmed yet.
+  {
+    resource: 'MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher',
+    type: '3D Models',
     license: 'To verify',
     url: null,
+  },
+  {
+    resource: LOGO_CREDIT,
+    type: 'Logo',
+    license: 'MIT License (this repository)',
+    url: null,
+  },
+  {
+    resource: 'ChatGPT (OpenAI): planning, development support and 3D modeling support',
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://chatgpt.com',
+  },
+  {
+    resource: 'Codex (OpenAI): Unity scripts and shaders for the 3D chamber',
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://developers.openai.com/codex',
+  },
+  {
+    resource: "Gemini (Google): refining the team's business rules, backend integration and test data",
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://gemini.google.com',
+  },
+  {
+    resource: 'Claude / Claude Code (Anthropic): front-end code, interface, documentation and logo',
+    type: 'SI Tool',
+    license: 'Provider terms',
+    url: 'https://claude.com/product/claude-code',
   },
   // TODO(voice-tool): name, license and link of the narration tool.
   {
