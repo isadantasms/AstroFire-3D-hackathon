@@ -37,7 +37,7 @@ namespace FireSimulation
             {
                 delta = mouse.delta.ReadValue();
                 scroll = mouse.scroll.ReadValue().y;
-                orbit = mouse.rightButton.isPressed; pan = mouse.middleButton.isPressed;
+                orbit = mouse.leftButton.isPressed; pan = mouse.middleButton.isPressed;
             }
             reset = Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
 #elif ENABLE_LEGACY_INPUT_MANAGER
