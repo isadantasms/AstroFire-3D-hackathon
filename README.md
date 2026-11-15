@@ -1,4 +1,4 @@
-# [PROJECT_NAME]
+# AstroFire
 
 **2026 NASA Space Apps Challenge — Challenge:** *Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data*
 
@@ -7,7 +7,7 @@
 ---
 
 ## 1. Overview & Scientific Question
-`[PROJECT_NAME]` synthesizes empirical microgravity combustion datasets from the **NASA Physical Sciences Informatics (PSI)** repository and technical literature from the **NASA Technical Reports Server (NTRS)** into an interactive 3D combustion simulator and fire-safety decision console for spacecraft cabins and partial-gravity habitats.
+`AstroFire` synthesizes empirical microgravity combustion datasets from the **NASA Physical Sciences Informatics (PSI)** repository and technical literature from the **NASA Technical Reports Server (NTRS)** into an interactive 3D combustion simulator and fire-safety decision console for spacecraft cabins and partial-gravity habitats.
 
 ## 2. NASA Open Data & Citations
 All datasets, DOIs, technical reports, and open-source libraries used in this repository are cataloged with their licenses in [`docs/references.md`](docs/references.md) and [`assets/CREDITS.md`](assets/CREDITS.md).
