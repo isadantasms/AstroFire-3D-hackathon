@@ -69,7 +69,53 @@ Source: `backend/data/pinn_validation_metrics.json`, produced by `backend/app/ml
 
 The per-epoch curve (25 points, epochs 1–120: train MSE, validation MSE, physics residual and total loss) is stored in `pinn_loss_curve` in the same file. For example, total PINN loss goes from 0.115376 at epoch 1 to 0.035516 at epoch 120. Include the full table in the PDF.
 
-## 3. Known issues to fix before the PDF
+## 3. SI disclosure
+
+Full disclosure for the technical PDF. The Home keeps this detailed version until the PDF is published
+(`TECHNICAL_DOCS_PDF_URL` in `frontend/src/app/routes.ts`); then it switches to a compact block that links here.
+Source of truth for the wording: `frontend/src/content/project.ts`.
+
+**Transparency & scientific integrity — Human-led science. AI-assisted development.**
+
+### 3.1 SI inside AstroFire
+
+NASA data → Rule-based engine → Results
+
+AstroFire does not run an AI model when you simulate. A deterministic engine matches your scenario to the 79 BASS-II records, or applies formulas bounded by NASA technical reports, and fills in the diagnosis and suppression text from templates. Those rules and templates were drafted with Gemini and reviewed by the team. In mock mode, results come from three sample payloads written with Gemini.
+
+What it does:
+- Computes telemetry from the BASS-II records or NASA-bounded formulas
+- Explains the flame regime and suppression options with template text
+- Cites the NASA sources behind each result
+
+What it does not do:
+- Run a live AI model
+- Measure Moon or Mars fires
+- Provide a certified safety assessment
+
+In the Simulator and the PDF report, these texts carry the label "Diagnosis text from templates drafted with SI and reviewed by the team." In mock mode they add "Sample text written with Gemini".
+
+> TODO(si): If the PINN is wired into `/api/simulate`, update this section to describe the ML prediction step.
+
+### 3.2 AI-assisted development
+
+- ChatGPT (OpenAI): planning, development support and 3D modeling support
+- Codex (OpenAI): Unity scripts and shaders for the 3D chamber
+- Gemini (Google): refining the team's business rules, backend integration and test data
+- Claude / Claude Code (Anthropic): front-end code and interface, planning, visual design, documentation, pitch script and reference review
+- AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.
+- Demo video narration generated with [VOICE TOOL].
+
+> TODO(logo): when the team redesigns the logo, change the logo line to "AstroFire logo designed by the team; initial concept explored with Claude Code (SI-assisted)."
+> TODO(voice-tool): replace [VOICE TOOL] with the name of the narration tool.
+
+### 3.3 Human review & responsibility
+
+The team conceived the solution, chose the NASA data and methods, made every design decision, and reviewed the code, data and results.
+
+"Super Intelligence (SI)" is the term used by the Space Apps challenge; ChatGPT, Codex, Gemini and Claude are tools we used for specific tasks.
+
+## 4. Known issues to fix before the PDF
 
 - Backend risk labels now follow the schema bands for 36–70 (Moderate Alert) and 71–100 (Critical Flashover Risk). The enum has no label for a burning flame scored 0–35 ("Safe" is reserved for extinguished flames), so those keep "Moderate Alert"; "High Risk" is unused (to verify with the team).
 - Investigation relevance on Research & Data is team-assigned (High / Medium); the criteria are not documented yet (to verify).

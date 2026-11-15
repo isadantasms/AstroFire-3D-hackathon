@@ -43,6 +43,20 @@ export const SI_TERM_NOTE =
   '“Super Intelligence (SI)” is the term used by the Space Apps challenge; ChatGPT, Codex, Gemini and Claude are tools we used for specific tasks.'
 
 /**
+ * Compact Home version, shown once the technical PDF (which holds the full disclosure) is published.
+ * TODO(logo): when the team redesigns the logo, update "the AstroFire logo (created with Claude Code)".
+ * TODO(voice-tool): replace [VOICE TOOL] with the name of the narration tool.
+ */
+export const SI_COMPACT = {
+  product:
+    'When you run a simulation, a rule-based engine matches your scenario to NASA BASS-II data and technical reports. The diagnosis and guidance texts were drafted with SI and reviewed by the team.',
+  development:
+    'AI tools supported specific tasks: ChatGPT, Codex, Gemini and Claude / Claude Code (code, 3D, data and interface), the AstroFire logo (created with Claude Code) and the demo video narration ([VOICE TOOL]).',
+  human: 'The team conceived the solution, made the design and science decisions, and reviewed all code, data and results.',
+  linkLabel: 'Full SI disclosure in the documentation',
+} as const
+
+/**
  * Label for the diagnosis and suppression text in the Simulator and the PDF report.
  * TODO(si): If the PINN is wired into /api/simulate, update this label to describe the ML prediction step.
  */

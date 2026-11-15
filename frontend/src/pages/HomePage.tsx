@@ -10,7 +10,7 @@ import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences
 import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
 import { EXPERIMENTS_SNAPSHOT } from '../data/experimentsSnapshot'
 import { INVESTIGATIONS } from '../content/investigations'
-import { DEV_TOOLS, HUMAN_REVIEW, LOGO_CREDIT, SI_IN_PRODUCT, SI_TERM_NOTE, VOICE_CREDIT } from '../content/project'
+import { DEV_TOOLS, HUMAN_REVIEW, LOGO_CREDIT, SI_COMPACT, SI_IN_PRODUCT, SI_TERM_NOTE, VOICE_CREDIT } from '../content/project'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
@@ -307,8 +307,51 @@ function HelpsSection() {
   )
 }
 
-/** How SI is used (NASA Space Apps disclosure); the footer "SI Usage" link lands here. */
+/**
+ * How SI is used (NASA Space Apps disclosure); the footer "SI Usage" link lands here (#si-usage).
+ * The full disclosure moves to the technical PDF: once TECHNICAL_DOCS_PDF_URL is set, the Home shows the
+ * compact block with a link to it. Until then the detailed version stays on the Home.
+ */
 function SiUsageSection() {
+  return TECHNICAL_DOCS_PDF_URL ? <CompactSiUsage docsUrl={TECHNICAL_DOCS_PDF_URL} /> : <DetailedSiUsage />
+}
+
+function CompactSiUsage({ docsUrl }: { docsUrl: string }) {
+  const rows = [
+    { name: 'In the product', text: SI_COMPACT.product },
+    { name: 'In development', text: SI_COMPACT.development },
+    { name: 'Human responsibility', text: SI_COMPACT.human },
+  ]
+  return (
+    <section id="si-usage" className="relative scroll-mt-16" aria-labelledby="si-usage-title" data-testid="si-compact">
+      <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
+        <SectionHeader id="si-usage" label="Transparency" title="How we use SI" />
+        <div data-reveal style={stagger(2)} className={`reveal mx-auto mt-10 max-w-3xl p-6 sm:p-8 ${PANEL}`}>
+          <dl className="space-y-4">
+            {rows.map((r) => (
+              <div key={r.name} className="grid gap-1 sm:grid-cols-[11rem_1fr] sm:gap-6">
+                <dt className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">{r.name}</dt>
+                <dd className="text-sm leading-relaxed text-secondary">{r.text}</dd>
+              </div>
+            ))}
+          </dl>
+          <a
+            href={docsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm text-focus hover:underline"
+          >
+            {SI_COMPACT.linkLabel}
+            <ArrowRight className="size-3.5" aria-hidden />
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/** Detailed disclosure, shown on the Home until the technical PDF is published. */
+function DetailedSiUsage() {
   return (
     <section id="si-usage" className="relative scroll-mt-16" aria-labelledby="si-usage-title">
       <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
