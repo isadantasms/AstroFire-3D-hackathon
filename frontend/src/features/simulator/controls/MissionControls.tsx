@@ -1,9 +1,10 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Elias
 import { useEffect, useId, useRef, useState } from 'react'
-import { Check, ChevronDown, Play } from 'lucide-react'
+import { Check, ChevronDown, Droplets, Play } from 'lucide-react'
+import { Tooltip } from '../../../components/Tooltip'
 import type { MaterialInfo } from '../../../types/catalog'
 import { clamp, fmt } from '../../../lib/format'
-import { AIRFLOW_SLIDER, GRAVITY_OPTIONS, O2_SLIDER, SCENARIO_PRESETS, type ScenarioPreset } from '../presets'
+import { AIRFLOW_SLIDER, GRAVITY_OPTIONS, O2_SLIDER } from '../presets'
 import { BASS2_RANGES } from '../../../data/experimentsSnapshot'
 import type { DraftInputs, SimulationAction } from '../state/simulationReducer'
 
@@ -15,8 +16,9 @@ interface MissionControlsProps {
   running: boolean
   dispatch: (action: SimulationAction) => void
   onRun: () => void
-  /** Fills the controls with a sample scenario (and runs it in mock mode, see SimulatorPage). */
-  onPreset: (preset: ScenarioPreset) => void
+  /** null when "Discharge FWM PFE" is available; otherwise the reason it is disabled. */
+  dischargeBlocked: string | null
+  onDischarge: () => void
 }
 
 function splitMaterialLabel(raw: string): { title: string; subtitle: string | null } {
@@ -27,7 +29,16 @@ function splitMaterialLabel(raw: string): { title: string; subtitle: string | nu
   return { title, subtitle: subtitle || null }
 }
 
-export function MissionControls({ draft, materials, resultThicknessMm, running, dispatch, onRun, onPreset }: MissionControlsProps) {
+export function MissionControls({
+  draft,
+  materials,
+  resultThicknessMm,
+  running,
+  dispatch,
+  onRun,
+  dischargeBlocked,
+  onDischarge,
+}: MissionControlsProps) {
   const materialLabelId = useId()
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
@@ -57,33 +68,6 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
     <div className="flex h-full min-h-0 flex-col">
       <div className="relative flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-1 pb-4">
         <h2 className="text-base font-semibold text-primary">Mission controls</h2>
-
-        <div>
-          <p className="mb-2 text-xs text-secondary">Sample scenarios</p>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Sample scenarios">
-            {SCENARIO_PRESETS.map((p) => {
-              const active =
-                p.material_id === draft.material_id &&
-                p.gravity_g === draft.gravity_g &&
-                p.o2_pct === draft.o2_pct &&
-                p.airflow_cm_s === draft.airflow_cm_s
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  aria-pressed={active}
-                  disabled={running}
-                  onClick={() => onPreset(p)}
-                  className={`inline-flex min-h-11 items-center rounded-full border px-3 text-xs transition-colors disabled:opacity-60 ${
-                    active ? 'border-focus bg-elevated font-medium text-primary' : 'border-subtle bg-void text-secondary hover:text-primary'
-                  }`}
-                >
-                  {p.name}
-                </button>
-              )
-            })}
-          </div>
-        </div>
 
         <div>
           <p id={materialLabelId} className="mb-2 text-xs text-secondary">
@@ -231,7 +215,7 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
       {/* Always visible: fixed at the bottom of the screen below lg, at the base of the column from lg. */}
       <div
         data-run-bar
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-subtle bg-hero/95 px-4 py-3 backdrop-blur-sm lg:static lg:z-auto lg:shrink-0 lg:bg-transparent lg:px-0 lg:pt-3 lg:pb-0 lg:backdrop-blur-none"
+        className="fixed inset-x-0 bottom-0 z-30 flex flex-col gap-2 border-t border-subtle bg-hero/95 px-4 py-3 backdrop-blur-sm lg:static lg:z-auto lg:shrink-0 lg:bg-transparent lg:px-0 lg:pt-3 lg:pb-0 lg:backdrop-blur-none"
       >
         <button
           type="button"
@@ -242,6 +226,21 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
           <Play className="size-4 fill-current" aria-hidden />
           {running ? 'Running…' : 'Run Simulation'}
         </button>
+
+        <Tooltip label={dischargeBlocked} align="center" side="top" focusable={dischargeBlocked !== null} className="w-full">
+          {(describedBy) => (
+            <button
+              type="button"
+              onClick={onDischarge}
+              disabled={dischargeBlocked !== null}
+              aria-describedby={describedBy}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-[10px] border border-focus bg-focus px-4 py-2.5 text-xs font-semibold text-hero shadow-sm transition-colors hover:bg-focus/90 disabled:cursor-not-allowed disabled:border-subtle disabled:bg-transparent disabled:text-muted disabled:shadow-none"
+            >
+              <Droplets className="size-3.5" aria-hidden />
+              Discharge FWM PFE
+            </button>
+          )}
+        </Tooltip>
       </div>
     </div>
   )

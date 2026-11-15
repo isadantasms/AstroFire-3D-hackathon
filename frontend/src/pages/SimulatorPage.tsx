@@ -1,5 +1,5 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Elias
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { defaultApiClient, type ApiClient, type Catalog } from '../services/api/client'
 import { MissionControls } from '../features/simulator/controls/MissionControls'
@@ -7,7 +7,6 @@ import { FlameChamberPlaceholder } from '../features/simulator/chamber/FlameCham
 import { toChamberSuppression } from '../features/simulator/chamber/types'
 import { ResultsColumn } from '../features/simulator/results/ResultsColumn'
 import { useCatalog, useSimulation } from '../features/simulator/state/useSimulation'
-import type { ScenarioPreset } from '../features/simulator/presets'
 import { shouldAutoOpenTutorial } from '../features/simulator/tutorial/tutorialConfig'
 import {
   SimulatorHelpButton,
@@ -30,30 +29,6 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
   const catalog = catalogState.status === 'ready' ? catalogState.catalog : null
   const loading = state.status === 'loading'
 
-  // Sample scenarios: fill the controls; in mock mode they also run (the result is that sample payload).
-  const [pendingRun, setPendingRun] = useState(false)
-  const applyPreset = useCallback(
-    (preset: ScenarioPreset, andRun: boolean) => {
-      dispatch({
-        type: 'applyPreset',
-        draft: {
-          material_id: preset.material_id,
-          gravity_g: preset.gravity_g,
-          o2_pct: preset.o2_pct,
-          airflow_cm_s: preset.airflow_cm_s,
-        },
-        material: catalog?.materials.find((m) => m.material_id === preset.material_id),
-      })
-      if (andRun) setPendingRun(true)
-    },
-    [catalog, dispatch],
-  )
-  // `run` is rebuilt with the new draft on the next render, so the preset is what gets simulated.
-  useEffect(() => {
-    if (!pendingRun) return
-    setPendingRun(false)
-    run()
-  }, [pendingRun, run])
   const standbyMaterial = useMemo(() => {
     const found = catalog?.materials.find((m) => m.material_id === state.draft.material_id)
     return {
@@ -96,9 +71,10 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
               materials={catalog.materials}
               resultThicknessMm={state.result?.inputs.thickness_mm ?? null}
               running={loading}
+              dischargeBlocked={dischargeBlocked}
               dispatch={dispatch}
               onRun={run}
-              onPreset={(preset) => applyPreset(preset, mock)}
+              onDischarge={discharge}
             />
           ) : null}
         </aside>
@@ -113,8 +89,6 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
             standbyMaterial={standbyMaterial}
             extinguishedBy={state.chamber.extinguishedBy}
             dischargeStartedAt={state.chamber.dischargeStartedAt}
-            dischargeBlocked={dischargeBlocked}
-            onDischarge={discharge}
             loading={loading}
             stale={stale}
           />

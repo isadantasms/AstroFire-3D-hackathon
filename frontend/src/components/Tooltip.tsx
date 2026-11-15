@@ -9,20 +9,21 @@ interface TooltipProps {
   side?: 'top' | 'bottom'
   /** Make the wrapper focusable (for disabled or non-interactive triggers). */
   focusable?: boolean
+  className?: string
 }
 
 const ALIGN = { start: 'left-0', center: 'left-1/2 -translate-x-1/2', end: 'right-0' }
 const SIDE = { top: 'bottom-full mb-2', bottom: 'top-full mt-2' }
 
 /** Small hover/focus tooltip. Works on disabled buttons because the wrapper receives the hover. */
-export function Tooltip({ label, children, align = 'center', side = 'top', focusable = false }: TooltipProps) {
+export function Tooltip({ label, children, align = 'center', side = 'top', focusable = false, className }: TooltipProps) {
   const id = useId()
   // With no label, keep the wrapper (so the trigger is not remounted) but render no tooltip.
   if (label === null || label === undefined || label === '') {
-    return <span className="relative inline-flex">{children(undefined)}</span>
+    return <span className={`relative inline-flex ${className ?? ''}`}>{children(undefined)}</span>
   }
   return (
-    <span className="group/tt relative inline-flex" tabIndex={focusable ? 0 : undefined}>
+    <span className={`group/tt relative inline-flex ${className ?? ''}`} tabIndex={focusable ? 0 : undefined}>
       {children(id)}
       <span
         id={id}

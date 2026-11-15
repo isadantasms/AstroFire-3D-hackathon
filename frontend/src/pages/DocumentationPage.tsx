@@ -81,7 +81,7 @@ function DocumentationHeader() {
               <li key={s.id}>
                 <a
                   href={`#${s.id}`}
-                  className="inline-flex rounded-full border border-subtle bg-panel/70 px-3.5 py-1.5 text-xs text-secondary transition-colors hover:border-label hover:text-primary"
+                  className="inline-flex items-center justify-center rounded-full border border-subtle bg-panel/70 px-3.5 py-1.5 text-xs text-secondary transition-colors hover:border-label hover:text-primary"
                 >
                   {s.label}
                 </a>
@@ -247,7 +247,7 @@ function ResearchSection() {
               role="radio"
               aria-checked={active}
               onClick={() => setUse(f.key)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
+              className={`inline-flex items-center justify-center rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
                 active ? 'border-focus bg-elevated font-medium text-primary' : 'border-subtle bg-panel text-secondary hover:text-primary'
               }`}
             >
@@ -339,10 +339,13 @@ function BassDataSection() {
         The fire tests NASA ran aboard the ISS for the BASS-II experiment, as published in the NASA PSI open data
         repository.
       </p>
-      {/* Data notes, in one line: open licenses only, and Moon/Mars are estimates. */}
+      {/* Data notes: open licenses, Moon/Mars estimates, and 79 vs. 150 dataset scope. */}
       <p data-testid="data-notes" className="mt-2 mb-4 max-w-3xl text-xs leading-relaxed text-muted">
         Open data only (CC0-1.0 or U.S. Government public domain; PSI-10 has no license listed and is not used). NASA PSI
-        has no Moon or Mars combustion data, so those results are estimates between microgravity and Earth data.
+        has no Moon or Mars combustion data, so those results are estimates between microgravity and Earth data. The
+        curated matrix below lists the 79 verified BASS-II records with measured spread rates (mm/s) used for PINN
+        regression training and validation; an additional 71 outcome-only BASS-II tests (N = 150 total) are used in the
+        expanded ignition outcome classification benchmark (Sustained Spread vs. Quenched).
       </p>
       <Suspense fallback={<div className="h-24 rounded-2xl border border-subtle bg-panel" />}>
         <BassExperimentsSection collapsible />

@@ -1,7 +1,6 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha, Esquivel & Elias
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { CircleDashed, CircleOff, Droplets, ExternalLink, Flame } from 'lucide-react'
-import { Tooltip } from '../../../components/Tooltip'
 import { fmt } from '../../../lib/format'
 import type { Simulation3D, SimulationResponse } from '../../../types/contract'
 import { chamberDevControlsEnabled, defaultChamberView, UNITY_READY_TIMEOUT_MS } from './devMode'
@@ -23,9 +22,6 @@ export interface FlameChamberProps extends ChamberRenderInput {
   extinguishedBy: 'suppression' | 'no_sustained_flame' | null
   /** Epoch ms when the current discharge started (for the countdown). */
   dischargeStartedAt: number | null
-  /** null when "Discharge FWM PFE" is available; otherwise the reason it is disabled. */
-  dischargeBlocked: string | null
-  onDischarge: () => void
   loading: boolean
   stale: boolean
   /** Force the developer view controls on or off (defaults to the env / ?dev flag). */
@@ -94,8 +90,6 @@ export function FlameChamberPlaceholder({
   standbyMaterial = null,
   extinguishedBy,
   dischargeStartedAt,
-  dischargeBlocked,
-  onDischarge,
   loading,
   stale,
   devControls = chamberDevControlsEnabled(),
@@ -262,7 +256,7 @@ export function FlameChamberPlaceholder({
         className="relative flex min-h-72 flex-1 flex-col overflow-hidden rounded-xl border border-subtle bg-void"
         data-testid="chamber-placeholder"
       >
-        {/* Chamber bar: state + extinguisher */}
+        {/* Chamber bar: state + dev controls */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle bg-panel/80 px-4 py-2">
           <div className="flex items-center gap-3">
             <h2 id="chamber-title" className="text-sm font-semibold text-primary">
@@ -270,10 +264,11 @@ export function FlameChamberPlaceholder({
             </h2>
             <ChamberStatus phase={phase} extinguishedBy={extinguishedBy} remainingS={remainingS} stale={stale} />
           </div>
-          <div className="flex items-center gap-2">
-            {devControls ? <DevControls viewMode={viewMode} onChange={setViewMode} /> : null}
-            <DischargeButton blocked={dischargeBlocked} onDischarge={onDischarge} />
-          </div>
+          {devControls ? (
+            <div className="flex items-center gap-2">
+              <DevControls viewMode={viewMode} onChange={setViewMode} />
+            </div>
+          ) : null}
         </div>
 
         <div className="relative flex flex-1 items-center justify-center overflow-hidden">
@@ -396,26 +391,6 @@ function ChamberNotice({ children, testId }: { children: ReactNode; testId?: str
 
 function summaryText(i: SimulationResponse['inputs']): string {
   return `${i.environment_label} · ${i.material_name} · ${fmt(i.thickness_mm, 1)} mm · ${fmt(i.o2_pct, 1)}% O₂ · ${fmt(i.airflow_cm_s, 1)} cm/s`
-}
-
-function DischargeButton({ blocked, onDischarge }: { blocked: string | null; onDischarge: () => void }) {
-  const button = (describedBy?: string) => (
-    <button
-      type="button"
-      onClick={onDischarge}
-      disabled={blocked !== null}
-      aria-describedby={describedBy}
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-focus bg-focus px-3.5 py-1.5 text-xs font-semibold text-hero shadow-sm transition-colors hover:bg-focus/90 disabled:cursor-not-allowed disabled:border-subtle disabled:bg-transparent disabled:text-muted disabled:shadow-none"
-    >
-      <Droplets className="size-3.5" aria-hidden />
-      Discharge FWM PFE
-    </button>
-  )
-  return (
-    <Tooltip label={blocked} align="end" side="bottom" focusable={blocked !== null}>
-      {(id) => button(id)}
-    </Tooltip>
-  )
 }
 
 function DevControls({ viewMode, onChange }: { viewMode: 'webgl' | 'static'; onChange: (mode: 'webgl' | 'static') => void }) {

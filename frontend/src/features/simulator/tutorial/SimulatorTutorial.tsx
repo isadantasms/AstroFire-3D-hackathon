@@ -354,7 +354,7 @@ export function SimulatorTutorialModal({ open, onClose }: SimulatorTutorialModal
             type="button"
             onClick={onClose}
             aria-label="Close tutorial"
-            className="rounded-lg border border-subtle bg-void p-1.5 text-secondary transition-colors hover:border-focus hover:text-primary"
+            className="inline-flex items-center justify-center rounded-lg border border-subtle bg-void p-1.5 text-secondary transition-colors hover:border-focus hover:text-primary"
           >
             <X className="size-4" aria-hidden />
           </button>
@@ -467,7 +467,7 @@ export function SimulatorHelpModal({ open, onClose, onReplayTutorial }: Simulato
             type="button"
             onClick={onClose}
             aria-label="Close help"
-            className="rounded-lg border border-subtle bg-void p-1.5 text-secondary transition-colors hover:border-focus hover:text-primary"
+            className="inline-flex items-center justify-center rounded-lg border border-subtle bg-void p-1.5 text-secondary transition-colors hover:border-focus hover:text-primary"
           >
             <X className="size-4" aria-hidden />
           </button>
