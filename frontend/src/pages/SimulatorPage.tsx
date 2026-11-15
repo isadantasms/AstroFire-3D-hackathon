@@ -1,5 +1,5 @@
-// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { useCallback, useMemo } from 'react'
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Elias
+import { useCallback, useMemo, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { defaultApiClient, type ApiClient, type Catalog } from '../services/api/client'
 import { MissionControls } from '../features/simulator/controls/MissionControls'
@@ -9,9 +9,17 @@ import { CycleBar } from '../features/simulator/CycleBar'
 import { ResultsColumn } from '../features/simulator/results/ResultsColumn'
 import { cycleStep } from '../features/simulator/state/simulationReducer'
 import { useCatalog, useSimulation } from '../features/simulator/state/useSimulation'
+import {
+  shouldAutoOpenTutorial,
+  SimulatorHelpButton,
+  SimulatorHelpModal,
+  SimulatorTutorialModal,
+} from '../features/simulator/tutorial/SimulatorTutorial'
 
 export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClient }) {
   const { state, dispatch, run, discharge, stale, dischargeBlocked } = useSimulation(client)
+  const [tutorialOpen, setTutorialOpen] = useState(shouldAutoOpenTutorial)
+  const [helpOpen, setHelpOpen] = useState(false)
   const suppression = useMemo(() => toChamberSuppression(state.result), [state.result])
   const onCatalogLoaded = useCallback(
     (catalog: Catalog) => dispatch({ type: 'catalogLoaded', materials: catalog.materials }),
@@ -93,6 +101,17 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
           <ResultsColumn state={state} stale={stale} mock={mock} onRun={run} />
         </aside>
       </div>
+
+      <SimulatorHelpButton onClick={() => setHelpOpen(true)} />
+      <SimulatorTutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
+      <SimulatorHelpModal
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        onReplayTutorial={() => {
+          setHelpOpen(false)
+          setTutorialOpen(true)
+        }}
+      />
     </div>
   )
 }
