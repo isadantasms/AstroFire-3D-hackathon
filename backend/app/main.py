@@ -83,14 +83,17 @@ if HAS_FASTAPI:
     )
 
     @app.get("/api/health")
+    @app.get("/health", include_in_schema=False)
     def api_health() -> dict[str, str]:
         return get_health()
 
     @app.get("/api/materials")
+    @app.get("/materials", include_in_schema=False)
     def api_materials() -> dict[str, object]:
         return get_materials()
 
     @app.get("/api/experiments")
+    @app.get("/experiments", include_in_schema=False)
     def api_experiments(
         material_id: Optional[str] = Query(default=None, description="Filter by material_id"),
         pi_group: Optional[str] = Query(default=None, description="Filter by Principal Investigator group"),
@@ -98,18 +101,22 @@ if HAS_FASTAPI:
         return get_experiments(material_id=material_id, pi_group=pi_group)
 
     @app.post("/api/simulate", response_model=SimulationContractResponse)
+    @app.post("/simulate", response_model=SimulationContractResponse, include_in_schema=False)
     def api_simulate(request: SimulationRequest) -> SimulationContractResponse:
         return post_simulate(request)
 
     @app.get("/api/model-metrics")
+    @app.get("/model-metrics", include_in_schema=False)
     def api_model_metrics() -> dict[str, object]:
         return get_model_metrics()
 
     @app.get("/api/presets")
+    @app.get("/presets", include_in_schema=False)
     def api_presets() -> dict[str, object]:
         return get_presets()
 
     @app.get("/api/investigations")
+    @app.get("/investigations", include_in_schema=False)
     def api_investigations(
         target_environment: Optional[str] = Query(
             default=None,

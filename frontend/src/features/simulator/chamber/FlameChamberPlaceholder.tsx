@@ -32,7 +32,10 @@ export interface FlameChamberProps extends ChamberRenderInput {
   devControls?: boolean
 }
 
-const WEBGL_BASE_URL = import.meta.env.VITE_WEBGL_URL || 'http://127.0.0.1:8080/index.html'
+const DEFAULT_WEBGL_URL = import.meta.env.PROD
+  ? '/webgl/index.html'
+  : 'http://127.0.0.1:8080/index.html'
+const WEBGL_BASE_URL = import.meta.env.VITE_WEBGL_URL || DEFAULT_WEBGL_URL
 
 export const BELOW_OXYGEN_LIMIT = 'Extinguished below oxygen limit'
 

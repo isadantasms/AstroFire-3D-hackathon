@@ -1,0 +1,3 @@
+# SI-assisted: generated with Gemini, reviewed and edited by Elias & Pina
+fastapi>=0.110.0
+pydantic>=2.6.0

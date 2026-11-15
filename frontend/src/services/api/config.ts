@@ -1,9 +1,12 @@
-// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
+// SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha & Elias
 export type ApiMode = 'mock' | 'live'
 
-export const API_MODE: ApiMode = import.meta.env.VITE_API_MODE === 'live' ? 'live' : 'mock'
+const defaultMode: ApiMode = import.meta.env.PROD ? 'live' : 'mock'
+const rawMode = import.meta.env.VITE_API_MODE || defaultMode
+export const API_MODE: ApiMode = rawMode === 'live' ? 'live' : 'mock'
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(
+const defaultBaseUrl = import.meta.env.PROD ? '' : 'http://localhost:8000'
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? defaultBaseUrl).replace(
   /\/+$/,
   '',
 )

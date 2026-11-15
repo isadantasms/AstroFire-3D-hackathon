@@ -1,0 +1,17 @@
+# SI-assisted: generated with Gemini, reviewed and edited by Elias
+arquivos a separar/
+"arquivos a separar"/
+NASA SPACE APPS - 2026/
+"NASA SPACE APPS - 2026"/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+unity-fire-simulation/Assets/
+unity-fire-simulation/Library/
+unity-fire-simulation/Temp/
+unity-fire-simulation/Logs/
+backend/ExpandedDemo*
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
