@@ -23,15 +23,22 @@ async function renderHome(docsUrl: string | null) {
 }
 
 describe('Home SI disclosure', () => {
-  it('shows the short block without the documentation link while the technical PDF does not exist', async () => {
+  it('shows the short block with a Learn more disclosure; without the PDF the link goes to Research & Data', async () => {
     await renderHome(null)
     const si = within(screen.getByTestId('si-compact'))
     expect(si.getByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
     expect(si.getAllByRole('term').map((dt) => dt.textContent)).toEqual(['In the product', 'In development', 'Human responsibility'])
-    expect(si.queryByRole('link')).toBeNull()
+
+    const more = screen.getByTestId('si-learn-more')
+    expect(more.tagName).toBe('DETAILS')
+    expect(more).not.toHaveAttribute('open')
+    expect(within(more).getByText('Learn more')).toBeInTheDocument()
+    expect(within(more).getByRole('heading', { level: 3, name: 'What SI does in AstroFire' })).toBeInTheDocument()
+    expect(within(more).getByText('Run a live AI model')).toBeInTheDocument()
+    expect(within(more).getByRole('link', { name: /Read the documentation/ })).toHaveAttribute('href', '/research')
   })
 
-  it('adds the documentation link once the technical PDF link is set', async () => {
+  it('the Learn more link opens the technical PDF once it is set', async () => {
     await renderHome('https://example.org/astrofire-technical-docs.pdf')
     const si = within(screen.getByTestId('si-compact'))
     expect(screen.getByTestId('si-compact')).toHaveAttribute('id', 'si-usage')

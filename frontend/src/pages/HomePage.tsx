@@ -1,7 +1,7 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, Play } from 'lucide-react'
+import { ArrowRight, ChevronDown, Play } from 'lucide-react'
 import { RocketHeroBackdrop } from '../components/RocketHeroBackdrop'
 import { SkyLayer } from '../components/home/SkyLayer'
 import { PlanetHorizon } from '../components/home/PlanetHorizon'
@@ -310,7 +310,7 @@ function HelpsSection() {
 /**
  * How SI is used (NASA Space Apps disclosure); the footer "SI Usage" link lands here (#si-usage).
  * Short on purpose: the full disclosure lives in docs/technical-notes.md (for the technical PDF).
- * The documentation link appears once TECHNICAL_DOCS_PDF_URL is set.
+ * "Learn more" opens what SI does / does not do and the documentation link.
  */
 function SiUsageSection() {
   const rows = [
@@ -331,20 +331,59 @@ function SiUsageSection() {
               </div>
             ))}
           </dl>
-          {TECHNICAL_DOCS_PDF_URL ? (
-            <a
-              href={TECHNICAL_DOCS_PDF_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm text-focus hover:underline"
-            >
-              {SI_COMPACT.linkLabel}
-              <ArrowRight className="size-3.5" aria-hidden />
-            </a>
-          ) : null}
+
+          {/* "Learn more": what SI does / does not do, plus the documentation link. */}
+          <details className="group mt-6 border-t border-subtle pt-4" data-testid="si-learn-more">
+            <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-primary hover:text-[#F28C28] [&::-webkit-details-marker]:hidden">
+              <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+              Learn more
+            </summary>
+            <div className="mt-4 grid gap-6 sm:grid-cols-2">
+              <SiList title="What SI does in AstroFire" items={SI_COMPACT.does} mark="✓" tone="text-nominal" />
+              <SiList title="What it does not do" items={SI_COMPACT.doesNot} mark="×" tone="text-muted" />
+            </div>
+            <SiDocsLink />
+          </details>
         </div>
       </div>
     </section>
+  )
+}
+
+function SiList({ title, items, mark, tone }: { title: string; items: readonly string[]; mark: string; tone: string }) {
+  return (
+    <div>
+      <h3 className="text-sm font-medium text-primary">{title}</h3>
+      <ul className="mt-2 space-y-1.5">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-secondary">
+            <span className={`shrink-0 font-mono ${tone}`} aria-hidden="true">
+              {mark}
+            </span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** Technical PDF once published; until then, Research & Data (same rule as the hero "Documentation" button). */
+function SiDocsLink() {
+  const className = 'mt-5 inline-flex items-center gap-1.5 text-sm text-focus hover:underline'
+  if (TECHNICAL_DOCS_PDF_URL) {
+    return (
+      <a href={TECHNICAL_DOCS_PDF_URL} target="_blank" rel="noreferrer" className={className}>
+        {SI_COMPACT.linkLabel}
+        <ArrowRight className="size-3.5" aria-hidden />
+      </a>
+    )
+  }
+  return (
+    <Link to={LINKS.research} className={className}>
+      Read the documentation
+      <ArrowRight className="size-3.5" aria-hidden />
+    </Link>
   )
 }
 
