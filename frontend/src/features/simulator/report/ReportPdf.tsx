@@ -8,8 +8,10 @@ import { Defs, Document, Ellipse, LinearGradient, Link, Page, Path, Rect, Stop, 
 import {
   BRAND_COLORS,
   BRAND_FLAME_D,
+  BRAND_GAP_STROKE,
   BRAND_ORBIT,
   BRAND_ORBIT_FRONT_D,
+  BRAND_ORBIT_STROKE,
   BRAND_SPARKLE_D,
 } from '../../../components/brandGeometry'
 import { FIGURE_VIEWBOX, flameFigure } from './flameFigure'
@@ -44,7 +46,7 @@ const s = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
-  brandName: { fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 10, marginLeft: 5 },
+  brandName: { fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 10, marginLeft: 4 },
   title: { fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 20, lineHeight: 1.2 },
   titleRule: { width: 48, height: 2, backgroundColor: ORANGE, marginTop: 8, marginBottom: 8 },
   subtitle: { fontSize: 11.5, lineHeight: 1.4, color: GREY, marginBottom: 14 },
@@ -104,19 +106,20 @@ function monoSpaced(text: string) {
 function Logo() {
   const o = BRAND_ORBIT
   return (
-    <Svg width={18} height={18} viewBox="0 0 32 32">
+    <Svg width={12} height={12} viewBox="0 0 32 32">
       <Defs>
         <LinearGradient id="pdf-flame" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={BRAND_COLORS.amber} />
           <Stop offset="0.62" stopColor={BRAND_COLORS.orange} />
         </LinearGradient>
       </Defs>
-      {/* On white paper the light orbit would vanish, so it is drawn in dark ink here. */}
-      <Ellipse cx={o.cx} cy={o.cy} rx={o.rx} ry={o.ry} transform={`rotate(${o.rotate} ${o.cx} ${o.cy})`} fill="none" stroke={INK} strokeWidth={1.5} />
+      {/* Light-background version (logo-icon-light.svg): orbit and sparkle in #0A101C. */}
+      <Ellipse cx={o.cx} cy={o.cy} rx={o.rx} ry={o.ry} transform={`rotate(${o.rotate} ${o.cx} ${o.cy})`} fill="none" stroke={BRAND_COLORS.ink} strokeWidth={BRAND_ORBIT_STROKE} />
       <Path d={BRAND_FLAME_D} fill="url(#pdf-flame)" fillRule="evenodd" />
-      <Path d={BRAND_ORBIT_FRONT_D} fill="none" stroke="#FFFFFF" strokeWidth={3.6} strokeLinecap="round" />
-      <Path d={BRAND_ORBIT_FRONT_D} fill="none" stroke={INK} strokeWidth={1.5} strokeLinecap="round" />
-      <Path d={BRAND_SPARKLE_D} fill={ORANGE} />
+      {/* White stroke = the gap where the orbit crosses the flame (the page is white). */}
+      <Path d={BRAND_ORBIT_FRONT_D} fill="none" stroke="#FFFFFF" strokeWidth={BRAND_GAP_STROKE} strokeLinecap="round" />
+      <Path d={BRAND_ORBIT_FRONT_D} fill="none" stroke={BRAND_COLORS.ink} strokeWidth={BRAND_ORBIT_STROKE} strokeLinecap="round" />
+      <Path d={BRAND_SPARKLE_D} fill={BRAND_COLORS.ink} />
     </Svg>
   )
 }

@@ -1,45 +1,63 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { useId } from 'react'
-import { BRAND_FLAME_D as FLAME_D, BRAND_ORBIT_FRONT_D as ORBIT_FRONT_D, BRAND_SPARKLE_D as SPARKLE_D } from './brandGeometry'
+import {
+  BRAND_COLORS as C,
+  BRAND_FLAME_D,
+  BRAND_GAP_STROKE,
+  BRAND_ORBIT as O,
+  BRAND_ORBIT_FRONT_D,
+  BRAND_ORBIT_STROKE,
+  BRAND_SPARKLE_D,
+} from './brandGeometry'
+
+type Variant = 'dark' | 'light' | 'mono'
+
+const ORBIT_COLOR: Record<Variant, string> = { dark: C.orbit, light: C.ink, mono: C.orange }
+const SPARKLE_COLOR: Record<Variant, string> = { dark: '#FFFFFF', light: C.ink, mono: C.orange }
 
 /**
  * AstroFire mark: a flame whose base becomes a hollow sphere (a microgravity flame ball),
- * crossed by a tilted orbit, with a small four-point sparkle in the core.
- * Original vector artwork; deliberately unrelated to any NASA insignia.
- * Decorative next to the wordmark (the link carries the accessible name).
+ * crossed by a tilted orbit, with a four-point sparkle in the core.
+ * AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.
+ * Deliberately unrelated to any NASA insignia. Decorative next to the wordmark (the link carries the name).
  */
-export function BrandMark({ size = 24, mono = false }: { size?: number; mono?: boolean }) {
+export function BrandMark({ size = 24, variant = 'dark' }: { size?: number; variant?: Variant }) {
   const uid = useId().replace(/:/g, '')
   const gradientId = `af-flame-${uid}`
   const maskId = `af-gap-${uid}`
-  const orbit = mono ? '#F28C28' : '#E6ECF5'
+  const orbit = ORBIT_COLOR[variant]
 
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#F2B544" />
-          <stop offset="0.62" stopColor="#F28C28" />
+          <stop offset="0" stopColor={C.amber} />
+          <stop offset="0.62" stopColor={C.orange} />
         </linearGradient>
         {/* Cuts a gap in the flame where the front of the orbit crosses it. */}
         <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
           <rect width="32" height="32" fill="#fff" />
-          <path d={ORBIT_FRONT_D} fill="none" stroke="#000" strokeWidth="3.6" strokeLinecap="round" />
+          <path d={BRAND_ORBIT_FRONT_D} fill="none" stroke="#000" strokeWidth={BRAND_GAP_STROKE} strokeLinecap="round" />
         </mask>
       </defs>
       <ellipse
-        cx="16"
-        cy="20.5"
-        rx="14.8"
-        ry="4.5"
-        transform="rotate(-20 16 20.5)"
+        cx={O.cx}
+        cy={O.cy}
+        rx={O.rx}
+        ry={O.ry}
+        transform={`rotate(${O.rotate} ${O.cx} ${O.cy})`}
         fill="none"
         stroke={orbit}
-        strokeWidth="1.5"
+        strokeWidth={BRAND_ORBIT_STROKE}
       />
-      <path mask={`url(#${maskId})`} fill={mono ? '#F28C28' : `url(#${gradientId})`} fillRule="evenodd" d={FLAME_D} />
-      <path d={ORBIT_FRONT_D} fill="none" stroke={orbit} strokeWidth="1.5" strokeLinecap="round" />
-      <path fill={mono ? '#F28C28' : '#FFFFFF'} d={SPARKLE_D} />
+      <path
+        mask={`url(#${maskId})`}
+        fill={variant === 'mono' ? C.orange : `url(#${gradientId})`}
+        fillRule="evenodd"
+        d={BRAND_FLAME_D}
+      />
+      <path d={BRAND_ORBIT_FRONT_D} fill="none" stroke={orbit} strokeWidth={BRAND_ORBIT_STROKE} strokeLinecap="round" />
+      <path fill={SPARKLE_COLOR[variant]} d={BRAND_SPARKLE_D} />
     </svg>
   )
 }
