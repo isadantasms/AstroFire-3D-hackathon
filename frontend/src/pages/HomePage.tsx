@@ -1,7 +1,7 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, Play, UserCheck, Workflow, Wrench } from 'lucide-react'
+import { ArrowRight, GraduationCap, HardHat, Microscope, Play, UserCheck, Workflow, Wrench } from 'lucide-react'
 import { RocketHeroBackdrop } from '../components/RocketHeroBackdrop'
 import { SkyLayer } from '../components/home/SkyLayer'
 import { PlanetHorizon } from '../components/home/PlanetHorizon'
@@ -10,10 +10,7 @@ import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences
 import { DOCUMENTATION_SI_URL, LINKS } from '../app/routes'
 import { EXPERIMENTS_SNAPSHOT } from '../data/experimentsSnapshot'
 import { INVESTIGATIONS } from '../content/investigations'
-import { SI_COMPACT } from '../content/project'
-
-// TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
-const PITCH_VIDEO_URL = '#'
+import { PITCH_VIDEO_URL, SI_COMPACT } from '../content/project'
 
 /** Entrance order: 80 ms between elements. */
 function stagger(step: number): CSSProperties {
@@ -34,6 +31,7 @@ export function HomePage() {
       <SkyLayer />
       <Hero />
       <HelpsSection />
+      <AudienceSection />
       <SiUsageSection />
       <EvidenceSection />
       <ClosingSection />
@@ -43,7 +41,7 @@ export function HomePage() {
 
 function DocumentationButton() {
   const className =
-    'inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label'
+    'inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label'
   // The Documentation page gives access to the full technical PDF.
   return (
     <Link to={LINKS.documentation} className={className}>
@@ -72,10 +70,10 @@ function LaunchSimulatorButton() {
 function Hero() {
   return (
     // Full viewport height below the sticky header, with a floor for short screens.
-    <section className="relative isolate h-[calc(100svh-3.5rem)] min-h-[560px]" aria-labelledby="hero-title">
+    <section className="relative isolate h-[calc(100svh-3.5rem)] min-h-[560px] short:min-h-[340px]" aria-labelledby="hero-title">
       <RocketHeroBackdrop />
       <PlanetHorizon />
-      <div className="relative mx-auto flex h-full max-w-4xl flex-col items-center justify-center px-4 pt-10 pb-36 text-center sm:px-6">
+      <div className="relative mx-auto flex h-full max-w-4xl flex-col items-center justify-center px-4 pt-10 pb-36 text-center sm:px-6 short:pt-4 short:pb-8">
         <div data-rocket-avoid className="flex flex-col items-center">
         <p className="hero-rise font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase" style={stagger(0)}>
           <span className="text-brand" aria-hidden>
@@ -86,7 +84,7 @@ function Hero() {
 
         <h1
           id="hero-title"
-          className="hero-rise mt-6 text-[2.5rem] leading-[1.05] font-semibold tracking-[-0.02em] text-primary sm:text-6xl lg:text-[4.25rem]"
+          className="hero-rise mt-6 text-[2.5rem] leading-[1.05] font-semibold tracking-[-0.02em] text-primary sm:text-6xl lg:text-[4.25rem] short:mt-3 short:text-[2.25rem]!"
           style={stagger(1)}
         >
           Make the next giant leap{' '}
@@ -98,17 +96,17 @@ function Hero() {
           </span>
         </h1>
 
-        <p className="hero-rise mt-6 max-w-2xl text-base leading-relaxed text-secondary sm:text-lg" style={stagger(2)}>
+        <p className="hero-rise mt-6 max-w-2xl text-base leading-relaxed text-secondary sm:text-lg short:mt-3 short:text-base!" style={stagger(2)}>
           Turn complex space fire research into clear answers: simulate scenarios, compare
           investigations and get cited safety guidance in seconds.
         </p>
 
-        <div className="hero-rise mt-10 flex flex-wrap items-center justify-center gap-3" style={stagger(3)}>
+        <div className="hero-rise mt-10 flex flex-wrap items-center justify-center gap-3 short:mt-5" style={stagger(3)}>
           <LaunchSimulatorButton />
           <DocumentationButton />
           <a
             href={PITCH_VIDEO_URL}
-            className="inline-flex items-center gap-2 rounded-[10px] px-3 py-3 text-sm text-secondary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:text-primary"
+            className="inline-flex min-h-11 items-center gap-2 rounded-[10px] px-3 text-sm text-secondary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:text-primary"
           >
             <Play className="size-3.5 fill-current" aria-hidden />
             Watch the 30s pitch
@@ -386,7 +384,7 @@ function HelpsSection() {
                 <button
                   type="button"
                   onClick={() => select(i + 1, true)}
-                  className="relative mt-8 inline-flex items-center gap-1.5 text-sm text-secondary transition-colors hover:text-primary"
+                  className="relative mt-6 inline-flex min-h-11 items-center gap-1.5 text-sm text-secondary transition-colors hover:text-primary"
                 >
                   Next: {STEPS[i + 1].name.toLowerCase()}
                   <ArrowRight className="size-3.5" aria-hidden />
@@ -400,6 +398,39 @@ function HelpsSection() {
         <div data-reveal style={stagger(4)} className="reveal lg:col-start-1 lg:row-start-2">
           <LaunchSimulatorButton />
         </div>
+      </div>
+    </section>
+  )
+}
+
+const AUDIENCE = [
+  { name: 'Students', text: 'See why fire behaves differently in microgravity.', Icon: GraduationCap },
+  { name: 'Researchers', text: 'Compare NASA investigations and their findings.', Icon: Microscope },
+  { name: 'Engineers', text: 'Explore material and ventilation scenarios for crewed habitats.', Icon: HardHat },
+]
+
+/** "Who it's for": the three audiences, in short columns (stacked on small screens). */
+function AudienceSection() {
+  return (
+    <section id="audience" className="relative scroll-mt-16" aria-labelledby="audience-title">
+      <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
+        <SideHeader id="audience" label="Audience" title="Who it’s for" />
+        <ul data-reveal style={stagger(2)} className="reveal mt-8 grid gap-4 md:grid-cols-3">
+          {AUDIENCE.map(({ name, text, Icon }) => (
+            <li key={name} className={`flex gap-4 p-5 ${PANEL}`}>
+              <span
+                aria-hidden="true"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-subtle text-label"
+              >
+                <Icon className="size-5" strokeWidth={1.75} />
+              </span>
+              <div>
+                <h3 className="text-base font-semibold text-primary">{name}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )
@@ -455,7 +486,7 @@ function SiUsageSection() {
 
 /** SI section of the technical PDF once published; until then, the documentation card on the Documentation page. */
 function SiDocsLink() {
-  const className = 'mt-5 inline-flex items-center gap-1.5 text-sm text-focus hover:underline'
+  const className = 'mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm text-focus hover:underline'
   if (DOCUMENTATION_SI_URL) {
     return (
       <a href={DOCUMENTATION_SI_URL} target="_blank" rel="noreferrer" className={className}>
@@ -477,7 +508,7 @@ function EvidenceSection() {
   const facts = [
     `${EXPERIMENTS_SNAPSHOT.length} BASS-II tests from NASA PSI`,
     `${INVESTIGATIONS.length} NASA investigations compared by habitat`,
-    'Every source cited',
+    'Sources cited',
   ]
   return (
     <section className="relative" aria-labelledby="evidence-title" data-testid="evidence-strip">
@@ -496,7 +527,7 @@ function EvidenceSection() {
               <li key={f}>{f}</li>
             ))}
           </ul>
-          <Link to={LINKS.documentation} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-focus hover:underline">
+          <Link to={LINKS.documentation} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-sm text-focus hover:underline">
             Explore the research
             <ArrowRight className="size-3.5" aria-hidden />
           </Link>
@@ -520,17 +551,6 @@ function LegendBadge({ tone, children }: { tone: string; children: ReactNode }) 
   return <span className={`rounded-md border px-1.5 py-0.5 text-[0.6875rem] ${tone}`}>{children}</span>
 }
 
-function ExploreResearchButton() {
-  return (
-    <Link
-      to={LINKS.documentation}
-      className="inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label"
-    >
-      Explore Research
-    </Link>
-  )
-}
-
 function ClosingSection() {
   return (
     <section className="relative" aria-labelledby="closing-title">
@@ -549,7 +569,7 @@ function ClosingSection() {
           </div>
           <div data-rocket-avoid className="flex shrink-0 flex-wrap items-center gap-3">
             <LaunchSimulatorButton />
-            <ExploreResearchButton />
+            <DocumentationButton />
           </div>
         </div>
       </div>

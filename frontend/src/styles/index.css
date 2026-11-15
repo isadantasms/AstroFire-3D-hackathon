@@ -11,6 +11,9 @@
  */
 @import 'tailwindcss' source('..');
 
+/* Short viewports (landscape phones, 200% zoom): used by the Home hero so its buttons stay above the fold. */
+@custom-variant short (@media (max-height: 500px));
+
 :root {
   /* Surfaces */
   --bg-void: #0a101c;
@@ -322,5 +325,39 @@
 @media (prefers-reduced-motion: reduce) {
   .step-in {
     animation: none !important;
+  }
+}
+
+/*
+ * Phone text floor (< 640px). Reading text is at least 14px and uppercase decorative labels at least 12px.
+ * Unlayered on purpose so it wins over the small size utilities; desktop sizes are unchanged.
+ */
+@media (max-width: 639.98px) {
+  :is(.text-xs, .text-\[0\.625rem\], .text-\[0\.65rem\], .text-\[0\.6875rem\], .text-\[0\.75rem\], .text-\[0\.8125rem\]) {
+    font-size: 0.875rem;
+  }
+  :is(.text-xs, .text-\[0\.625rem\], .text-\[0\.65rem\], .text-\[0\.6875rem\], .text-\[0\.75rem\], .text-\[0\.8125rem\]).uppercase {
+    font-size: 0.75rem;
+  }
+}
+
+/* Simulator below lg: the Run Simulation bar is fixed at the bottom, so the footer keeps clear of it. */
+@media (max-width: 1023.98px) {
+  body:has([data-run-bar]) footer {
+    padding-bottom: 5rem;
+  }
+}
+
+/*
+ * Touch targets: buttons, links shown as boxes, summaries and form fields are at least 44×44px.
+ * Components layer with zero specificity, so explicit size utilities still win. Inline links inside
+ * sentences are not affected (min-height does not apply to inline boxes).
+ */
+@layer components {
+  :where(button, summary, select, a[href], input:not([type='range'], [type='checkbox'], [type='radio'])) {
+    min-height: 2.75rem;
+  }
+  :where(button, summary) {
+    min-width: 2.75rem;
   }
 }

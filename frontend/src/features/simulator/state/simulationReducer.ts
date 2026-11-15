@@ -125,6 +125,7 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
     case 'applyPreset':
       return {
         ...state,
+        chamber: { ...IDLE_CHAMBER, cycle: state.chamber.cycle + 1 },
         draft: {
           ...action.draft,
           thickness_mm: action.material?.nominal_thickness_mm ?? null,

@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Check, ChevronDown, Play } from 'lucide-react'
 import type { MaterialInfo } from '../../../types/catalog'
 import { clamp, fmt } from '../../../lib/format'
-import { AIRFLOW_SLIDER, GRAVITY_OPTIONS, O2_SLIDER } from '../presets'
+import { AIRFLOW_SLIDER, GRAVITY_OPTIONS, O2_SLIDER, SCENARIO_PRESETS, type ScenarioPreset } from '../presets'
 import { BASS2_RANGES } from '../../../data/experimentsSnapshot'
 import type { DraftInputs, SimulationAction } from '../state/simulationReducer'
 
@@ -15,6 +15,8 @@ interface MissionControlsProps {
   running: boolean
   dispatch: (action: SimulationAction) => void
   onRun: () => void
+  /** Fills the controls with a sample scenario (and runs it in mock mode, see SimulatorPage). */
+  onPreset: (preset: ScenarioPreset) => void
 }
 
 function splitMaterialLabel(raw: string): { title: string; subtitle: string | null } {
@@ -25,7 +27,7 @@ function splitMaterialLabel(raw: string): { title: string; subtitle: string | nu
   return { title, subtitle: subtitle || null }
 }
 
-export function MissionControls({ draft, materials, resultThicknessMm, running, dispatch, onRun }: MissionControlsProps) {
+export function MissionControls({ draft, materials, resultThicknessMm, running, dispatch, onRun, onPreset }: MissionControlsProps) {
   const materialLabelId = useId()
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
@@ -55,6 +57,33 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
     <div className="flex h-full min-h-0 flex-col">
       <div className="relative flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-1 pb-4">
         <h2 className="text-base font-semibold text-primary">Mission controls</h2>
+
+        <div>
+          <p className="mb-2 text-xs text-secondary">Sample scenarios</p>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Sample scenarios">
+            {SCENARIO_PRESETS.map((p) => {
+              const active =
+                p.material_id === draft.material_id &&
+                p.gravity_g === draft.gravity_g &&
+                p.o2_pct === draft.o2_pct &&
+                p.airflow_cm_s === draft.airflow_cm_s
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-pressed={active}
+                  disabled={running}
+                  onClick={() => onPreset(p)}
+                  className={`inline-flex min-h-11 items-center rounded-full border px-3 text-xs transition-colors disabled:opacity-60 ${
+                    active ? 'border-focus bg-elevated font-medium text-primary' : 'border-subtle bg-void text-secondary hover:text-primary'
+                  }`}
+                >
+                  {p.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         <div>
           <p id={materialLabelId} className="mb-2 text-xs text-secondary">
@@ -164,7 +193,7 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
                   aria-checked={active}
                   aria-label={`${g.label}, ${g.value} g`}
                   onClick={() => dispatch({ type: 'setGravity', gravity_g: g.value })}
-                  className={`rounded-md px-1 py-1.5 text-center transition-colors ${
+                  className={`min-h-11 rounded-md px-1 py-1.5 text-center transition-colors ${
                     active ? 'bg-elevated text-primary' : 'text-secondary hover:text-primary'
                   }`}
                 >
@@ -199,8 +228,11 @@ export function MissionControls({ draft, materials, resultThicknessMm, running, 
         />
       </div>
 
-      {/* Always visible at the base of the column. */}
-      <div className="shrink-0 border-t border-subtle pt-3">
+      {/* Always visible: fixed at the bottom of the screen below lg, at the base of the column from lg. */}
+      <div
+        data-run-bar
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-subtle bg-hero/95 px-4 py-3 backdrop-blur-sm lg:static lg:z-auto lg:shrink-0 lg:bg-transparent lg:px-0 lg:pt-3 lg:pb-0 lg:backdrop-blur-none"
+      >
         <button
           type="button"
           onClick={onRun}
@@ -249,9 +281,9 @@ function RangeControl({ label, unit, ariaUnit, value, slider, digits, tested, on
             step={slider.step}
             value={value}
             onChange={(e) => commit(e.target.value)}
-            className="w-16 rounded-md border border-subtle bg-void px-1.5 py-0.5 text-right font-mono text-sm text-primary tabular-nums focus:border-focus"
+            className="h-11 w-16 rounded-md border border-subtle bg-void px-1.5 text-right font-mono text-sm text-primary tabular-nums focus:border-focus"
           />
-          <span className="w-8 font-mono text-xs text-muted">{unit}</span>
+          <span className="min-w-8 font-mono text-xs whitespace-nowrap text-muted">{unit}</span>
         </span>
       </div>
       <input
@@ -263,7 +295,7 @@ function RangeControl({ label, unit, ariaUnit, value, slider, digits, tested, on
         value={clamp(value, slider.min, slider.max)}
         aria-valuetext={`${fmt(value, digits)} ${ariaUnit}`}
         onChange={(e) => commit(e.target.value)}
-        className="mt-2 w-full accent-[var(--brand-orange)]"
+        className="mt-2 w-full accent-[var(--brand-orange)] max-lg:h-11"
       />
       <div className="flex justify-between font-mono text-[0.625rem] text-muted tabular-nums">
         <span>{slider.min}</span>

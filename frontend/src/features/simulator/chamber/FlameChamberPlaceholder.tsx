@@ -178,10 +178,14 @@ export function FlameChamberPlaceholder({
               {viewMode === 'webgl' && unity === 'checking' ? <ChamberNotice>Connecting to the 3D view…</ChamberNotice> : null}
               {viewMode === 'webgl' && unity === 'unavailable' ? (
                 <ChamberNotice testId="unity-unavailable">
-                  3D view unavailable: the Unity WebGL build is not responding. Showing the static view.
-                  <button type="button" onClick={retry} className="ml-2 text-focus hover:underline">
-                    Retry
-                  </button>
+                  {/* Phones and small tablets (< 768px): point to the desktop browser instead of a retry. */}
+                  <span className="md:hidden">For the full 3D chamber, open AstroFire 3D on a desktop browser.</span>
+                  <span className="hidden md:inline">
+                    3D view unavailable: the Unity WebGL build is not responding. Showing the static view.
+                    <button type="button" onClick={retry} className="ml-1 inline-flex min-h-11 items-center px-1 text-focus hover:underline">
+                      Retry
+                    </button>
+                  </span>
                 </ChamberNotice>
               ) : null}
             </>
@@ -277,7 +281,7 @@ function DischargeButton({ blocked, onDischarge }: { blocked: string | null; onD
       onClick={onDischarge}
       disabled={blocked !== null}
       aria-describedby={describedBy}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-focus bg-focus px-3.5 py-1.5 text-xs font-semibold text-hero shadow-sm transition-colors hover:bg-focus/90 disabled:cursor-not-allowed disabled:border-subtle disabled:bg-transparent disabled:text-muted disabled:shadow-none"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-focus bg-focus px-3.5 py-1.5 text-xs font-semibold text-hero shadow-sm transition-colors hover:bg-focus/90 disabled:cursor-not-allowed disabled:border-subtle disabled:bg-transparent disabled:text-muted disabled:shadow-none"
     >
       <Droplets className="size-3.5" aria-hidden />
       Discharge FWM PFE

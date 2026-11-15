@@ -56,39 +56,29 @@ export function ReportPanel({ report, onClose, onDownload, downloading, download
   return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end">
       <div data-testid="report-backdrop" className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden />
+      {/*
+        Below sm the whole dialog scrolls: the title row with the actions stays pinned (sticky) and the
+        scenario metadata scrolls away with the report, so the reading area is not squeezed.
+      */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex h-full w-full flex-col border-l border-subtle bg-hero shadow-2xl lg:w-[60vw]"
+        className="relative flex h-full w-full flex-col overflow-y-auto border-l border-subtle bg-hero shadow-2xl sm:overflow-hidden lg:w-[60vw]"
       >
-        <header className="shrink-0 border-b border-subtle px-5 py-4 sm:px-8">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h2 id={titleId} className="text-lg font-semibold text-primary">
-                {report.title}
-              </h2>
-              <p className="mt-0.5 text-sm text-secondary">{report.subtitle}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
-                <span className="font-mono break-all text-secondary">{report.scenarioId}</span>
-                <span aria-hidden>·</span>
-                <span className="font-mono tabular-nums">{formatDateTime(report.generatedAt)}</span>
-                <span aria-hidden>·</span>
-                <span className={report.mock ? 'text-warning' : 'text-secondary'}>{report.mode}</span>
-                {report.mockNote ? <span data-testid="report-mock-note">· {report.mockNote}</span> : null}
-              </div>
-              <p className="mt-1 text-[0.6875rem] text-muted" data-testid="report-provenance">
-                {PROVENANCE}
-              </p>
-            </div>
+        <header className="contents sm:block sm:shrink-0 sm:border-b sm:border-subtle sm:px-8 sm:py-4">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-subtle bg-hero px-4 py-2 sm:static sm:items-start sm:border-0 sm:p-0">
+            <h2 id={titleId} className="min-w-0 text-base font-semibold text-primary sm:text-lg">
+              {report.title}
+            </h2>
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={onDownload}
                 disabled={downloading}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-subtle px-3 py-1.5 text-xs text-primary transition-colors hover:border-label disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-subtle px-3 text-sm text-primary transition-colors hover:border-label disabled:cursor-wait disabled:opacity-60 sm:text-xs"
               >
-                <Download className="size-3.5" aria-hidden />
+                <Download className="size-4 sm:size-3.5" aria-hidden />
                 {downloading ? 'Preparing PDF…' : 'Download PDF'}
               </button>
               <button
@@ -96,20 +86,34 @@ export function ReportPanel({ report, onClose, onDownload, downloading, download
                 type="button"
                 onClick={onClose}
                 aria-label="Close report"
-                className="rounded-lg border border-subtle p-1.5 text-secondary transition-colors hover:text-primary"
+                className="inline-flex size-11 items-center justify-center rounded-lg border border-subtle text-secondary transition-colors hover:text-primary"
               >
                 <X className="size-4" aria-hidden />
               </button>
             </div>
           </div>
-          {downloadError ? (
-            <p role="alert" className="mt-2 text-xs text-critical">
-              {downloadError}
+          <div className="shrink-0 border-b border-subtle px-4 py-3 sm:border-0 sm:p-0">
+            <p className="text-sm text-secondary sm:mt-0.5">{report.subtitle}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+              <span className="font-mono break-all text-secondary">{report.scenarioId}</span>
+              <span aria-hidden>·</span>
+              <span className="font-mono tabular-nums">{formatDateTime(report.generatedAt)}</span>
+              <span aria-hidden>·</span>
+              <span className={report.mock ? 'text-warning' : 'text-secondary'}>{report.mode}</span>
+              {report.mockNote ? <span data-testid="report-mock-note">· {report.mockNote}</span> : null}
+            </div>
+            <p className="mt-1 text-[0.6875rem] text-muted" data-testid="report-provenance">
+              {PROVENANCE}
             </p>
-          ) : null}
+            {downloadError ? (
+              <p role="alert" className="mt-2 text-xs text-critical">
+                {downloadError}
+              </p>
+            ) : null}
+          </div>
         </header>
 
-        <article data-testid="report-body" className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">
+        <article data-testid="report-body" className="shrink-0 px-4 py-6 sm:min-h-0 sm:flex-1 sm:shrink sm:overflow-y-auto sm:px-8">
           <div className="mx-auto max-w-3xl space-y-9 text-sm leading-relaxed text-secondary">
             <section aria-labelledby="report-abstract" className="rounded-xl border border-subtle bg-panel/70 p-4">
               <h3 id="report-abstract" className="text-sm font-semibold text-primary">
