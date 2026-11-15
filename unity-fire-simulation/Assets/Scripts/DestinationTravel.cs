@@ -497,7 +497,12 @@ namespace FireSimulation
 
         public void SkipAnimation()
         {
-            if(IsTravelling) SkipJourney();
+            if (IsTravelling || RequestedDestination != ArrivedDestination)
+            {
+                if (!IsTravelling || RequestedDestination != FlightDestination)
+                    FlightDestination = RequestedDestination;
+                SkipJourney();
+            }
         }
 
         void SkipJourney()

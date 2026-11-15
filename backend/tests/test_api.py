@@ -7,6 +7,7 @@ Verifies 1:1 compliance with contracts/simulation_schema.json and NASA/TM-202100
 """
 import json
 import pathlib
+import unittest
 from backend.app.main import (
     get_experiments,
     get_health,
@@ -16,6 +17,7 @@ from backend.app.main import (
     get_presets,
     post_simulate,
 )
+from backend.app.physics_engine import MATERIAL_CATALOG, MATERIAL_SUPPRESSION_PROTOCOLS
 from backend.app.schemas import SimulationRequest
 
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent.parent / "contracts" / "simulation_schema.json"
@@ -122,6 +124,59 @@ def test_presets_and_investigations() -> None:
     assert inv_iss["investigations"][0]["investigation_id"] == "BASS-II"
 
 
+def test_material_protocols_and_live_pinn_twin() -> None:
+    assert set(MATERIAL_SUPPRESSION_PROTOCOLS.keys()) == set(MATERIAL_CATALOG.keys())
+    non_pmma = {"cotton_fiberglass_sibal", "nomex_iii_fabric", "japan_wax_candle"}
+    for mat_id in MATERIAL_CATALOG:
+        res = post_simulate(
+            SimulationRequest(
+                material_id=mat_id,
+                gravity_g=0.0,
+                o2_pct=28.0,
+                airflow_cm_s=8.0,
+            )
+        ).model_dump()
+        validate_against_contract_keys(res)
+        copilot = res["safety_copilot"]
+        assert "STEP 2:" in copilot["suppression_action"]
+        assert MATERIAL_SUPPRESSION_PROTOCOLS[mat_id]["step2_action"] in copilot["suppression_action"]
+        if mat_id in non_pmma:
+            assert "methylmethacrylate vapor jetting" not in copilot["suppression_action"]
+        else:
+            assert "methylmethacrylate vapor jetting" in copilot["suppression_action"]
+        assert "Closest ISS Twin:" in copilot["diagnosis"]
+        assert "±" in copilot["diagnosis"]
+        assert "mm/s" in copilot["diagnosis"]
+        assert "Closest ISS Twin:" in copilot["scientific_limitations"]
+        assert "±" in copilot["scientific_limitations"]
+
+
+class TestBackendAPI(unittest.TestCase):
+    def test_health_and_experiments(self) -> None:
+        test_health_and_experiments()
+
+    def test_quiescent_0g_spherical_blue_flame(self) -> None:
+        test_quiescent_0g_spherical_blue_flame()
+
+    def test_lunar_ventilated_elongated_orange_flame(self) -> None:
+        test_lunar_ventilated_elongated_orange_flame()
+
+    def test_hypoxia_extinction_below_loi(self) -> None:
+        test_hypoxia_extinction_below_loi()
+
+    def test_direct_empirical_bass2_match(self) -> None:
+        test_direct_empirical_bass2_match()
+
+    def test_pinn_model_metrics(self) -> None:
+        test_pinn_model_metrics()
+
+    def test_presets_and_investigations(self) -> None:
+        test_presets_and_investigations()
+
+    def test_material_protocols_and_live_pinn_twin(self) -> None:
+        test_material_protocols_and_live_pinn_twin()
+
+
 if __name__ == "__main__":
     test_health_and_experiments()
     test_quiescent_0g_spherical_blue_flame()
@@ -130,5 +185,6 @@ if __name__ == "__main__":
     test_direct_empirical_bass2_match()
     test_pinn_model_metrics()
     test_presets_and_investigations()
+    test_material_protocols_and_live_pinn_twin()
     print("ALL BACKEND CONTRACT, PHYSICS, PRESETS, INVESTIGATIONS & PINN TESTS PASSED!")
 

@@ -99,6 +99,79 @@ MATERIAL_CATALOG: dict[str, dict[str, Any]] = {
     },
 }
 
+MATERIAL_SUPPRESSION_PROTOCOLS: dict[str, dict[str, str]] = {
+    "pmma_clear_slab": {
+        "physical_mechanism": (
+            "subsurface molten acrylic bubble nucleation and methylmethacrylate monomer vapor jetting "
+            "(Miller & Wichman, NASA/TM-20210011385 Sec. 5)"
+        ),
+        "step2_action": (
+            "STEP 2: Maintain suppression until subsurface cast-slab bubble layer solidifies to stop "
+            "methylmethacrylate vapor jetting (Miller & Wichman, NASA/TM-20210011385 Sec. 5)."
+        ),
+    },
+    "pmma_thin_film": {
+        "physical_mechanism": (
+            "thermally thin pyrolysis front with molten polymer edge beading and methylmethacrylate vapor release "
+            "(Bhattacharjee, NASA/TM-20210011385 Sec. 2)"
+        ),
+        "step2_action": (
+            "STEP 2: Cool thermally thin pyrolysis edge beads until film temperature drops below "
+            "methylmethacrylate vapor jetting and re-ignition threshold (Bhattacharjee, NASA/TM-20210011385 Sec. 2)."
+        ),
+    },
+    "cotton_fiberglass_sibal": {
+        "physical_mechanism": (
+            "cotton cellulose pyrolysis over an inert fiberglass weave that retains incandescent carbonaceous char "
+            "(T'ien, NASA/TM-20210011385 Sec. 7)"
+        ),
+        "step2_action": (
+            "STEP 2: Quench exposed fiberglass weave and residual carbonaceous char to prevent smoldering "
+            "re-ignition of cotton cellulose fibers (T'ien, NASA/TM-20210011385 Sec. 7)."
+        ),
+    },
+    "pmma_rod": {
+        "physical_mechanism": (
+            "axisymmetric subsurface bubble layer and deep thermal soak in the 6.35 mm cylindrical core driving "
+            "methylmethacrylate vapor jetting (Olson, NASA/TM-20210011385 Sec. 6)"
+        ),
+        "step2_action": (
+            "STEP 2: Enforce 9+ min cylindrical solid-core cooldown until subsurface bubble layer stops "
+            "methylmethacrylate vapor jetting (Olson, NASA/TM-20210011385 Sec. 6.1.3)."
+        ),
+    },
+    "pmma_black_rod": {
+        "physical_mechanism": (
+            "carbon-doped high-absorptivity radiative surface heating and subsurface methylmethacrylate vapor jetting "
+            "(Fernandez-Pello, NASA/TM-20210011385 Sec. 4)"
+        ),
+        "step2_action": (
+            "STEP 2: Cool carbon-doped high-absorptivity acrylic rod core until subsurface bubble layer stops "
+            "methylmethacrylate vapor jetting (Fernandez-Pello, NASA/TM-20210011385 Sec. 4)."
+        ),
+    },
+    "nomex_iii_fabric": {
+        "physical_mechanism": (
+            "meta-aramid intumescent char barrier swelling and high-LOI radiative self-quenching "
+            "(Ferkul, NASA/TM-20210011385 Sec. 3.1)"
+        ),
+        "step2_action": (
+            "STEP 2: Inspect meta-aramid intumescent char barrier integrity and isolate adjacent radiant heat "
+            "sources to prevent char breakthrough (Ferkul, NASA/TM-20210011385 Sec. 3.1)."
+        ),
+    },
+    "japan_wax_candle": {
+        "physical_mechanism": (
+            "capillary liquid wax wick transport and hemispherical paraffin vapor diffusion flame "
+            "(Ferkul, NASA/TM-20210011385 Sec. 3.1)"
+        ),
+        "step2_action": (
+            "STEP 2: Cool porous candle wick and solidify molten Japan wax capillary pool to halt hemispherical "
+            "paraffin vapor evaporation (Ferkul, NASA/TM-20210011385 Sec. 3.1)."
+        ),
+    },
+}
+
 
 def load_empirical_records() -> list[dict[str, Any]]:
     if not DATA_PATH.exists():
@@ -240,6 +313,135 @@ def compute_suppression_estimate(
     )
 
 
+def find_closest_iss_twin(
+    material_id: str,
+    thickness_mm: float,
+    airflow_cm_s: float,
+    o2_pct: float,
+    matched_row: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Finds the closest empirical test record across the 79 verified ISS BASS-II states in EMPIRICAL_CACHE.
+    """
+    if matched_row is not None:
+        return matched_row
+    candidates = [r for r in EMPIRICAL_CACHE if r.get("material_id") == material_id] or EMPIRICAL_CACHE
+    if not candidates:
+        return {
+            "test_id": "BASS2-M1",
+            "material_id": material_id,
+            "thickness_mm": thickness_mm,
+            "width_cm": 2.0,
+            "flow_direction": "Opposed",
+            "airflow_cm_s": airflow_cm_s,
+            "initial_o2_pct": o2_pct,
+            "spread_rate_mm_s": 0.0,
+        }
+    return min(
+        candidates,
+        key=lambda row: (
+            abs(float(row.get("initial_o2_pct", 21.0)) - o2_pct) / 5.0
+            + abs(float(row.get("airflow_cm_s", 0.0)) - airflow_cm_s) / 10.0
+            + abs(float(row.get("thickness_mm", thickness_mm)) - thickness_mm)
+            / max(0.1, float(row.get("thickness_mm", thickness_mm)))
+        ),
+    )
+
+
+_PINN_RUNTIME_CACHE: Optional[tuple[Any, Any, float]] = None
+
+
+def _get_pinn_runtime() -> tuple[Any, Any, float]:
+    """
+    Loads and caches the trained PhysicsInformedClassifier, PhysicsInformedSpreadPINN, and CV MAE (mm/s)
+    directly from backend.app.ml_pipeline and its persisted weights/metrics JSON artifacts.
+    """
+    global _PINN_RUNTIME_CACHE
+    if _PINN_RUNTIME_CACHE is not None:
+        return _PINN_RUNTIME_CACHE
+
+    from .ml_pipeline import (
+        METRICS_OUTPUT_PATH,
+        WEIGHTS_OUTPUT_PATH,
+        PhysicsInformedClassifier,
+        PhysicsInformedSpreadPINN,
+    )
+
+    clf = PhysicsInformedClassifier(seed=2026)
+    pinn = PhysicsInformedSpreadPINN(hidden_dim=8, seed=2026)
+    mae_mm_s = 0.0549
+
+    if WEIGHTS_OUTPUT_PATH.exists():
+        weights_data = json.loads(WEIGHTS_OUTPUT_PATH.read_text(encoding="utf-8"))
+        cw = weights_data.get("classifier_weights", {})
+        for key in ("w_o2_margin", "w_quench_margin", "w_inv_thick", "bias"):
+            if key in cw:
+                setattr(clf, key, float(cw[key]))
+
+        pw = weights_data.get("pinn_regressor_weights", {})
+        if "hidden_dim" in pw and int(pw["hidden_dim"]) != pinn.hidden_dim:
+            pinn = PhysicsInformedSpreadPINN(hidden_dim=int(pw["hidden_dim"]), seed=2026)
+        if "prior_scale" in pw:
+            pinn.prior_scale = float(pw["prior_scale"])
+        if "w2" in pw:
+            pinn.w2 = [float(v) for v in pw["w2"]]
+        if "b2" in pw:
+            pinn.b2 = float(pw["b2"])
+        if "w1" in pw:
+            pinn.w1 = [[float(v) for v in row] for row in pw["w1"]]
+        if "b1" in pw:
+            pinn.b1 = [float(v) for v in pw["b1"]]
+
+    if METRICS_OUTPUT_PATH.exists():
+        metrics_data = json.loads(METRICS_OUTPUT_PATH.read_text(encoding="utf-8"))
+        reg_metrics = metrics_data.get("regression_metrics", {})
+        if "mae_mm_s" in reg_metrics:
+            mae_mm_s = float(reg_metrics["mae_mm_s"])
+
+    _PINN_RUNTIME_CACHE = (clf, pinn, mae_mm_s)
+    return _PINN_RUNTIME_CACHE
+
+
+def evaluate_live_pinn_inference(
+    material: dict[str, Any],
+    thickness_mm: float,
+    gravity_g: float,
+    o2_pct: float,
+    airflow_cm_s: float,
+    burn_rate_mm_s: float,
+    is_extinguished: bool,
+    twin_row: dict[str, Any],
+    matched_row: Optional[dict[str, Any]] = None,
+) -> tuple[float, float, float]:
+    """
+    Runs live PINN sustained-flame probability and spread rate inference by directly reusing
+    extract_physical_features and the persisted PINN weights from backend.app.ml_pipeline.
+    Returns (sustained_prob_pct, pinn_spread_mm_s, mae_mm_s).
+    """
+    from .ml_pipeline import extract_physical_features
+
+    clf, pinn, mae_mm_s = _get_pinn_runtime()
+    ref_row = matched_row if matched_row is not None else twin_row
+    live_record: dict[str, Any] = {
+        "material_id": material["material_id"],
+        "material_name": ref_row.get("material_name", material["material_name"]),
+        "thickness_mm": thickness_mm,
+        "width_cm": float(ref_row.get("width_cm") or 2.0),
+        "flow_direction": str(ref_row.get("flow_direction") or "Opposed"),
+        "gravity_g": gravity_g,
+        "airflow_cm_s": airflow_cm_s,
+        "initial_o2_pct": o2_pct,
+        "final_o2_pct": matched_row.get("final_o2_pct") if matched_row is not None else None,
+        "spread_rate_mm_s": burn_rate_mm_s,
+    }
+    feat = extract_physical_features(live_record)
+    prob = clf.predict_proba(feat)
+    if not is_extinguished and feat["physics_prior_vf_mm_s"] <= 0.0 and burn_rate_mm_s > 0.0:
+        feat["physics_prior_vf_mm_s"] = burn_rate_mm_s
+    pinn_vf = 0.0 if is_extinguished else pinn.predict(feat)
+    return round(prob * 100.0, 1), round(pinn_vf, 3), round(mae_mm_s, 3)
+
+
 def run_simulation(req: SimulationRequest) -> SimulationContractResponse:
     material = MATERIAL_CATALOG.get(req.material_id, MATERIAL_CATALOG["pmma_clear_slab"])
     thickness_mm = round(float(req.thickness_mm or material["nominal_thickness_mm"]), 3)
@@ -325,45 +527,82 @@ def run_simulation(req: SimulationRequest) -> SimulationContractResponse:
         else:
             risk_label = "Critical Flashover Risk"
 
+    # Resolve material-specific physical mechanism & STEP 2 protocol (NASA/TM-20210011385)
+    mat_protocol = MATERIAL_SUPPRESSION_PROTOCOLS.get(
+        material["material_id"],
+        MATERIAL_SUPPRESSION_PROTOCOLS["pmma_clear_slab"],
+    )
+
+    # Compute Closest ISS Twin across the 79 BASS-II empirical states + live PINN inference
+    twin_row = find_closest_iss_twin(
+        material_id=material["material_id"],
+        thickness_mm=thickness_mm,
+        airflow_cm_s=airflow_cm_s,
+        o2_pct=o2_pct,
+        matched_row=matched_row,
+    )
+    twin_id = str(twin_row.get("test_id", "BASS2-M1"))
+    pinn_prob_pct, pinn_vf_mm_s, pinn_mae_mm_s = evaluate_live_pinn_inference(
+        material=material,
+        thickness_mm=thickness_mm,
+        gravity_g=gravity_g,
+        o2_pct=o2_pct,
+        airflow_cm_s=airflow_cm_s,
+        burn_rate_mm_s=burn_rate_mm_s,
+        is_extinguished=is_extinguished,
+        twin_row=twin_row,
+        matched_row=matched_row,
+    )
+    pinn_summary = (
+        f"PINN Sustained Probability: {pinn_prob_pct:.1f}% "
+        f"(PINN Vf: {pinn_vf_mm_s:.3f} ± {pinn_mae_mm_s:.3f} mm/s MAE | Closest ISS Twin: {twin_id})."
+    )
+
     # Build actionable diagnosis, suppression protocol, and scientific limitations
     if is_extinguished:
         diagnosis = (
             f"Combustion quenched or prevented: ambient oxygen ({o2_pct:.1f}% O2) is below the effective "
             f"Limiting Oxygen Index ({oxygen_limit_pct:.1f}% O2) or below the radiative extinction velocity "
-            f"threshold for {material['material_name']}."
+            f"threshold for {material['material_name']}. Physical mechanism: {mat_protocol['physical_mechanism']}. "
+            f"{pinn_summary}"
         )
         suppression_action = (
-            "Maintain cabin ventilation shutoff and keep local O2 below the Limiting Oxygen Index; "
+            "STEP 1: Maintain cabin ventilation shutoff and keep local O2 below the Limiting Oxygen Index; "
             "allow 9+ minutes of solid-phase cooldown (NASA/TM-20210011385 Sec. 6.1.3) before crew touch "
-            "or air recirculation to prevent hot-core re-ignition."
+            f"or air recirculation to prevent hot-core re-ignition. {mat_protocol['step2_action']}"
         )
     elif is_quiescent_0g:
         diagnosis = (
             f"Quiescent 0g diffusion regime (gravity = {gravity_g:.2f}g, airflow = {airflow_cm_s:.1f} cm/s < 1.0 cm/s). "
             f"Buoyancy is absent; oxygen reaches the reaction zone solely by molecular diffusion, forming a "
-            f"stationary spherical blue flame ball ({burn_rate_mm_s:.3f} mm/s) that evades standard smoke sensors."
+            f"stationary spherical blue flame ball ({burn_rate_mm_s:.3f} mm/s) that evades standard smoke sensors. "
+            f"Physical mechanism: {mat_protocol['physical_mechanism']}. {pinn_summary}"
         )
         suppression_action = (
-            "Do NOT activate cabin ventilation fans (forced flow will transition the dim blue flame ball into an "
-            "accelerated radiative plume). Isolate glovebox/module air supply and apply targeted N2/CO2 dilution or fine water mist."
+            "STEP 1: Do NOT activate cabin ventilation fans (forced flow will transition the dim blue flame ball into an "
+            "accelerated radiative plume). Isolate glovebox/module air supply and apply targeted N2/CO2 dilution or fine water mist. "
+            f"{mat_protocol['step2_action']}"
         )
     else:
         diagnosis = (
             f"Advective/buoyant regime (gravity = {gravity_g:.2f}g, airflow = {airflow_cm_s:.1f} cm/s, {o2_pct:.1f}% O2). "
             f"Forced ventilation in the 'Goldilocks' low-speed zone (1-30 cm/s) replenishes O2 at the flame leading edge, "
-            f"stretching the plume into a luminous orange/sooty wake spreading at {burn_rate_mm_s:.3f} mm/s."
+            f"stretching the plume into a luminous orange/sooty wake spreading at {burn_rate_mm_s:.3f} mm/s. "
+            f"Physical mechanism: {mat_protocol['physical_mechanism']}. {pinn_summary}"
         )
         suppression_action = (
             "STEP 1: Immediate HVAC / cabin ventilation shutoff (< 2 seconds) to induce radiative extinction "
             "(validated in BASS-II RTDFS tests where flow cutoff quenched flames in < 2 s). "
-            "STEP 2: Maintain suppression until solid bubble layer cools to stop methylmethacrylate vapor jetting."
+            f"{mat_protocol['step2_action']}"
         )
 
     if matched_row is not None:
         limitations = (
             f"Direct empirical measurement from NASA PSI BASS-II test {matched_row['test_id']} "
             f"({matched_row['source_table']}, PI: {matched_row['pi_group']}) conducted aboard the ISS Microgravity "
-            f"Science Glovebox (250 L volume, 1 atm). Notes: {matched_row['notes']}"
+            f"Science Glovebox (250 L volume, 1 atm). Notes: {matched_row['notes']} "
+            f"Closest ISS Twin: {twin_id}; PINN estimate: {pinn_vf_mm_s:.3f} ± {pinn_mae_mm_s:.3f} mm/s "
+            f"({pinn_prob_pct:.1f}% sustained-flame probability)."
         )
         scenario_id = matched_row["test_id"].lower()
     else:
@@ -371,7 +610,9 @@ def run_simulation(req: SimulationRequest) -> SimulationContractResponse:
             f"Bounded physical interpolation from NASA/TM-20210011385 ({material['pi_reference']}) using "
             f"Olson's stretch flammability boundary (Eq. 6.1) and Bhattacharjee's thermal/radiative scaling (Eq. 2.2-2.5). "
             f"Assumes 1 atm baseline pressure; partial-gravity ({gravity_g:.2f}g) buoyancy is mapped via equivalent "
-            f"convective stretch velocity."
+            f"convective stretch velocity. Closest ISS Twin: {twin_id} ({twin_row.get('airflow_cm_s')} cm/s, "
+            f"{twin_row.get('initial_o2_pct')}% O2, measured {twin_row.get('spread_rate_mm_s')} mm/s); "
+            f"PINN estimate: {pinn_vf_mm_s:.3f} ± {pinn_mae_mm_s:.3f} mm/s ({pinn_prob_pct:.1f}% sustained-flame probability)."
         )
         scenario_id = f"sim_{material['material_id']}_{int(gravity_g*100)}g_{int(o2_pct)}o2_{int(airflow_cm_s)}cms"
 

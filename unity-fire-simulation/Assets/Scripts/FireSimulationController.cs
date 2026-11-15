@@ -96,6 +96,7 @@ namespace FireSimulation
 
         void Awake()
         {
+            Application.runInBackground = true;
             if (specimen == null) specimen = GetComponent<MaterialSampleView>();
             if (materialSample == null)
                 materialSample = GameObject.Find("Material sample")?.transform;

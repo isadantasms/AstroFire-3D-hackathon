@@ -36,6 +36,47 @@ const WEBGL_BASE_URL = import.meta.env.VITE_WEBGL_URL || 'http://127.0.0.1:8080/
 
 export const BELOW_OXYGEN_LIMIT = 'Extinguished below oxygen limit'
 
+function isReactInputOrSliderFocused(): boolean {
+  if (typeof document === 'undefined') return false
+  const active = document.activeElement as HTMLElement | null
+  if (!active || active === document.body || active === document.documentElement) return false
+  const tag = active.tagName.toLowerCase()
+  if (tag === 'input' || tag === 'select' || tag === 'textarea') return true
+  const role = active.getAttribute('role')
+  if (
+    role === 'slider' ||
+    role === 'spinbutton' ||
+    role === 'listbox' ||
+    role === 'option' ||
+    role === 'combobox'
+  ) {
+    return true
+  }
+  return Boolean(active.isContentEditable)
+}
+
+function focusUnityIframeSafely(iframe: HTMLIFrameElement | null): void {
+  if (!iframe || isReactInputOrSliderFocused()) return
+  try {
+    iframe.focus({ preventScroll: true })
+    iframe.contentWindow?.focus()
+  } catch {
+    // Ignore cross-origin or detached iframe focus exceptions.
+  }
+}
+
+function sendUnityCommand(target: Window, gameObject: string, method: string): void {
+  target.postMessage({ type: 'UNITY_SEND_MESSAGE', gameObject, method }, '*')
+  try {
+    const win = target as Window & {
+      unityInstance?: { SendMessage?: (go: string, fn: string) => void }
+    }
+    win.unityInstance?.SendMessage?.(gameObject, method)
+  } catch {
+    // Cross-origin iframe window access is optional; postMessage handles it.
+  }
+}
+
 /**
  * 3D Flame Chamber host. Shows the Unity WebGL view by default (static view as fallback); the Unity view
  * (unity-fire-simulation/WebGlSimulation) receives the contract payload (APPLY_FIRE_PAYLOAD)
@@ -66,7 +107,32 @@ export function FlameChamberPlaceholder({
     const target = iframeRef.current?.contentWindow
     if (!target || unity !== 'ready' || !payload) return
     if (phase !== 'burning' && !(phase === 'extinguished' && extinguishedBy === 'no_sustained_flame')) return
+    focusUnityIframeSafely(iframeRef.current)
     target.postMessage({ type: 'APPLY_FIRE_PAYLOAD', payload }, '*')
+    sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
+    sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
+
+    let raf2 = 0
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
+        sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
+      })
+    })
+    const timer1 = setTimeout(() => {
+      sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
+      sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
+    }, 40)
+    const timer2 = setTimeout(() => {
+      sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
+    }, 120)
+
+    return () => {
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+      clearTimeout(timer1)
+      clearTimeout(timer2)
+    }
   }, [payload, phase, extinguishedBy, unity])
 
   const standbyMaterialId = standbyMaterial?.material_id
@@ -125,8 +191,48 @@ export function FlameChamberPlaceholder({
   useEffect(() => {
     const target = iframeRef.current?.contentWindow
     if (!target || unity !== 'ready') return
+    focusUnityIframeSafely(iframeRef.current)
     const message: ChamberStateMessage = { type: 'APPLY_CHAMBER_STATE', phase, flame, suppression }
     target.postMessage(message, '*')
+
+    let raf2 = 0
+    let raf1 = 0
+    let timer1: ReturnType<typeof setTimeout> | null = null
+    let timer2: ReturnType<typeof setTimeout> | null = null
+
+    if (phase === 'suppressing') {
+      sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
+      sendUnityCommand(target, 'Fire Extinguisher', 'UseExtinguisher')
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
+          sendUnityCommand(target, 'Fire Extinguisher', 'UseExtinguisher')
+        })
+      })
+      timer1 = setTimeout(() => {
+        sendUnityCommand(target, 'FireSimulation', 'SkipAnimation')
+        sendUnityCommand(target, 'Fire Extinguisher', 'UseExtinguisher')
+      }, 40)
+      timer2 = setTimeout(() => {
+        sendUnityCommand(target, 'Fire Extinguisher', 'UseExtinguisher')
+      }, 120)
+    } else if (phase === 'burning') {
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
+        })
+      })
+      timer1 = setTimeout(() => {
+        sendUnityCommand(target, 'FireSimulation', 'ResetSuppression')
+      }, 40)
+    }
+
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1)
+      if (raf2) cancelAnimationFrame(raf2)
+      if (timer1) clearTimeout(timer1)
+      if (timer2) clearTimeout(timer2)
+    }
   }, [phase, flame, suppression, unity])
 
   const remainingS = useDischargeCountdown(phase, dischargeStartedAt, suppression?.discharge_seconds ?? null)
