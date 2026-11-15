@@ -1,6 +1,6 @@
 // SI-assisted: generated with Gemini & Claude, reviewed and edited by Rocha, Elias, Pina & Dantas
 /** Library, tool, asset and SI-tool credits (Documentation → Sources & credits). */
-import { LOGO_CREDIT } from './project'
+import { LOGO_CREDIT, SHOW_UNVERIFIED, VOICE_TOOL } from './project'
 
 export interface CreditRow {
   resource: string
@@ -12,9 +12,10 @@ export interface CreditRow {
 /*
  * Software, tools, assets and SI tools with their licenses. NASA data and reports are not repeated
  * here: they are the numbered references (content/references.ts) shown right above this table.
- * Rows marked "To verify" still need details from the team; nothing is filled in for them.
+ * Rows marked "To verify" still need details from the team; nothing is filled in for them. They show only
+ * in development builds (SHOW_UNVERIFIED) until the team confirms them.
  */
-export const CREDITS_LEDGER: CreditRow[] = [
+const ALL_CREDITS: (CreditRow | false)[] = [
   {
     resource: 'React 19, TypeScript, Vite & Tailwind CSS',
     type: 'Open-Source Libraries',
@@ -45,12 +46,11 @@ export const CREDITS_LEDGER: CreditRow[] = [
     license: 'Unity Terms of Service',
     url: 'https://unity.com/legal/terms-of-service',
   },
-  // TODO(credits): author and license of the MagicaVoxel models are not confirmed yet.
   {
-    resource: 'MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher',
+    resource: '3D voxel models created by the team with MagicaVoxel',
     type: '3D Models',
-    license: 'To verify',
-    url: null,
+    license: 'MIT License (this repository)',
+    url: 'https://ephtracy.github.io/',
   },
   {
     resource: LOGO_CREDIT,
@@ -94,18 +94,23 @@ export const CREDITS_LEDGER: CreditRow[] = [
     license: 'Provider terms',
     url: 'https://claude.com/product/claude-code',
   },
-  // TODO(voice-tool): name, license and link of the narration tool.
-  {
-    resource: '[VOICE TOOL]: demo video narration',
+  // TODO(voice-tool): license and link of the narration tool (the name comes from VOICE_TOOL).
+  Boolean(VOICE_TOOL) && {
+    resource: `${VOICE_TOOL}: demo video narration`,
     type: 'SI Tool',
     license: 'To verify',
     url: null,
   },
   // TODO(references): the UFSC/INPE VSB-30 study is listed by name only until the team confirms the reference.
-  {
+  SHOW_UNVERIFIED && {
     resource: 'UFSC/INPE · VSB-30 sounding-rocket study',
     type: 'Research Study',
     license: 'To verify',
     url: null,
   },
 ]
+
+/** Credits shown on the Documentation page; unconfirmed licenses are hidden in production builds. */
+export const CREDITS_LEDGER: CreditRow[] = ALL_CREDITS.filter(
+  (row): row is CreditRow => row !== false && (SHOW_UNVERIFIED || row.license !== 'To verify'),
+)

@@ -15,6 +15,7 @@
 | NTRS-20260001600: Niehaus, J., Urban, D., Ruff, G., Berger, G., & Easton, J. (2026). *Spacecraft Fire Safety Predictions using Verified Saffire Model* | NASA technical report | US Gov Public Domain | https://ntrs.nasa.gov/citations/20260001600 | Sample payload (scenario 2) limitations text |
 | NTRS-20170007283: *Spacecraft Fire Safety Research at NASA Glenn Research Center* (Meyer, 2016; covers SAME) | NASA technical report | US Gov Public Domain | https://ntrs.nasa.gov/citations/20170007283 | Documentation investigation ranking (SAME) |
 | *Solid Fuel Ignition and Extinction (SoFIE)*, NASA Glenn Research Center | NASA web page | To verify | https://www.nasa.gov/glenn/glenn-expertise-space-exploration/physical-sciences-program/combustion-science/solid-fuel-ignition-and-extinction-sofie/ | Documentation investigation ranking (SoFIE) |
+| NASA Space Apps Challenge 2026: *Flame in Freefall* (official challenge page) | Challenge description | Public web page | https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/ | Report regime map: the ≥ 30% O₂ band for the lunar base atmosphere |
 | FLEX / SPICE | NASA data | To verify (TODO: full reference) | https://psi.nasa.gov/ | Documentation investigation ranking |
 | NTRS-20030003652 | NASA technical report | To verify (TODO: title, authors, link) | To verify | `contracts/simulation_schema.json`, `backend/app/physics_engine.py` (not shown in the UI) |
 | NTRS-20130011664 | NASA technical report | To verify (TODO: title, authors, link) | To verify | `contracts/simulation_schema.json`, `backend/app/physics_engine.py` (not shown in the UI) |
@@ -26,7 +27,7 @@
 | Resource | Type | License | Link | Used in |
 | --- | --- | --- | --- | --- |
 | Unity (game engine and WebGL template) | Engine | Unity Terms of Service | https://unity.com/legal/terms-of-service | `unity-fire-simulation/` (3D chamber, WebGL build) |
-| MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher | 3D models | To verify (TODO: author and license) | https://ephtracy.github.io/ (MagicaVoxel editor) | `unity-fire-simulation/Assets/MagicaVoxelModels/`, `Assets/TravelModels/` |
+| 3D voxel models (Earth, ISS, Mars, Moon, RocketShip, Extinguisher) created by the team with MagicaVoxel | 3D models | MIT License (this repository) | https://ephtracy.github.io/ (MagicaVoxel editor) | `unity-fire-simulation/Assets/MagicaVoxelModels/`, `Assets/TravelModels/` |
 | FastAPI | Library | MIT License | https://fastapi.tiangolo.com | `backend/` |
 | Pydantic V2 | Library | MIT License | https://docs.pydantic.dev | `backend/`, `contracts/simulation_schema.json` |
 | React & TypeScript | Library | MIT / Apache-2.0 | https://react.dev | `frontend/` |

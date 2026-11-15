@@ -37,7 +37,7 @@ export function figureCaptions(report: ReportModel) {
     riskBar:
       'Figure 1. Flammability score on the risk bands used across AstroFire 3D (Nominal 0–35, Moderate 36–70, Critical 71–100). Higher scores mean the material burns more readily.',
     schematic:
-      'Figure 2. Illustrative visualization of the simulated flame, not measured data. Arrows show the airflow; the colour of the reaction zone shows whether it produces soot.',
-    regime: `Figure 3. Oxygen versus airflow for the ${report.regime.points.length} BASS-II tests ${report.datasetCite}. Filled dots kept burning; hollow dots went out or never ignited. The ring marks this scenario and the red tick its oxygen limit; the engine's full limit curve is not drawn.`,
+      'Figure 2. Illustrative visualization of the simulated flame, not measured data. Arrows show the airflow; the color of the reaction zone shows whether it produces soot.',
+    regime: `Figure 3. Oxygen versus airflow for the ${report.regime.points.length} BASS-II tests ${report.datasetCite}. Filled dots kept burning; hollow dots went out or never ignited. The shaded band marks the oxygen-enriched lunar base atmosphere (≥ 30% O₂) ${report.bandCite}. The ring marks this scenario and the red tick its oxygen limit; the engine's full limit curve is not drawn.`,
   }
 }

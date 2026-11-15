@@ -15,6 +15,7 @@ import { Tooltip } from '../components/Tooltip'
 import { DOCUMENTATION_PDF_URL, DOCUMENTATION_SI_URL, LINKS } from '../app/routes'
 import { FIRE_SAFETY_USES, INVESTIGATIONS, type FireSafetyUse } from '../content/investigations'
 import { REFERENCES } from '../content/references'
+import { SHOW_UNVERIFIED } from '../content/project'
 // Lazy: keeps the BASS-II snapshot and API client out of the main bundle.
 const BassExperimentsSection = lazy(() =>
   import('../features/simulator/experiments/BassExperimentsSection').then((m) => ({ default: m.BassExperimentsSection })),
@@ -313,8 +314,14 @@ function ResearchSection() {
           ))}
         </ol>
         <p className="mt-3 text-xs text-muted">
-          NASA data is CC0-1.0 and NASA technical reports are U.S. Government public domain. <Tag>To verify</Tag> Full
-          references for FLEX and SPICE, and the license of the SoFIE web page.
+          NASA data is CC0-1.0 and NASA technical reports are U.S. Government public domain.
+          {/* Pending items show in development builds only, until the team confirms them. */}
+          {SHOW_UNVERIFIED ? (
+            <>
+              {' '}
+              <Tag>To verify</Tag> Full references for FLEX and SPICE, and the license of the SoFIE web page.
+            </>
+          ) : null}
         </p>
       </details>
     </Section>

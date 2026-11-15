@@ -183,13 +183,13 @@ export function regimeMap(regime: ReportModel['regime']): Chart {
   const y = (v: number) => bottom - ((bottom - top) * (Math.min(Math.max(v, Y_MIN), Y_MAX) - Y_MIN)) / (Y_MAX - Y_MIN)
   const shapes: Shape[] = []
 
-  // Enriched exploration atmospheres (≥ 30% O2) and the 21% O2 Earth-air reference.
+  // Oxygen-enriched lunar base atmosphere (≥ 30% O2, challenge description) and the 21% O2 Earth-air reference.
   shapes.push({ kind: 'rect', x: left, y: y(40), w: right - left, h: y(30) - y(40), fill: 'orange', opacity: 0.08 })
   shapes.push({
     kind: 'text',
     x: right - 4,
     y: y(40) + 11,
-    text: 'Exploration atmospheres (≥ 30% O₂)',
+    text: 'Lunar base atmosphere (≥ 30% O₂)',
     size: 7.5,
     fill: 'orange',
     anchor: 'end',

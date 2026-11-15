@@ -50,4 +50,9 @@ export const REFERENCES: readonly Reference[] = [
     text: 'Niehaus, J., Urban, D., Ruff, G., Berger, G., & Easton, J. (2026). Spacecraft Fire Safety Predictions using Verified Saffire Model. NTRS-20260001600.',
     url: 'https://ntrs.nasa.gov/citations/20260001600',
   },
+  {
+    n: 8,
+    text: 'NASA Space Apps Challenge 2026. Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data (challenge description; oxygen-enriched lunar base atmosphere, 30% O₂ or more).',
+    url: 'https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/',
+  },
 ]

@@ -116,7 +116,7 @@ describe('report charts', () => {
     const r = buildReport(SCENARIOS[1], { mock: true, generatedAt: AT })
     const chart = regimeMap(r.regime)
     const texts = chart.shapes.flatMap((sh) => (sh.kind === 'text' ? [sh.text] : []))
-    expect(texts).toEqual(expect.arrayContaining(['21% O₂ (Earth air)', 'Exploration atmospheres (≥ 30% O₂)', 'This scenario', 'Airflow (cm/s)']))
+    expect(texts).toEqual(expect.arrayContaining(['21% O₂ (Earth air)', 'Lunar base atmosphere (≥ 30% O₂)', 'This scenario', 'Airflow (cm/s)']))
     const dots = chart.shapes.filter((sh) => sh.kind === 'circle' && sh.r === 2.4)
     expect(dots.length).toBeGreaterThanOrEqual(EXPERIMENTS_SNAPSHOT.length)
   })

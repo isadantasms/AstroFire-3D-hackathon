@@ -30,6 +30,14 @@ const DATASET_REFERENCE = {
   finding: 'Experimental records used for the flammability regime map and the empirical context in this report.',
 }
 
+/** Source of the ≥ 30% O2 band in the regime map (lunar base atmosphere in the challenge description). */
+const CHALLENGE_REFERENCE = {
+  id: 'NASA Space Apps Challenge 2026',
+  title: 'Flame in Freefall (challenge description)',
+  url: 'https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/',
+  finding: 'Indicates an oxygen-enriched lunar base atmosphere of 30% O₂ or more (shaded band in the regime map).',
+}
+
 export interface ValueRow {
   label: string
   value: string
@@ -102,6 +110,8 @@ export interface ReportModel {
   cite: string
   /** Citation of the BASS-II dataset (regime map, empirical context). */
   datasetCite: string
+  /** Citation of the challenge description (the ≥ 30% O2 band in the regime map). */
+  bandCite: string
 }
 
 const GROUNDING_LABEL: Record<GroundingStatus, string> = {
@@ -200,9 +210,11 @@ export function buildReport(result: SimulationResponse, options: { mock: boolean
   const cited = result.nasa_citations.filter(isCitationShown)
   const refs = [...cited]
   if (!refs.some((c) => c.url === DATASET_REFERENCE.url)) refs.push(DATASET_REFERENCE)
+  refs.push(CHALLENGE_REFERENCE)
   const references: ReportReference[] = refs.map((c, i) => ({ n: i + 1, id: c.id, title: c.title, url: c.url, finding: humanize(c.finding) }))
   const cite = cited.length > 0 ? `[${cited.map((_, i) => i + 1).join(', ')}]` : ''
   const datasetCite = `[${references.find((r) => r.url === DATASET_REFERENCE.url)!.n}]`
+  const bandCite = `[${references.find((r) => r.url === CHALLENGE_REFERENCE.url)!.n}]`
 
   const band = riskBand(t.flammability_score)
   const margin = inputs.o2_pct - t.oxygen_limit_pct
@@ -296,5 +308,6 @@ export function buildReport(result: SimulationResponse, options: { mock: boolean
     references,
     cite,
     datasetCite,
+    bandCite,
   }
 }

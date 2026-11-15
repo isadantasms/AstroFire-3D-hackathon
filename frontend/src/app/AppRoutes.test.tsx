@@ -35,7 +35,7 @@ describe('site structure', () => {
     renderAt('/')
     const footer = screen.getByRole('contentinfo')
     expect(screen.getByTestId('footer-credit')).toHaveTextContent(
-      '© 2026 21 Pyro Rangers · Built for NASA Space Apps Challenge 2026',
+      '© 2026 21 PyroRangers · Built for NASA Space Apps Challenge 2026',
     )
     expect(within(footer).getByText('Fire')).toBeInTheDocument()
     const footerNav = screen.getByRole('navigation', { name: 'Footer' })
@@ -128,7 +128,7 @@ describe('site structure', () => {
     const closing = within(screen.getByRole('heading', { level: 2, name: 'Explore combustion beyond Earth.' }).closest('section')!)
     expect(closing.getByText('Configure a scenario, visualize flame behavior, and examine the evidence behind the analysis.')).toBeInTheDocument()
     expect(closing.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
-    expect(closing.getByRole('link', { name: 'Explore Research' })).toHaveAttribute('href', '/documentation')
+    expect(closing.getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/documentation')
 
     // Old sections are gone.
     for (const old of ['The science', 'How it works', 'What makes AstroFire 3D different', 'Back on Earth']) {
@@ -172,6 +172,7 @@ describe('site structure', () => {
     const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
     expect(h2s).toEqual([
       'How AstroFire 3D helps',
+      'Who it’s for',
       'How we use SI',
       'Built on real research',
       'Explore combustion beyond Earth.',
@@ -183,7 +184,8 @@ describe('site structure', () => {
     expect(si.getByText('Transparency', { selector: 'p' })).toBeInTheDocument()
     expect(si.getByText(/A rule-based engine matches each scenario to NASA data/)).toBeInTheDocument()
     expect(si.getByText(/ChatGPT, Codex, Gemini and Claude Code/)).toBeInTheDocument()
-    expect(si.getByText(/\[VOICE TOOL\]/)).toBeInTheDocument()
+    // The narration sentence stays hidden until VOICE_TOOL is set in content/project.ts.
+    expect(screen.getByTestId('si-compact').textContent).not.toMatch(/VOICE TOOL|narrates the demo/)
     expect(si.getByText(/The team conceived the solution/)).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/recreated by the team|SI interprets the experimental data/)
 
@@ -191,7 +193,7 @@ describe('site structure', () => {
     const evidence = within(screen.getByTestId('evidence-strip'))
     expect(evidence.getByText('79 BASS-II tests from NASA PSI')).toBeInTheDocument()
     expect(evidence.getByText('6 NASA investigations compared by habitat')).toBeInTheDocument()
-    expect(evidence.getByText('Every source cited')).toBeInTheDocument()
+    expect(evidence.getByText('Sources cited')).toBeInTheDocument()
     expect(evidence.getByRole('link', { name: /Explore the research/ })).toHaveAttribute('href', '/documentation')
     expect(evidence.getByTestId('badge-legend')).toHaveTextContent(/NASA experimental data.*Estimate.*Illustrative/)
 
@@ -268,7 +270,7 @@ describe('site structure', () => {
     const refs = container.querySelector('#references') as HTMLDetailsElement
     expect(refs.tagName).toBe('DETAILS')
     expect(refs.open).toBe(false)
-    expect(within(refs).getByText('Full references (7)')).toBeInTheDocument()
+    expect(within(refs).getByText('Full references (8)')).toBeInTheDocument()
     for (let n = 1; n <= 7; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
     expect(within(refs).getByText(/NASA data is CC0-1\.0/)).toBeInTheDocument()
     expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
@@ -316,7 +318,7 @@ describe('site structure', () => {
     const credits = within(container.querySelector('#credits') as HTMLElement)
     expect(credits.queryByText(/BASS-II \(PSI-25\)|NASA\/TM-20210011385|NTRS-|Saffire|SoFIE|FLEX|SPICE/)).toBeNull()
     expect(credits.getByText(/IBM Plex Sans & IBM Plex Mono/)).toBeInTheDocument()
-    expect(credits.getByText('MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher')).toBeInTheDocument()
+    expect(credits.getByText('3D voxel models created by the team with MagicaVoxel')).toBeInTheDocument()
     expect(
       credits.getByText(
         'AstroFire 3D logo: concept generated with ChatGPT; simplified vector artwork recreated with Claude Code (SI-assisted) and reviewed by the team.',
@@ -331,13 +333,11 @@ describe('site structure', () => {
       expect(within(row).getByRole('link')).toHaveAttribute('href', 'https://policies.google.com/terms')
     }
     expect(within(credits.getByText('Unity (3D chamber engine and WebGL template)').closest('tr')!).getByText('Unity Terms of Service')).toBeInTheDocument()
-    // "To verify" stays only on the items the team still has to resolve.
+    // "To verify" stays only on the items the team still has to resolve (shown in development builds only).
+    // The narration row is hidden until VOICE_TOOL is set.
     const toVerify = credits.getAllByText('To verify').map((cell) => cell.closest('tr')!.querySelector('td')!.textContent)
-    expect(toVerify).toEqual([
-      'MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher',
-      '[VOICE TOOL]: demo video narration',
-      'UFSC/INPE · VSB-30 sounding-rocket study',
-    ])
+    expect(toVerify).toEqual(['UFSC/INPE · VSB-30 sounding-rocket study'])
+    expect(credits.queryByText(/VOICE TOOL|demo video narration/)).toBeNull()
   })
 
   it('the BASS-II table starts collapsed, then shows 10 rows until "Show all"', async () => {

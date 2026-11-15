@@ -39,7 +39,7 @@ describe('Home SI disclosure', () => {
       'A rule-based engine matches each scenario to NASA data. Its diagnosis texts were drafted with SI and reviewed by the team.',
     )
     expect(si.getByText('In development').nextSibling).toHaveTextContent(
-      'ChatGPT, Codex, Gemini and Claude Code supported code, 3D, data and interface. ChatGPT drafted the logo and Claude Code redrew it as vector art; [VOICE TOOL] narrates the demo.',
+      'ChatGPT, Codex, Gemini and Claude Code supported code, 3D, data and interface. ChatGPT drafted the logo and Claude Code redrew it as vector art.',
     )
     expect(si.getByText('Human responsibility').nextSibling).toHaveTextContent(
       'The team conceived the solution, made every decision and reviewed all code, data and results.',
