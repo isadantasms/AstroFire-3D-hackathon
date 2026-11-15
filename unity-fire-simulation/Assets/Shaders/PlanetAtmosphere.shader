@@ -26,10 +26,8 @@ Shader "FireSimulation/PlanetAtmosphere"
             #pragma fragment frag
             #pragma target 3.0
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            // Browser path intentionally avoids depth textures and lighting feature includes.
-            #if !defined(SHADER_API_GLES3) && !defined(SHADER_API_GLES)
+            // Opaque clouds must limit the scattering ray on desktop and WebGL alike.
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
-            #endif
             struct A { float4 p:POSITION; };
             struct V { float4 p:SV_POSITION; float3 world:TEXCOORD0; };
             CBUFFER_START(UnityPerMaterial)
@@ -52,7 +50,6 @@ Shader "FireSimulation/PlanetAtmosphere"
                 float begin=max(0,hit.x), finish=hit.y;
                 float2 ground=intersectSphere(origin,ray,_PlanetRadius);
                 if(ground.y>ground.x && ground.x>0) finish=min(finish,ground.x);
-                #if !defined(SHADER_API_GLES3) && !defined(SHADER_API_GLES)
                 float2 uv=GetNormalizedScreenSpaceUV(i.p);
                 float depth=SampleSceneDepth(uv);
                 #if UNITY_REVERSED_Z
@@ -66,7 +63,6 @@ Shader "FireSimulation/PlanetAtmosphere"
                     float3 opaqueWorld=ComputeWorldSpacePosition(uv,depth,UNITY_MATRIX_I_VP);
                     finish=min(finish,length(opaqueWorld-_WorldSpaceCameraPos));
                 }
-                #endif
                 if(finish<=begin) return 0;
                 float thickness=max(.001,_ShellRadius-_PlanetRadius);
                 // Six fixed samples keep WebGL's fragment program small and predictable.

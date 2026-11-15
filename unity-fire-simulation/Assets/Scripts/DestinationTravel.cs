@@ -18,6 +18,8 @@ namespace FireSimulation
         public Material modelMaterial, engineMaterial;
         public Shader atmosphereShader;
         public Shader cloudShader;
+        public Shader sunShader;
+        public Shader nebulaShader;
         public Object rocketModel, earthModel, moonModel, marsModel, issModel;
         public Texture2D rocketPalette, earthPalette, moonPalette, marsPalette, issPalette;
         public GameObject exteriorStage, sceneRocket;
@@ -59,9 +61,11 @@ namespace FireSimulation
         const int ExteriorMask=(1<<SpaceLayer)|(1<<RocketLayer)|(1<<EarthViewLayer);
         public float SkipProgress => Mathf.Clamp01(skipHeld/SkipHoldSeconds);
         float skipHeld;
+        GUIStyle skipLabelStyle;
         int initialCullingMask, savedCullingMask;
         Camera windowCamera;
         RenderTexture windowTexture;
+        SpaceAmbience ambience;
 
         readonly List<Material> owned = new List<Material>();
         readonly List<ParticleSystem> engines = new List<ParticleSystem>();
@@ -144,7 +148,11 @@ namespace FireSimulation
 
         void LateUpdate()
         {
-            if(Ready) UpdateWindowFeed();
+            if(Ready)
+            {
+                UpdateWindowFeed();
+                if(ambience!=null) ambience.UpdateObserver(IsTravelling && Phase!="RETURNING TO CABIN"?travelCamera:windowCamera);
+            }
         }
 
         void BuildWorld()
@@ -152,9 +160,10 @@ namespace FireSimulation
             if (exteriorStage != null && sceneRocket != null)
             {
                 world=exteriorStage; ship=sceneRocket; ownsWorld=false;
+                world.SetActive(true);
                 ship.transform.localPosition=LandingAnchor(ArrivedDestination);
                 foreach (float x in new[] { -1.04f, 0, 1.04f }) BuildEngine(new Vector3(x, -2.65f, 0));
-                BuildStars();
+                BuildSpaceAmbience();
                 return;
             }
             ownsWorld=true;
@@ -169,7 +178,7 @@ namespace FireSimulation
             var rocket = Model(rocketModel, rocketPalette, "Rocket exterior", Vector3.zero, RocketScale);
             rocket.transform.SetParent(ship.transform, false);
             foreach (float x in new[] { -1.04f, 0, 1.04f }) BuildEngine(new Vector3(x, -2.65f, 0));
-            BuildStars();
+            BuildSpaceAmbience();
         }
 
         static void SetLayer(Transform root,int layer)
@@ -190,7 +199,7 @@ namespace FireSimulation
             windowCamera.cullingMask=1<<SpaceLayer;
             windowCamera.clearFlags=CameraClearFlags.SolidColor;
             windowCamera.backgroundColor=new Color(.003f,.005f,.012f);
-            windowCamera.nearClipPlane=.02f;windowCamera.farClipPlane=2500;windowCamera.fieldOfView=64;
+            windowCamera.nearClipPlane=.02f;windowCamera.farClipPlane=SpaceAmbience.FarClip;windowCamera.fieldOfView=64;
             windowCamera.depthTextureMode=DepthTextureMode.Depth;
             environment.SetWindowTexture(windowTexture);
             UpdateWindowFeed();
@@ -209,6 +218,7 @@ namespace FireSimulation
             windowCamera.cullingMask=earthSurface ? 1<<EarthViewLayer : (1<<SpaceLayer)|(1<<EarthViewLayer);
             windowCamera.backgroundColor=earthSurface ? new Color(.23f,.53f,.82f,0) : new Color(.003f,.005f,.012f);
             environment.SetEarthSurfaceView(earthSurface,new Vector2(parallax.x,parallax.y));
+            environment.SetIssWindowView(ArrivedDestination==LaboratoryEnvironment.Destination.ISS && !IsTravelling);
             Vector3 mount=new Vector3(0,.4f,.65f)+parallax;
             Vector3 position=ship.transform.position+ship.transform.rotation*mount;
             Vector3 outward=(ship.transform.forward-ship.transform.up*.22f).normalized;
@@ -282,28 +292,11 @@ namespace FireSimulation
             engines.Add(particles);
         }
 
-        void BuildStars()
+        void BuildSpaceAmbience()
         {
-            var obj = new GameObject("Travel star field");
-            obj.transform.SetParent(world.transform, false);
-            var stars = obj.AddComponent<ParticleSystem>();
-            stars.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            var main = stars.main; main.playOnAwake = false; main.maxParticles = 900;
-            main.simulationSpace = ParticleSystemSimulationSpace.Local; main.startSpeed = 0;
-            var emission = stars.emission; emission.enabled = false;
-            stars.GetComponent<ParticleSystemRenderer>().sharedMaterial = engineMaterial;
-            var random = new System.Random(2026);
-            var data = new ParticleSystem.Particle[900];
-            for (int i=0; i<data.Length; i++)
-            {
-                var direction = new Vector3((float)random.NextDouble()*2-1,(float)random.NextDouble()*2-1,(float)random.NextDouble()*2-1).normalized;
-                data[i].position = direction * (900 + (float)random.NextDouble()*400);
-                data[i].startSize = 1 + (float)random.NextDouble()*1.2f;
-                data[i].startColor = new Color(.75f,.85f,1,.7f);
-                data[i].startLifetime = data[i].remainingLifetime = 100000;
-            }
-            stars.SetParticles(data, data.Length);
-            stars.Pause();
+            ambience=world.GetComponent<SpaceAmbience>();
+            if(ambience==null) ambience=world.AddComponent<SpaceAmbience>();
+            ambience.Configure(sunShader,engineMaterial,nebulaShader);
         }
 
         public static Vector3 Anchor(LaboratoryEnvironment.Destination destination)
@@ -379,9 +372,10 @@ namespace FireSimulation
             switch(destination)
             {
                 case LaboratoryEnvironment.Destination.Earth: return new Vector3(-180,-90,-60);
-                case LaboratoryEnvironment.Destination.Moon: return new Vector3(200,-PlanetScale(destination),-30);
-                case LaboratoryEnvironment.Destination.Mars: return new Vector3(20,-PlanetScale(destination),280);
-                default: return new Vector3(-170,12,-60);
+                // Distances remain compressed for the demo, with distinct Earth orbit/lunar/interplanetary ranges.
+                case LaboratoryEnvironment.Destination.Moon: return new Vector3(1250,-PlanetScale(destination),140);
+                case LaboratoryEnvironment.Destination.Mars: return new Vector3(3300,-PlanetScale(destination),2100);
+                default: return new Vector3(-170,8,-60);
             }
         }
 
@@ -445,7 +439,7 @@ namespace FireSimulation
             travelCamera.clearFlags = CameraClearFlags.SolidColor;
             travelCamera.backgroundColor = new Color(.003f,.005f,.012f);
             travelCamera.fieldOfView = 48;
-            travelCamera.farClipPlane=2500;
+            travelCamera.farClipPlane=SpaceAmbience.FarClip;
             Vector3 start = ParkedPosition, end = LandingAnchor(target);
             Quaternion departureRotation=ParkedRotation;
             Vector3 departureView = ObservationOffset(ArrivedDestination), arrivalView = ObservationOffset(target);
@@ -607,20 +601,49 @@ namespace FireSimulation
             savedState=false;
         }
 
-        // Cinematic transition only: no HUD, buttons, labels or progress indicators.
+        // Only the hold-to-skip indicator and cinematic fade remain on screen.
         void OnGUI()
         {
-            if(fade<=0) return;
+            if(!Application.isPlaying || Event.current.type!=EventType.Repaint || (fade<=0 && !IsTravelling)) return;
             int depth=GUI.depth;var color=GUI.color;
-            GUI.depth=-10000;GUI.color=new Color(0,0,0,fade);
-            GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),Texture2D.whiteTexture);
+            GUI.depth=-10000;
+            if(fade>0)
+            {
+                GUI.color=new Color(0,0,0,fade);
+                GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),Texture2D.whiteTexture);
+            }
+            if(IsTravelling) DrawSkipIndicator();
             GUI.color=color;GUI.depth=depth;
+        }
+
+        void DrawSkipIndicator()
+        {
+            float scale=Mathf.Clamp(Screen.width/1280f,.7f,1.15f);
+            float width=190*scale,height=42*scale,padding=12*scale;
+            var panel=new Rect(Screen.width-width-18*scale,Screen.height-height-18*scale,width,height);
+            GUI.color=new Color(.025f,.045f,.065f,.65f);
+            GUI.DrawTexture(panel,Texture2D.whiteTexture);
+            if(skipLabelStyle==null) skipLabelStyle=new GUIStyle(GUI.skin.label) {alignment=TextAnchor.MiddleRight};
+            skipLabelStyle.fontSize=Mathf.RoundToInt(12*scale);
+            skipLabelStyle.normal.textColor=new Color(.88f,.92f,.96f);
+            GUI.color=Color.white;
+            GUI.Label(new Rect(panel.x+padding,panel.y+4*scale,width-padding*2,23*scale),"Hold E to skip",skipLabelStyle);
+            var bar=new Rect(panel.x+padding,panel.yMax-10*scale,width-padding*2,3*scale);
+            GUI.color=new Color(1,1,1,.18f);
+            GUI.DrawTexture(bar,Texture2D.whiteTexture);
+            if(SkipProgress>0)
+            {
+                GUI.color=new Color(.36f,.81f,.94f,.95f);
+                bar.width*=SkipProgress;
+                GUI.DrawTexture(bar,Texture2D.whiteTexture);
+            }
         }
 
         void OnDisable()
         {
             StopAllCoroutines(); RestoreCamera();
             if(environment!=null) environment.SetWindowTexture(null);
+            if(environment!=null) environment.SetIssWindowView(false);
             if(windowTexture!=null) { windowTexture.Release();Destroy(windowTexture);windowTexture=null; }
             if(windowCamera!=null) { Destroy(windowCamera.gameObject);windowCamera=null; }
             if(Ready && travelCamera!=null) travelCamera.cullingMask=initialCullingMask;
@@ -628,11 +651,9 @@ namespace FireSimulation
             else if (world!=null)
             {
                 foreach(var engine in engines) if(engine!=null) Destroy(engine.gameObject);
-                var stars=world.transform.Find("Travel star field");
-                if(stars!=null) Destroy(stars.gameObject);
                 world.SetActive(false);
             }
-            world=null; ship=null;
+            world=null; ship=null;ambience=null;
             foreach(var material in owned) if(material!=null) Destroy(material);
             owned.Clear(); engines.Clear(); Ready=false; IsTravelling=false;
         }

@@ -7,5 +7,6 @@ In accordance with the 2026 NASA Space Apps Challenge rules, all third-party ico
 | **Lucide Icons** (`lucide-react`) | UI Vector Icons | ISC License | https://lucide.dev/license | `frontend/` telemetry badges & controls |
 | **Inter** | UI Typography | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Inter | `frontend/` primary interface text |
 | **JetBrains Mono** | Telemetry Monospace Font | SIL Open Font License 1.1 | https://fonts.google.com/specimen/JetBrains+Mono | `frontend/` `tabular-nums` readouts |
+| **Voxel Flame Emblem** (`logo_voxel_*.png`) | Project Emblem & App Icons | MIT License | Team Creation / SI-assisted | `assets/`, Unity UI, and web interface |
 
 > **Compliance Note:** Zero official NASA logos, seals, or restricted mission insignias are included in this repository. Any AI-generated visual asset carries the visible watermark `"Generated with SI (<tool>)"`.
