@@ -45,4 +45,9 @@ export const REFERENCES: readonly Reference[] = [
     text: 'NASA Glenn Research Center. Solid Fuel Ignition and Extinction (SoFIE). nasa.gov.',
     url: 'https://www.nasa.gov/glenn/glenn-expertise-space-exploration/physical-sciences-program/combustion-science/solid-fuel-ignition-and-extinction-sofie/',
   },
+  {
+    n: 7,
+    text: 'Niehaus, J., Urban, D., Ruff, G., Berger, G., & Easton, J. (2026). Spacecraft Fire Safety Predictions using Verified Saffire Model. NTRS-20260001600.',
+    url: 'https://ntrs.nasa.gov/citations/20260001600',
+  },
 ]

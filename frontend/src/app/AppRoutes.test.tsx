@@ -206,17 +206,24 @@ describe('site structure', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
   })
 
-  it('Credits & licenses close the Documentation page, with the to-verify rows', async () => {
+  it('Sources & credits: numbered NASA references on top, then the credits table without NASA rows', async () => {
     const { container } = renderAt('/documentation')
-    expect(await screen.findByRole('heading', { level: 2, name: 'References' })).toBeInTheDocument()
-    const credits = within(container.querySelector('#credits') as HTMLElement)
-    expect(credits.getByRole('heading', { level: 2, name: 'Credits & licenses' })).toBeInTheDocument()
-    expect(credits.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Data & research', 'Software & assets'])
-    expect(credits.getByText('BASS-II (PSI-25): Burning and Suppression of Solids - II')).toBeInTheDocument()
+    const sources = within(await screen.findByRole('region', { name: 'Sources & credits' }))
+    // Old anchors keep working inside the section.
+    const refs = container.querySelector('#references') as HTMLElement
+    const creditsEl = container.querySelector('#credits') as HTMLElement
+    expect(refs).not.toBeNull()
+    expect(creditsEl).not.toBeNull()
+    expect(refs.compareDocumentPosition(creditsEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(sources.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['References', 'Credits & licenses'])
+
+    const credits = within(creditsEl)
+    expect(credits.queryByText(/BASS-II \(PSI-25\)|NASA\/TM-20210011385|NTRS-|Saffire|SoFIE|FLEX|SPICE/)).toBeNull()
     expect(credits.getByText(/IBM Plex Sans, IBM Plex Serif & IBM Plex Mono/)).toBeInTheDocument()
     expect(credits.getByText('MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher')).toBeInTheDocument()
     expect(credits.getByText('AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.')).toBeInTheDocument()
     expect(credits.getByText('Unity (3D chamber engine and WebGL template)')).toBeInTheDocument()
+    expect(credits.getByText(/^ChatGPT \(OpenAI\)/)).toBeInTheDocument()
     expect(credits.getByText(/^Codex \(OpenAI\)/)).toBeInTheDocument()
     for (const name of [
       'Antigravity: coding environment used with Gemini',
@@ -228,7 +235,7 @@ describe('site structure', () => {
     }
   })
 
-  it('Documentation: header, shortcuts, full-documentation card and section order', async () => {
+  it('Documentation: header, four shortcuts, compact contents and section order', async () => {
     renderAt('/documentation')
     expect(await screen.findByRole('heading', { level: 1, name: 'Documentation' })).toBeInTheDocument()
     expect(screen.getByText('The research, data and methods behind AstroFire.')).toBeInTheDocument()
@@ -237,21 +244,20 @@ describe('site structure', () => {
       ['Full documentation', '#full-documentation'],
       ['Investigations', '#investigations'],
       ['Data', '#data'],
-      ['References', '#references'],
-      ['Credits', '#credits'],
+      ['Sources & credits', '#sources'],
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'AstroFire · Technical Documentation',
       'Which experiments matter for your habitat?',
       'The experimental data',
-      'About the data',
-      'References',
-      'Credits & licenses',
+      'Sources & credits',
     ])
 
     const card = within(document.getElementById('full-documentation')!)
     expect(card.getByText(/Everything about the project in one document/)).toBeInTheDocument()
-    expect(within(card.getByTestId('doc-contents')).getAllByRole('listitem').map((li) => li.textContent?.replace(/^\d+/, ''))).toEqual([
+    const contents = card.getByTestId('doc-contents')
+    expect(contents.className).toMatch(/sm:columns-2/)
+    expect(within(contents).getAllByRole('listitem').map((li) => li.textContent?.replace(/^\d+/, ''))).toEqual([
       'Problem and challenge alignment',
       'Product overview',
       'Using the simulator',
@@ -264,6 +270,8 @@ describe('site structure', () => {
       'Team and credits',
       'References',
     ])
+    // The SI chapter is a link (Home SI block until the PDF exists).
+    expect(within(contents).getByRole('link', { name: 'Use of Super Intelligence (SI)' })).toHaveAttribute('href', '/#si-usage')
     // The PDF is not published yet: both actions are disabled with "Coming soon".
     for (const name of ['Download full documentation (PDF)', 'Read the SI disclosure']) {
       const action = card.getByRole('button', { name })
@@ -271,24 +279,38 @@ describe('site structure', () => {
       expect(action).toHaveAccessibleDescription('Coming soon')
     }
 
+    // Data notes are one line inside the data section; no separate block.
+    expect(screen.getByTestId('data-notes')).toHaveTextContent(/PSI-10 has no license listed and is not used/)
+    expect(screen.getByTestId('data-notes')).toHaveTextContent(/no Moon or Mars combustion data/)
+    expect(document.getElementById('data')!.contains(screen.getByTestId('data-notes'))).toBe(true)
+    expect(document.getElementById('data-notes')).toBeNull()
+
     // Removed from the page (kept in docs/technical-notes.md).
     expect(document.getElementById('method')).toBeNull()
     expect(screen.queryByText(/Method, in short|Two regimes, one console|Hybrid PINN Loss Convergence/)).toBeNull()
     expect(screen.queryByText(/Ignition\/quench accuracy|Factor importance|cross-validation/i)).toBeNull()
   })
 
-  it('investigation cards: corrected SoFIE text, sourced conditions only, guidance in Details', async () => {
+  it('investigation cards: name, relevance, site badge, why it matters and source; the rest in Details', async () => {
     renderAt('/documentation')
     const sofie = (await screen.findByText('Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)')).closest('li')!
+    expect(within(sofie).getByTestId('site')).toHaveTextContent('ISS · CIR')
     expect(within(sofie).getByText('See source')).toBeInTheDocument()
     expect(within(sofie).getByText(/Several SoFIE principal investigators also authored the BASS-II summary report/)).toBeInTheDocument()
     expect(screen.queryByText(/Direct successor to BASS-II/)).toBeNull()
     expect(screen.queryByText(/15\.0% – 40\.0%|10 kW|370–550 ppm/)).toBeNull()
 
-    // BASS-II range is computed from the 79 dataset records.
+    const sites = screen.getAllByTestId('site').map((b) => b.textContent)
+    expect(new Set(sites)).toEqual(new Set(['ISS · MSG', 'ISS · CIR', 'Cygnus']))
+
+    // BASS-II range is computed from the 79 dataset records and sits in Details.
     const bass = screen.getByText('Burning and Suppression of Solids–II (BASS-II)').closest('li')!
-    expect(within(bass).getByText('13.6–22.2% O₂ · 0.6–47.0 cm/s (79 tests)')).toBeInTheDocument()
-    expect(within(bass).getByText('SI-assisted guidance · research only, not an operational procedure')).toBeInTheDocument()
+    const details = bass.querySelector('details')!
+    expect(within(details).getByText('13.6–22.2% O₂ · 0.6–47.0 cm/s (79 tests)')).toBeInTheDocument()
+    expect(within(details).getByText(/^Conditions tested:/)).toBeInTheDocument()
+    expect(within(details).getByText('SI-assisted guidance · research only, not an operational procedure')).toBeInTheDocument()
+    expect(within(bass).getByTestId('site')).toHaveTextContent('ISS · MSG')
+    expect(within(bass).getByText('Why it matters')).toBeInTheDocument()
     expect(within(bass).getByRole('link', { name: /View source/ })).toHaveAttribute('href', 'https://doi.org/10.60555/4qc4-de67')
     expect(within(bass).getByRole('link', { name: 'Reference 1' })).toHaveAttribute('href', '#ref-1')
   })
@@ -329,8 +351,8 @@ describe('site structure', () => {
 
   it('references are numbered and the SAME credit no longer covers other investigations', async () => {
     const { container } = renderAt('/documentation')
-    expect(await screen.findByRole('heading', { level: 2, name: 'References' })).toBeInTheDocument()
-    for (let n = 1; n <= 6; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
+    expect(await screen.findByRole('heading', { level: 3, name: 'References' })).toBeInTheDocument()
+    for (let n = 1; n <= 7; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
     expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
   })
 

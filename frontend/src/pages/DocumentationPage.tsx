@@ -7,11 +7,12 @@
  * validation, architecture, equations) lives in the PDF and in docs/technical-notes.md, not here.
  */
 import { lazy, Suspense, useState, type ReactNode } from 'react'
+import { Link } from 'react-router'
 import { ChevronDown, Download, ExternalLink, FileText } from 'lucide-react'
 import { Tag } from '../components/ConsolePanel'
 import { CreditsLedger } from '../components/CreditsLedger'
 import { Tooltip } from '../components/Tooltip'
-import { DOCUMENTATION_PDF_URL, DOCUMENTATION_SI_URL } from '../app/routes'
+import { DOCUMENTATION_PDF_URL, DOCUMENTATION_SI_URL, LINKS } from '../app/routes'
 import {
   HABITATS,
   INVESTIGATIONS,
@@ -31,9 +32,11 @@ const SECTIONS = [
   { id: 'full-documentation', label: 'Full documentation' },
   { id: 'investigations', label: 'Investigations' },
   { id: 'data', label: 'Data' },
-  { id: 'references', label: 'References' },
-  { id: 'credits', label: 'Credits' },
+  // #references and #credits stay as anchors inside this section.
+  { id: 'sources', label: 'Sources & credits' },
 ] as const
+
+const SI_CHAPTER = 'Use of Super Intelligence (SI)'
 
 /** Table of contents of the technical PDF (shown on the documentation card). */
 const DOC_CONTENTS = [
@@ -44,7 +47,7 @@ const DOC_CONTENTS = [
   'Data and curation',
   'Model and validation',
   'Architecture and data contract',
-  'Use of Super Intelligence (SI)',
+  SI_CHAPTER,
   'Limitations',
   'Team and credits',
   'References',
@@ -60,10 +63,7 @@ export function DocumentationPage() {
         <FullDocumentationCard />
         <InvestigationsSection />
         <BassDataSection />
-        <DataNotesSection />
-        <ReferencesSection />
-        {/* Credits & licenses: the footer "Credits" link lands here (#credits). */}
-        <CreditsLedger />
+        <SourcesSection />
       </div>
     </div>
   )
@@ -114,8 +114,8 @@ function FullDocumentationCard() {
       className={`relative scroll-mt-20 overflow-hidden ${PANEL}`}
     >
       <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px] bg-brand" />
-      <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:gap-12 lg:p-10">
-        <div>
+      <div className="p-6 sm:p-8 lg:p-10">
+        <div className="max-w-3xl">
           <p className="inline-flex items-center gap-2 font-mono text-[0.6875rem] tracking-[0.18em] text-label uppercase">
             <FileText className="size-3.5 text-brand" aria-hidden />
             Full documentation
@@ -146,19 +146,38 @@ function FullDocumentationCard() {
           </div>
         </div>
 
-        <div className="border-t border-subtle pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
-          <h3 className="font-mono text-[0.6875rem] tracking-[0.18em] text-muted uppercase">Contents</h3>
-          <ol className="mt-3 space-y-1.5" data-testid="doc-contents">
+        {/* Compact contents: two columns of small text; the SI chapter is a link. */}
+        <div className="mt-8 border-t border-subtle pt-5">
+          <h3 className="font-mono text-[0.625rem] tracking-[0.18em] text-muted uppercase">Contents</h3>
+          <ol className="mt-3 gap-x-8 space-y-1 sm:columns-2" data-testid="doc-contents">
             {DOC_CONTENTS.map((item, i) => (
-              <li key={item} className="flex gap-3 text-sm text-secondary">
-                <span className="w-5 shrink-0 text-right font-mono text-xs leading-5 text-muted tabular-nums">{i + 1}</span>
-                <span className="leading-5">{item}</span>
+              <li key={item} className="flex break-inside-avoid gap-2.5 text-xs leading-5 text-secondary">
+                <span className="w-4 shrink-0 text-right font-mono text-[0.6875rem] text-muted tabular-nums">{i + 1}</span>
+                {item === SI_CHAPTER ? <SiChapterLink>{item}</SiChapterLink> : <span>{item}</span>}
               </li>
             ))}
           </ol>
         </div>
       </div>
     </section>
+  )
+}
+
+/** SI chapter of the PDF once published; until then, the "How we use SI" block on the Home. */
+function SiChapterLink({ children }: { children: ReactNode }) {
+  const className = 'font-medium text-focus underline-offset-2 hover:underline'
+  if (DOCUMENTATION_SI_URL) {
+    return (
+      <a href={DOCUMENTATION_SI_URL} target="_blank" rel="noreferrer" className={className}>
+        {children}
+        <span className="sr-only"> (opens in a new tab)</span>
+      </a>
+    )
+  }
+  return (
+    <Link to={LINKS.siUsage} className={className}>
+      {children}
+    </Link>
   )
 }
 
@@ -272,12 +291,10 @@ function InvestigationCard({ inv, rank, relevance }: { inv: Investigation; rank:
   return (
     <li className={`${PANEL} flex flex-col p-5`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-mono text-xs text-focus">
-            #{rank} · {inv.code}
-          </p>
-          <h3 className="mt-1 text-base font-semibold text-primary">{inv.name}</h3>
-        </div>
+        <h3 className="min-w-0 text-base leading-snug font-semibold text-primary">
+          <span className="mr-1.5 font-mono text-xs font-normal text-muted">#{rank}</span>
+          <span>{inv.name}</span>
+        </h3>
         <span
           data-testid="relevance"
           title="Team-assigned relevance"
@@ -288,20 +305,19 @@ function InvestigationCard({ inv, rank, relevance }: { inv: Investigation; rank:
         </span>
       </div>
 
-      <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-2">
-        <div>
-          <dt className="text-muted">Facility</dt>
-          <dd className="mt-0.5 text-secondary">{inv.facility}</dd>
-        </div>
-        <div>
-          <dt className="text-muted">Conditions tested</dt>
-          <dd className="mt-0.5 font-mono text-secondary tabular-nums">{inv.conditions ?? 'See source'}</dd>
-        </div>
-      </dl>
+      <p className="mt-2">
+        <span
+          data-testid="site"
+          title={inv.facility}
+          className="inline-block rounded-md border border-subtle bg-void/60 px-1.5 py-0.5 font-mono text-[0.6875rem] tracking-[0.06em] text-label"
+        >
+          {inv.site}
+        </span>
+      </p>
 
       <div className="mt-4">
         <p className="text-xs text-muted">Why it matters</p>
-        <p className="mt-0.5 line-clamp-2 text-sm leading-relaxed text-secondary">{inv.why}</p>
+        <p className="mt-0.5 text-sm leading-relaxed text-secondary">{inv.why}</p>
       </div>
 
       <details className="group mt-4 border-t border-subtle pt-3">
@@ -310,6 +326,13 @@ function InvestigationCard({ inv, rank, relevance }: { inv: Investigation; rank:
           Details
         </summary>
         <div className="mt-3 space-y-2 text-xs leading-relaxed text-secondary">
+          <p>
+            <strong className="font-medium text-primary">Facility:</strong> {inv.facility} · <span className="font-mono">{inv.code}</span>
+          </p>
+          <p>
+            <strong className="font-medium text-primary">Conditions tested:</strong>{' '}
+            <span className="font-mono tabular-nums">{inv.conditions ?? 'See source'}</span>
+          </p>
           <p>
             <strong className="font-medium text-primary">Materials:</strong> {inv.materials}
           </p>
@@ -365,9 +388,14 @@ function InvestigationCard({ inv, rank, relevance }: { inv: Investigation; rank:
 function BassDataSection() {
   return (
     <Section id="data" label="Data" title="The experimental data">
-      <p className="mb-4 max-w-3xl text-sm leading-relaxed text-secondary">
+      <p className="max-w-3xl text-sm leading-relaxed text-secondary">
         BASS-II tests run aboard the ISS, as recorded in the NASA PSI dataset <Cite refs={[2]} /> and the summary report{' '}
         <Cite refs={[1]} />.
+      </p>
+      {/* Data notes, in one line: open licenses only, and Moon/Mars are estimates. */}
+      <p data-testid="data-notes" className="mt-2 mb-4 max-w-3xl text-xs leading-relaxed text-muted">
+        Open data only (CC0-1.0 or U.S. Government public domain; PSI-10 has no license listed and is not used). NASA PSI
+        has no Moon or Mars combustion data, so those results are estimates between microgravity and Earth data.
       </p>
       <Suspense fallback={<div className="h-24 rounded-2xl border border-subtle bg-panel" />}>
         <BassExperimentsSection collapsible />
@@ -377,57 +405,41 @@ function BassDataSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Data notes                                                          */
+/* Sources & credits                                                   */
 /* ------------------------------------------------------------------ */
 
-function DataNotesSection() {
+/** Numbered NASA references on top (the [n] on the cards point here), then the credits table. */
+function SourcesSection() {
   return (
-    <Section id="data-notes" label="Data notes" title="About the data">
-      <div className={`${PANEL} divide-y divide-subtle`}>
-        <div className="p-5">
-          <h3 className="text-sm font-medium text-primary">Open data only</h3>
-          <p className="mt-1 text-sm leading-relaxed text-secondary">
-            All data comes from openly licensed NASA sources (CC0-1.0 or U.S. Government public domain). PSI-10 has no
-            license listed and is not used.
-          </p>
-        </div>
-        <div className="p-5">
-          <h3 className="text-sm font-medium text-primary">Partial gravity</h3>
-          <p className="mt-1 text-sm leading-relaxed text-secondary">
-            NASA PSI has no Moon or Mars combustion data. These results are estimates bounded by microgravity and
-            Earth-gravity data.
-          </p>
-        </div>
+    <Section id="sources" label="Sources & credits" title="Sources & credits">
+      <div id="references" className="scroll-mt-20">
+        <h3 className="text-base font-semibold text-primary">References</h3>
+        <p className="mt-1 text-xs text-muted">
+          NASA data (CC0-1.0) and technical reports (U.S. Government public domain) behind the cards and the simulator.
+        </p>
+        <ol className={`mt-4 ${PANEL} divide-y divide-subtle`}>
+          {REFERENCES.map((r) => (
+            <li key={r.n} id={`ref-${r.n}`} className="flex scroll-mt-20 gap-3 p-4 text-sm leading-relaxed">
+              <span className="shrink-0 font-mono text-xs text-muted tabular-nums">[{r.n}]</span>
+              <span className="min-w-0 text-secondary">
+                {r.text}{' '}
+                <a href={r.url} target="_blank" rel="noreferrer" className="text-focus [overflow-wrap:anywhere] hover:underline">
+                  {r.url}
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 text-xs text-muted">
+          <Tag>To verify</Tag> The FLEX and SPICE cards link to the NASA PSI repository; their full references are still to
+          be added. The license of the SoFIE web page [6] is to verify.
+        </p>
       </div>
-    </Section>
-  )
-}
 
-/* ------------------------------------------------------------------ */
-/* References                                                          */
-/* ------------------------------------------------------------------ */
-
-function ReferencesSection() {
-  return (
-    <Section id="references" label="References" title="References">
-      <ol className={`${PANEL} divide-y divide-subtle`}>
-        {REFERENCES.map((r) => (
-          <li key={r.n} id={`ref-${r.n}`} className="flex scroll-mt-20 gap-3 p-4 text-sm leading-relaxed">
-            <span className="shrink-0 font-mono text-xs text-muted tabular-nums">[{r.n}]</span>
-            <span className="min-w-0 text-secondary">
-              {r.text}{' '}
-              <a href={r.url} target="_blank" rel="noreferrer" className="text-focus [overflow-wrap:anywhere] hover:underline">
-                {r.url}
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            </span>
-          </li>
-        ))}
-      </ol>
-      <p className="mt-3 text-xs text-muted">
-        <Tag>To verify</Tag> The FLEX and SPICE cards link to the NASA PSI repository; their full references are still to
-        be added.
-      </p>
+      <div className="mt-10">
+        <CreditsLedger />
+      </div>
     </Section>
   )
 }

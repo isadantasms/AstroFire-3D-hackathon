@@ -1,41 +1,29 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import { ExternalLink } from 'lucide-react'
-import { ConsolePanel } from './ConsolePanel'
-import { CREDITS_LEDGER, type CreditRow } from '../content/credits'
+import { CREDITS_LEDGER } from '../content/credits'
 
-/** NASA data and reports plus research studies; everything else is software, tools and assets. */
-const isResearch = (c: CreditRow) => c.type.startsWith('NASA') || c.type.startsWith('Research')
-const DATA_RESEARCH = CREDITS_LEDGER.filter(isResearch)
-const SOFTWARE = CREDITS_LEDGER.filter((c) => !isResearch(c))
-
-/** Data, libraries and assets with their licenses; the footer "Credits" link lands here (#credits). */
+/**
+ * Software, tools, assets and SI tools with their licenses (Documentation → Sources & credits).
+ * NASA data and reports are the numbered references shown above it, so they are not repeated here.
+ * The footer "Credits" link lands here (#credits).
+ */
 export function CreditsLedger() {
   return (
-    <ConsolePanel id="credits" title="Credits & licenses" className="scroll-mt-20">
-      <div className="space-y-6">
-        <CreditGroup title="Data & research" rows={DATA_RESEARCH} />
-        <CreditGroup title="Software & assets" rows={SOFTWARE} />
-      </div>
-    </ConsolePanel>
-  )
-}
-
-function CreditGroup({ title, rows }: { title: string; rows: CreditRow[] }) {
-  return (
-    <div>
-      <h3 className="text-sm font-medium text-secondary">{title}</h3>
-      <div className="relative mt-2 overflow-x-auto">
+    <div id="credits" className="scroll-mt-20">
+      <h3 className="text-base font-semibold text-primary">Credits &amp; licenses</h3>
+      <p className="mt-1 text-xs text-muted">Software, tools, assets and SI tools used to build AstroFire.</p>
+      <div className="relative mt-4 overflow-x-auto rounded-2xl border border-subtle bg-panel px-4">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="border-b border-subtle text-xs text-muted">
             <tr>
-              <th scope="col" className="py-2 pr-4 font-medium">Resource</th>
-              <th scope="col" className="py-2 pr-4 font-medium">Type</th>
-              <th scope="col" className="py-2 pr-4 font-medium">License</th>
-              <th scope="col" className="py-2 text-right font-medium">Source</th>
+              <th scope="col" className="py-2.5 pr-4 font-medium">Resource</th>
+              <th scope="col" className="py-2.5 pr-4 font-medium">Type</th>
+              <th scope="col" className="py-2.5 pr-4 font-medium">License</th>
+              <th scope="col" className="py-2.5 text-right font-medium">Source</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((item) => (
+            {CREDITS_LEDGER.map((item) => (
               <tr key={item.resource} className="border-b border-subtle/60 align-top last:border-b-0">
                 <td className="py-2.5 pr-4 text-primary">{item.resource}</td>
                 <td className="py-2.5 pr-4 text-xs whitespace-nowrap text-muted">{item.type}</td>

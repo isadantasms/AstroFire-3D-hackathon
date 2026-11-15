@@ -38,6 +38,8 @@ export interface Investigation {
   code: string
   name: string
   facility: string
+  /** Short label of where the test ran, shown as a badge on the card (from the facility above). */
+  site: string
   /** Tested O2 and airflow, only when traceable to a source; otherwise null ("see source"). */
   conditions: string | null
   why: string
@@ -63,6 +65,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     code: 'PSI-25 · NASA/TM-20210011385',
     name: 'Burning and Suppression of Solids–II (BASS-II)',
     facility: 'ISS Microgravity Science Glovebox (MSG)',
+    site: 'ISS · MSG',
     conditions: `${fmt(o2.min, 1)}–${fmt(o2.max, 1)}% O₂ · ${fmt(air.min, 1)}–${fmt(air.max, 1)} cm/s (79 tests)`,
     why: 'Observed ISS flame-spread and extinction data for solid fuels under forced flow. AstroFire matches every scenario against these records.',
     materials: 'PMMA slabs, thin films and rods, SIBAL cotton-fiberglass fabric, Nomex III, Japan wax candle',
@@ -80,6 +83,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     code: 'Saffire I–VI · NTRS-20170000230 & NTRS-20240002981',
     name: 'Spacecraft Fire Safety Demonstration Project (Saffire I–VI)',
     facility: 'Uncrewed Northrop Grumman Cygnus spacecraft',
+    site: 'Cygnus',
     conditions: null,
     why: 'Large-scale burns of materials also studied in BASS-II, aboard an uncrewed vehicle. Informs cabin-scale fire growth and combustion products.',
     materials: 'SIBAL fabric sheets, PMMA panels, Nomex fire barriers, silicone and cotton',
@@ -97,6 +101,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     code: 'SoFIE · ISS Combustion Integrated Rack (CIR)',
     name: 'Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)',
     facility: 'ISS Combustion Integrated Rack (CIR)',
+    site: 'ISS · CIR',
     conditions: null,
     why: 'Studies how solid spacecraft materials ignite, grow and go out, including the effects of flow, oxygen and pressure.',
     materials: 'PMMA and other solid spacecraft materials, including cotton-based fabrics',
@@ -115,6 +120,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     code: 'SAME · NTRS-20170007283',
     name: 'Smoke Aerosol Measurement Experiment (SAME)',
     facility: 'ISS Microgravity Science Glovebox (MSG)',
+    site: 'ISS · MSG',
     conditions: null,
     why: 'Measures smoke from overheated spacecraft materials before flaming starts, which informs early smoke detection.',
     materials: 'Kapton wire insulation, Teflon, silicone, cellulose paper, lamp wick',
@@ -132,6 +138,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     code: 'FLEX & FLEX-2 · ISS CIR',
     name: 'Flame Extinguishment Experiment (FLEX)',
     facility: 'ISS Combustion Integrated Rack (CIR)',
+    site: 'ISS · CIR',
     conditions: null,
     why: 'Studies how burning fuel droplets go out in microgravity, including low-temperature flames that continue after visible extinction.',
     materials: 'Heptane, methanol, decane and biobutanol droplets',
@@ -150,6 +157,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     code: 'SPICE · ISS MSG',
     name: 'Smoke Point In Co-flow Experiment (SPICE)',
     facility: 'ISS Microgravity Science Glovebox (MSG)',
+    site: 'ISS · MSG',
     conditions: null,
     why: 'Studies when gas-jet flames start to produce soot in microgravity, which changes flame color and radiant heat.',
     materials: 'Ethylene, propane, methane and propylene gas jets',
