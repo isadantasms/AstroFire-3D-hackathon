@@ -1,7 +1,6 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 import sans600 from '@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff?url'
-import serif400 from '@fontsource/ibm-plex-serif/files/ibm-plex-serif-latin-400-normal.woff?url'
-import serif600 from '@fontsource/ibm-plex-serif/files/ibm-plex-serif-latin-600-normal.woff?url'
+import sans400 from '@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff?url'
 import mono400 from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff?url'
 import { reportFileName, type ReportModel } from './reportModel'
 
@@ -15,7 +14,7 @@ export async function downloadReportPdf(report: ReportModel): Promise<void> {
     import('./ReportPdf'),
     import('./reportFonts'),
   ])
-  registerReportFonts({ sans600, serif400, serif600, mono400 })
+  registerReportFonts({ sans400, sans600, mono400 })
   // ReportDocument has no hooks; calling it returns the <Document> element react-pdf expects.
   const blob = await pdf(ReportDocument({ report })).toBlob()
 

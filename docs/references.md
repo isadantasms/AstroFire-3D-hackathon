@@ -33,7 +33,7 @@
 | Tailwind CSS | Library | MIT License | https://tailwindcss.com | `frontend/`, `DESIGN.md` |
 | Vite | Library | MIT License | https://vite.dev | `frontend/` build tooling and dev server |
 | React Router | Library | MIT License | https://reactrouter.com | `frontend/` client-side routing |
-| Fontsource (`@fontsource/ibm-plex-sans`, `@fontsource/ibm-plex-serif`, `@fontsource/ibm-plex-mono`) | Library | MIT License (packaging); IBM Plex fonts under SIL OFL 1.1 | https://fontsource.org | `frontend/` self-hosted fonts |
+| Fontsource (`@fontsource/ibm-plex-sans`, `@fontsource/ibm-plex-mono`) | Library | MIT License (packaging); IBM Plex fonts under SIL OFL 1.1 | https://fontsource.org | `frontend/` self-hosted fonts |
 | Vitest | Library | MIT License | https://vitest.dev | `frontend/` unit and route tests |
 | Testing Library (`@testing-library/react`, `@testing-library/jest-dom`) | Library | MIT License | https://testing-library.com | `frontend/` tests |
 | ESLint & typescript-eslint | Library | MIT License | https://eslint.org | `frontend/` linting |

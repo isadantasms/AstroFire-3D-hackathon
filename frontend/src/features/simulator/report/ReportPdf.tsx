@@ -1,98 +1,128 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
 /**
- * Academic-style PDF of the scenario report (A4, 2.5 cm margins, selectable text), rendered with
- * @react-pdf/renderer. Loaded lazily (see downloadReportPdf.ts) so it stays out of the main bundle.
- * Plex fonts ship only the latin subset, so the PDF writes "O2" / "CO2" instead of subscript digits.
+ * Print version of the scenario report (A4, white page, selectable text), rendered with
+ * @react-pdf/renderer and loaded lazily (see downloadReportPdf.ts). Same content and order as the
+ * "Full report" panel (ReportPanel.tsx). Charts are vector <Svg> drawn from reportCharts.ts.
+ * The Plex web fonts ship only the latin subset, so toPdf() rewrites a few symbols (₂, Δ, ≥, →).
  */
-import { Circle, Defs, Document, G, LinearGradient, Link, Page, Path, Rect, Stop, StyleSheet, Svg, Text, View } from '@react-pdf/renderer'
+import {
+  Circle,
+  Defs,
+  Document,
+  G,
+  Line,
+  LinearGradient,
+  Link,
+  Page,
+  Path,
+  Rect,
+  Stop,
+  StyleSheet,
+  Svg,
+  Text,
+  View,
+} from '@react-pdf/renderer'
+import type { ReactNode } from 'react'
 import { BRAND, BRAND_COLORS, BRAND_VARIANT_COLORS } from '../../../components/brandGeometry'
-import { FIGURE_VIEWBOX, flameFigure } from './flameFigure'
+import { toPdf } from './pdfText'
+import { fmt } from '../../../lib/format'
+import { CHART_THEMES, flameSchematic, regimeMap, riskBarChart, type Chart } from './reportCharts'
+import { figureCaptions, KPI_INTRO, SECTION_INTRO, SECTION_TITLES } from './reportCopy'
 import {
   DISCLAIMER,
-  FIGURE_CAPTION,
   formatDateTime,
   GUIDANCE_NOTE,
-  NOT_AVAILABLE,
+  MOCK_WATERMARK,
   PRODUCT_NAME,
+  PROVENANCE,
   SI_NOTE,
-  type MetricRow,
+  SIZING_AWAITING,
+  type Kpi,
   type ReportModel,
-  type ValueRow,
 } from './reportModel'
 
+const INK = '#0F172A'
+const BODY = '#334155'
+const MUTED = '#64748B'
+const RULE = '#CBD5E1'
+const HEAD_BG = '#F1F5F9'
 const ORANGE = BRAND_COLORS.orange
-const INK = '#1A1F29'
-const GREY = '#4A5263'
-const LIGHT = '#EEF0F3'
-const RULE = '#C9CED6'
-const MARGIN = 70.87 // 2.5 cm in points
+const MARGIN = 56
 
 const s = StyleSheet.create({
   page: {
     paddingTop: MARGIN,
-    paddingBottom: MARGIN,
+    paddingBottom: MARGIN + 8,
     paddingHorizontal: MARGIN,
-    fontFamily: 'Plex Serif',
-    fontSize: 10.5,
-    color: INK,
+    fontFamily: 'Plex Sans',
+    fontSize: 10,
+    color: BODY,
     backgroundColor: '#FFFFFF',
   },
-  brandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
-  brandName: { fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 10, marginLeft: 4 },
-  title: { fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 20, lineHeight: 1.2 },
-  titleRule: { width: 48, height: 2, backgroundColor: ORANGE, marginTop: 8, marginBottom: 8 },
-  subtitle: { fontSize: 11.5, lineHeight: 1.4, color: GREY, marginBottom: 14 },
-  meta: { borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: RULE, paddingVertical: 6, marginBottom: 14 },
-  metaRow: { flexDirection: 'row', fontSize: 9, lineHeight: 1.5 },
-  metaKey: { width: 110, fontFamily: 'Plex Sans', fontWeight: 600, color: GREY },
-  metaValue: { flex: 1 },
-  mono: { fontFamily: 'Plex Mono', fontSize: 9 },
-  abstractBox: { borderWidth: 0.75, borderColor: RULE, padding: 10, marginBottom: 6 },
-  abstractTitle: { fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 10, marginBottom: 4 },
-  h2: { flexDirection: 'row', fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 12.5, marginTop: 16, marginBottom: 6 },
-  h2Number: { color: ORANGE, width: 18 },
-  // Line height lives on text styles: set on the page, it hides the fixed footer in react-pdf.
-  p: { marginBottom: 6, textAlign: 'justify', fontSize: 10.5, lineHeight: 1.4 },
-  note: { fontSize: 9, color: GREY, fontStyle: 'normal' },
-  table: { borderTopWidth: 0.5, borderColor: RULE, marginVertical: 6 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  brandName: { fontWeight: 600, fontSize: 10, color: INK, marginLeft: 5 },
+  title: { fontWeight: 600, fontSize: 19, color: INK, lineHeight: 1.2 },
+  titleRule: { width: 44, height: 2, backgroundColor: ORANGE, marginTop: 7, marginBottom: 7 },
+  subtitle: { fontSize: 11, color: BODY, lineHeight: 1.4, marginBottom: 10 },
+  meta: { borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: RULE, paddingVertical: 5, marginBottom: 12 },
+  metaRow: { flexDirection: 'row', fontSize: 8.5, lineHeight: 1.5 },
+  metaKey: { width: 92, fontWeight: 600, color: MUTED },
+  metaValue: { flex: 1, color: BODY },
+  mono: { fontFamily: 'Plex Mono', fontSize: 8.5 },
+  p: { fontSize: 10, lineHeight: 1.45, marginBottom: 5, color: BODY },
+  small: { fontSize: 8.5, lineHeight: 1.45, color: MUTED },
+  abstractBox: { borderWidth: 0.75, borderColor: RULE, borderRadius: 3, padding: 10, marginBottom: 10 },
+  boxTitle: { fontWeight: 600, fontSize: 10, color: INK, marginBottom: 3 },
+  kpiRow: { flexDirection: 'row', marginTop: 4, marginBottom: 4 },
+  kpi: { flex: 1, borderWidth: 0.75, borderColor: RULE, borderRadius: 3, padding: 7, marginRight: 6 },
+  kpiLabel: { fontSize: 7.5, color: MUTED, lineHeight: 1.3 },
+  kpiValue: { fontFamily: 'Plex Mono', fontSize: 14, marginTop: 3 },
+  kpiWords: { fontWeight: 600, fontSize: 8.5, marginTop: 3, lineHeight: 1.3 },
+  kpiDetail: { fontSize: 7, color: MUTED, marginTop: 3, lineHeight: 1.3 },
+  tag: { fontFamily: 'Plex Mono', fontSize: 6.5, color: ORANGE },
+  h2: { flexDirection: 'row', fontWeight: 600, fontSize: 12.5, color: INK, marginTop: 14 },
+  h2Number: { color: ORANGE, width: 16 },
+  intro: { fontSize: 8.5, color: MUTED, lineHeight: 1.4, marginTop: 2, marginBottom: 6 },
+  table: { borderTopWidth: 0.5, borderColor: RULE, marginTop: 3, marginBottom: 4 },
   tr: { flexDirection: 'row', borderBottomWidth: 0.5, borderColor: RULE },
-  th: { backgroundColor: LIGHT, fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 8.5 },
-  cell: { paddingVertical: 3, paddingHorizontal: 5, fontSize: 9.5, lineHeight: 1.35 },
-  figure: { marginVertical: 8, alignItems: 'center' },
-  caption: { fontSize: 9, color: GREY, marginTop: 4, textAlign: 'center', lineHeight: 1.4 },
-  refItem: { flexDirection: 'row', marginBottom: 6 },
-  refNumber: { width: 22, fontFamily: 'Plex Mono', fontSize: 9 },
-  refBody: { flex: 1, fontSize: 9.5, lineHeight: 1.4 },
-  link: { color: INK, textDecoration: 'none', fontFamily: 'Plex Mono', fontSize: 8.5 },
+  th: { backgroundColor: HEAD_BG, fontWeight: 600, fontSize: 8, color: INK },
+  cell: { paddingVertical: 3, paddingHorizontal: 4, fontSize: 8.5, lineHeight: 1.35, color: BODY },
+  num: { fontFamily: 'Plex Mono', fontSize: 8.5, textAlign: 'right' },
+  figure: { marginTop: 6, marginBottom: 4 },
+  caption: { fontSize: 8, color: MUTED, lineHeight: 1.4, marginTop: 4 },
+  refItem: { flexDirection: 'row', marginBottom: 5 },
+  refNumber: { width: 20, fontFamily: 'Plex Mono', fontSize: 8.5, color: MUTED },
+  refBody: { flex: 1, fontSize: 9, lineHeight: 1.4, color: BODY },
+  link: { color: INK, textDecoration: 'none', fontFamily: 'Plex Mono', fontSize: 8 },
   footer: {
     position: 'absolute',
-    bottom: 34,
+    bottom: 28,
     left: MARGIN,
     right: MARGIN,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    fontFamily: 'Plex Sans',
-    fontWeight: 600,
     fontSize: 7.5,
-    color: GREY,
+    color: MUTED,
   },
   watermarkWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
-  watermark: {
-    fontFamily: 'Plex Sans',
-    fontWeight: 600,
-    fontSize: 34,
-    color: ORANGE,
-    opacity: 0.13,
-    transform: 'rotate(-40deg)',
-  },
+  watermark: { fontWeight: 600, fontSize: 32, color: ORANGE, opacity: 0.12, transform: 'rotate(-40deg)' },
 })
 
 /**
- * Mono text with its spaces set in the serif face: fontkit cannot lay out the empty space glyph
- * of the Plex Mono web font, while digits, letters and units render normally.
+ * Mono text with its spaces set in the sans face: fontkit cannot lay out the empty space glyph of
+ * the Plex Mono web font, while digits, letters and units render normally.
  */
 function monoSpaced(text: string) {
-  return text.split(' ').flatMap((part, i) => (i === 0 ? [part] : [<Text key={i} style={{ fontFamily: 'Plex Serif' }}> </Text>, part]))
+  return text.split(' ').flatMap((part, i) =>
+    i === 0
+      ? [part]
+      : [
+          <Text key={i} style={{ fontFamily: 'Plex Sans' }}>
+            {' '}
+          </Text>,
+          part,
+        ],
+  )
 }
 
 /** Light-background version of the logo (logo-icon-light.svg). */
@@ -121,11 +151,99 @@ function Logo() {
   )
 }
 
+/** Draws a chart's shapes with react-pdf vector primitives (light theme). */
+function ChartPdf({ chart, width }: { chart: Chart; width: number }) {
+  const c = CHART_THEMES.light
+  return (
+    <Svg width={width} height={(width * chart.height) / chart.width} viewBox={`0 0 ${chart.width} ${chart.height}`}>
+      {chart.shapes.map((sh, i) => {
+        switch (sh.kind) {
+          case 'rect':
+            return (
+              <Rect
+                key={i}
+                x={sh.x}
+                y={sh.y}
+                width={Math.max(0, sh.w)}
+                height={Math.max(0, sh.h)}
+                rx={sh.rx}
+                fill={sh.fill === 'bg' ? '#F8FAFC' : c[sh.fill]}
+                fillOpacity={sh.opacity}
+                stroke={sh.stroke ? c[sh.stroke] : undefined}
+              />
+            )
+          case 'line':
+            return (
+              <Line
+                key={i}
+                x1={sh.x1}
+                y1={sh.y1}
+                x2={sh.x2}
+                y2={sh.y2}
+                stroke={c[sh.stroke]}
+                strokeWidth={sh.width ?? 1}
+                strokeDasharray={sh.dash}
+              />
+            )
+          case 'circle':
+            return (
+              <Circle
+                key={i}
+                cx={sh.cx}
+                cy={sh.cy}
+                r={sh.r}
+                fill={sh.fill ? c[sh.fill] : 'none'}
+                fillOpacity={sh.opacity}
+                stroke={sh.stroke ? c[sh.stroke] : undefined}
+                strokeWidth={sh.width}
+                strokeDasharray={sh.dash}
+              />
+            )
+          case 'path':
+            return (
+              <Path
+                key={i}
+                d={sh.d}
+                fill={sh.fill ? c[sh.fill] : 'none'}
+                fillOpacity={sh.opacity}
+                stroke={sh.stroke ? c[sh.stroke] : undefined}
+                strokeWidth={sh.width}
+              />
+            )
+          case 'text':
+            return (
+              <Text
+                key={i}
+                x={sh.x}
+                y={sh.y}
+                fill={c[sh.fill]}
+                textAnchor={sh.anchor ?? 'start'}
+                style={{ fontFamily: 'Plex Sans', fontSize: sh.size, fontWeight: sh.bold ? 600 : 400 }}
+              >
+                {toPdf(sh.text)}
+              </Text>
+            )
+        }
+      })}
+    </Svg>
+  )
+}
+
 function Heading({ n, children }: { n?: number; children: string }) {
   return (
-    <View style={s.h2} minPresenceAhead={60}>
+    <View style={s.h2} minPresenceAhead={90}>
       {n ? <Text style={s.h2Number}>{n}.</Text> : null}
       <Text>{children}</Text>
+    </View>
+  )
+}
+
+function Section({ n, title, children }: { n: number; title: (typeof SECTION_TITLES)[number]; children: ReactNode }) {
+  return (
+    <View>
+      <Heading n={n}>{title}</Heading>
+      <Text style={s.intro}>{toPdf(SECTION_INTRO[title])}</Text>
+      {children}
     </View>
   )
 }
@@ -133,37 +251,38 @@ function Heading({ n, children }: { n?: number; children: string }) {
 function Paragraph({ children, cite }: { children: string; cite?: string }) {
   return (
     <Text style={s.p}>
-      {children}
+      {toPdf(children)}
       {cite ? ' ' : null}
-      {cite ? <Text style={s.mono}>{monoSpaced(cite)}</Text> : null}
+      {cite ? <Text style={s.mono}>{cite.replace(/, /g, ',')}</Text> : null}
     </Text>
   )
 }
 
-const NUMERIC = /^-?[0-9.]+$/
+const NUMERIC = /^[+−-]?[0-9.]+$/
 
-interface Column<T> {
+interface Column {
   header: string
   width: string
-  /** true: always mono; 'numeric': mono only for numeric values. */
-  mono?: boolean | 'numeric'
-  value: (row: T) => string
+  numeric?: boolean
 }
 
-function Table<T>({ rows, columns }: { rows: T[]; columns: Column<T>[] }) {
+/** Table with a header row repeated on each page (fixed), rows kept whole, numbers right-aligned in mono. */
+function Table({ columns, rows }: { columns: Column[]; rows: string[][] }) {
   return (
     <View style={s.table}>
-      <View style={[s.tr, s.th]}>
+      <View style={[s.tr, s.th]} fixed>
         {columns.map((c) => (
-          <Text key={c.header} style={[s.cell, { width: c.width }]}>
-            {c.header}
+          <Text key={c.header} style={[s.cell, { width: c.width, fontWeight: 600, color: INK }, c.numeric ? { textAlign: 'right' } : {}]}>
+            {toPdf(c.header)}
           </Text>
         ))}
       </View>
-      {rows.map((row, i) => (
-        <View key={i} style={s.tr} wrap={false}>
-          {columns.map((c) => (
-            <MonoCell key={c.header} column={c} value={c.value(row)} />
+      {rows.map((row, ri) => (
+        <View key={ri} style={s.tr} wrap={false}>
+          {row.map((cell, i) => (
+            <Text key={i} style={[s.cell, { width: columns[i].width }, columns[i].numeric && NUMERIC.test(cell) ? s.num : {}]}>
+              {columns[i].numeric && NUMERIC.test(cell) ? monoSpaced(toPdf(cell)) : toPdf(cell)}
+            </Text>
           ))}
         </View>
       ))}
@@ -171,62 +290,68 @@ function Table<T>({ rows, columns }: { rows: T[]; columns: Column<T>[] }) {
   )
 }
 
-function MonoCell<T>({ column, value }: { column: Column<T>; value: string }) {
-  const mono = column.mono === true || (column.mono === 'numeric' && NUMERIC.test(value))
-  return <Text style={[s.cell, { width: column.width }, mono ? s.mono : {}]}>{mono ? monoSpaced(value) : value}</Text>
+const VALUE_COLUMNS: Column[] = [
+  { header: 'Parameter', width: '30%' },
+  { header: 'Value', width: '52%', numeric: true },
+  { header: 'Unit', width: '18%' },
+]
+const METRIC_COLUMNS: Column[] = [
+  { header: 'Metric', width: '22%' },
+  { header: 'Value', width: '14%', numeric: true },
+  { header: 'Unit', width: '12%' },
+  { header: 'What it means', width: '52%' },
+]
+const NEIGHBOR_COLUMNS: Column[] = [
+  { header: 'Test', width: '19%' },
+  { header: 'Material', width: '21%' },
+  { header: 'O2 %', width: '8%', numeric: true },
+  { header: 'Airflow cm/s', width: '11%', numeric: true },
+  { header: 'Thick. mm', width: '10%', numeric: true },
+  { header: 'Burn mm/s', width: '10%', numeric: true },
+  { header: 'Outcome', width: '21%' },
+]
+
+const KPI_COLOR: Record<Kpi['tone'], string> = { nominal: '#059669', warning: '#D97706', critical: '#DC2626', neutral: INK }
+
+function KpiBox({ kpi, last }: { kpi: Kpi; last: boolean }) {
+  const words = kpi.value.length > 12
+  return (
+    <View style={[s.kpi, last ? { marginRight: 0 } : {}]}>
+      <Text style={s.kpiLabel}>
+        {toPdf(kpi.label)}
+        {kpi.tag ? ' ' : null}
+        {kpi.tag ? <Text style={s.tag}>{kpi.tag}</Text> : null}
+      </Text>
+      {words ? (
+        <Text style={[s.kpiWords, { color: KPI_COLOR[kpi.tone] }]}>{toPdf(kpi.value)}</Text>
+      ) : (
+        <Text style={[s.kpiValue, { color: KPI_COLOR[kpi.tone] }]}>
+          {monoSpaced(toPdf(kpi.value))}
+          {kpi.unit ? <Text style={{ fontSize: 8, color: MUTED }}>{monoSpaced(` ${toPdf(kpi.unit)}`)}</Text> : null}
+        </Text>
+      )}
+      <Text style={s.kpiDetail}>{toPdf(kpi.detail)}</Text>
+    </View>
+  )
 }
 
-const VALUE_COLUMNS: Column<ValueRow>[] = [
-  { header: 'Parameter', width: '30%', value: (r) => r.label },
-  { header: 'Value', width: '52%', mono: 'numeric', value: (r) => r.value },
-  { header: 'Unit', width: '18%', mono: true, value: (r) => r.unit || '—' },
-]
-
-const METRIC_COLUMNS: Column<MetricRow>[] = [
-  { header: 'Metric', width: '22%', value: (r) => r.label },
-  { header: 'Value', width: '24%', mono: 'numeric', value: (r) => r.value },
-  { header: 'Unit', width: '12%', mono: true, value: (r) => r.unit || '—' },
-  { header: 'What it means', width: '42%', value: (r) => r.meaning },
-]
-
-function FlameFigurePdf({ report }: { report: ReportModel }) {
-  const fig = flameFigure(report.flame.simulation)
-  const { width, height } = FIGURE_VIEWBOX
+function Figure({ chart, caption, width = 400 }: { chart: Chart; caption: string; width?: number }) {
   return (
     <View style={s.figure} wrap={false}>
-      <Svg width={300} height={(300 * height) / width} viewBox={`0 0 ${width} ${height}`}>
-        <Rect x={0} y={0} width={width} height={height} fill="#F4F5F7" />
-        {fig.flame ? (
-          <>
-            <Path d={fig.flame.outer} fill={fig.flame.color} fillOpacity={fig.flame.opacity * 0.55} />
-            <Path d={fig.flame.inner} fill={fig.flame.color} fillOpacity={fig.flame.opacity} />
-          </>
-        ) : null}
-        {fig.ghost ? (
-          <Path
-            d={`M${fig.ghost.cx - fig.ghost.r} ${fig.ghost.cy}A${fig.ghost.r} ${fig.ghost.r} 0 1 0 ${fig.ghost.cx + fig.ghost.r} ${fig.ghost.cy}A${fig.ghost.r} ${fig.ghost.r} 0 1 0 ${fig.ghost.cx - fig.ghost.r} ${fig.ghost.cy}Z`}
-            fill="none"
-            stroke="#8A94A6"
-            strokeWidth={1}
-            strokeDasharray="4 3"
-          />
-        ) : null}
-        <Rect x={fig.sample.x} y={fig.sample.y} width={fig.sample.width} height={fig.sample.height} fill="#5B6577" />
-      </Svg>
-      <Text style={s.caption}>
-        {FIGURE_CAPTION} {fig.label}.
-      </Text>
+      <ChartPdf chart={chart} width={width} />
+      <Text style={s.caption}>{toPdf(caption)}</Text>
     </View>
   )
 }
 
 export function ReportDocument({ report }: { report: ReportModel }) {
+  const captions = figureCaptions(report)
+  const [s1, s2, s3, s4, s5, s6, s7, s8, s9] = SECTION_TITLES
   const meta: [string, string, boolean?][] = [
     ['Scenario ID', report.scenarioId, true],
     ['Generated on', formatDateTime(report.generatedAt), true],
     ['Mode', report.mockNote ? `Mock (sample payload, not live engine output). ${report.mockNote}.` : 'Live'],
-    ['Grounding status', `${report.grounding.label} (${report.grounding.status})`],
-    ['Data sources', report.dataSources],
+    ['Data', PROVENANCE],
   ]
 
   return (
@@ -234,10 +359,9 @@ export function ReportDocument({ report }: { report: ReportModel }) {
       <Page size="A4" style={s.page}>
         {report.mock ? (
           <View style={s.watermarkWrap} fixed>
-            <Text style={s.watermark}>MOCK DATA, NOT NASA EVIDENCE</Text>
+            <Text style={s.watermark}>{MOCK_WATERMARK}</Text>
           </View>
         ) : null}
-
         <View style={s.footer} fixed>
           <Text>
             {PRODUCT_NAME} · {report.scenarioId}
@@ -251,77 +375,118 @@ export function ReportDocument({ report }: { report: ReportModel }) {
         </View>
         <Text style={s.title}>{report.title}</Text>
         <View style={s.titleRule} />
-        <Text style={s.subtitle}>{report.subtitle}</Text>
+        <Text style={s.subtitle}>{toPdf(report.subtitle)}</Text>
 
         <View style={s.meta}>
           {meta.map(([k, v, mono]) => (
             <View key={k} style={s.metaRow}>
               <Text style={s.metaKey}>{k}</Text>
-              <Text style={[s.metaValue, mono ? s.mono : {}]}>{mono ? monoSpaced(v) : v}</Text>
+              <Text style={[s.metaValue, mono ? s.mono : {}]}>{mono ? monoSpaced(v) : toPdf(v)}</Text>
             </View>
           ))}
         </View>
 
-        <View style={s.abstractBox}>
-          <Text style={s.abstractTitle}>Abstract</Text>
-          <Text style={s.p}>{report.abstract}</Text>
+        <View style={s.abstractBox} wrap={false}>
+          <Text style={s.boxTitle}>Abstract</Text>
+          <Text style={[s.p, { marginBottom: 0 }]}>{toPdf(report.abstract)}</Text>
         </View>
 
-        <Heading n={1}>Scenario parameters</Heading>
-        <Table rows={report.parameters} columns={VALUE_COLUMNS} />
+        <Text style={s.intro}>{KPI_INTRO}</Text>
+        <View style={s.kpiRow} wrap={false}>
+          {report.kpis.map((k, i) => (
+            <KpiBox key={k.label} kpi={k} last={i === report.kpis.length - 1} />
+          ))}
+        </View>
 
-        <Heading n={2}>Flammability telemetry</Heading>
-        <Table rows={report.telemetry} columns={METRIC_COLUMNS} />
+        <Section n={1} title={s1}>
+          <Table columns={VALUE_COLUMNS} rows={report.parameters.map((r) => [r.label, r.value, r.unit])} />
+        </Section>
 
-        <Heading n={3}>Flame behavior</Heading>
-        <Paragraph>{report.flame.text}</Paragraph>
-        <FlameFigurePdf report={report} />
+        <Section n={2} title={s2}>
+          <Table columns={METRIC_COLUMNS} rows={report.telemetry.map((r) => [r.label, r.value, r.unit, r.meaning])} />
+          <Figure chart={riskBarChart(report.score)} caption={captions.riskBar} width={360} />
+        </Section>
 
-        <Heading n={4}>Interpretation</Heading>
-        <Paragraph cite={report.cite}>{report.interpretation}</Paragraph>
+        <Section n={3} title={s3}>
+          <Paragraph>{report.flame.text}</Paragraph>
+          <Figure chart={flameSchematic(report.flame)} caption={captions.schematic} width={340} />
+        </Section>
 
-        <Heading n={5}>Suppression</Heading>
-        <Paragraph cite={report.cite}>{report.suppression.action}</Paragraph>
-        {report.suppression.sizing ? (
-          <>
-            <Text style={[s.p, { fontFamily: 'Plex Sans', fontWeight: 600, fontSize: 9.5 }]}>ISS FWM PFE suppression sizing</Text>
-            <Table rows={report.suppression.sizing} columns={METRIC_COLUMNS} />
-            {report.suppression.note ? <Text style={[s.p, s.note]}>{report.suppression.note}</Text> : null}
-          </>
-        ) : (
-          <Text style={[s.p, s.note]}>Suppression sizing: {NOT_AVAILABLE}.</Text>
-        )}
-        <Text style={[s.p, s.note]}>{GUIDANCE_NOTE}</Text>
+        <View wrap={false}>
+          <Section n={4} title={s4}>
+            <Figure chart={regimeMap(report.regime)} caption={captions.regime} width={360} />
+          </Section>
+        </View>
 
-        <Heading n={6}>Terrestrial applications</Heading>
-        <Paragraph>{report.terrestrial}</Paragraph>
+        <Section n={5} title={s5}>
+          <Paragraph>{report.neighbors.note}</Paragraph>
+          <Table
+            columns={NEIGHBOR_COLUMNS}
+            rows={report.neighbors.rows.map((r) => [
+              r.test_id,
+              r.material_name,
+              fmt(r.initial_o2_pct, 1),
+              fmt(r.airflow_cm_s, 1),
+              fmt(r.thickness_mm, 2),
+              fmt(r.spread_rate_mm_s, 3),
+              r.outcome,
+            ])}
+          />
+        </Section>
 
-        <Heading n={7}>Limitations and data grounding</Heading>
-        <Paragraph cite={report.cite}>{report.limitations}</Paragraph>
-        <Paragraph>{`Grounding status: ${report.grounding.label}. ${report.grounding.summary}`}</Paragraph>
+        <Section n={6} title={s6}>
+          <Paragraph cite={report.cite}>{report.interpretation}</Paragraph>
+        </Section>
+
+        <View wrap={false}>
+          <Section n={7} title={s7}>
+            <Paragraph cite={report.cite}>{report.suppression.action}</Paragraph>
+            {report.suppression.sizing ? (
+              <View wrap={false}>
+                <Text style={[s.p, { fontWeight: 600, color: INK, fontSize: 9 }]}>
+                  ISS water-mist extinguisher sizing (engine estimate)
+                </Text>
+                <Table columns={METRIC_COLUMNS} rows={report.suppression.sizing.map((r) => [r.label, r.value, r.unit, r.meaning])} />
+                {report.suppression.note ? <Text style={s.small}>{toPdf(report.suppression.note)}</Text> : null}
+              </View>
+            ) : (
+              <Text style={[s.small, { marginBottom: 4 }]}>{SIZING_AWAITING}</Text>
+            )}
+            <Text style={s.small}>{GUIDANCE_NOTE}</Text>
+          </Section>
+        </View>
+
+        <Section n={8} title={s8}>
+          <Paragraph>{report.terrestrial}</Paragraph>
+        </Section>
+
+        <Section n={9} title={s9}>
+          <Paragraph cite={report.cite}>{report.limitations}</Paragraph>
+          <Paragraph>{`Data grounding: ${report.groundingLabel}. ${report.groundingMeaning}`}</Paragraph>
+        </Section>
 
         <Heading>References</Heading>
-        {report.references.length === 0 ? <Text style={s.p}>{NOT_AVAILABLE}.</Text> : null}
-        {report.references.map((r) => (
-          <View key={r.n} style={s.refItem} wrap={false}>
-            <Text style={s.refNumber}>[{r.n}]</Text>
-            <View style={s.refBody}>
-              <Text>
-                {`${r.id}. ${r.title}. `}
-                <Link src={r.url} style={s.link}>
-                  {r.url}
-                </Link>
-              </Text>
-              <Text style={[s.note, { marginTop: 2 }]}>{r.finding}</Text>
+        <View style={{ marginTop: 6 }}>
+          {report.references.map((r) => (
+            <View key={r.n} style={s.refItem} wrap={false}>
+              <Text style={s.refNumber}>[{r.n}]</Text>
+              <View style={s.refBody}>
+                <Text>
+                  {toPdf(`${r.id}. ${r.title}. `)}
+                  <Link src={r.url} style={s.link}>
+                    {r.url}
+                  </Link>
+                </Text>
+                <Text style={[s.small, { marginTop: 1 }]}>{toPdf(r.finding)}</Text>
+              </View>
             </View>
-          </View>
-        ))}
-
-        <View style={{ marginTop: 14, borderTopWidth: 0.5, borderColor: RULE, paddingTop: 8 }} wrap={false}>
-          <Text style={[s.p, s.note]}>{SI_NOTE}</Text>
-          <Text style={[s.p, s.note, { fontFamily: 'Plex Sans', fontWeight: 600 }]}>{DISCLAIMER}</Text>
+          ))}
         </View>
 
+        <View style={{ marginTop: 12, borderTopWidth: 0.5, borderColor: RULE, paddingTop: 6 }} wrap={false}>
+          <Text style={s.small}>{SI_NOTE}</Text>
+          <Text style={s.small}>{DISCLAIMER}</Text>
+        </View>
       </Page>
     </Document>
   )

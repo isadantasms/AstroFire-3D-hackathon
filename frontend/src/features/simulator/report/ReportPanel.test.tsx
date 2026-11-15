@@ -49,10 +49,12 @@ const SECTIONS = [
   '1.Scenario parameters',
   '2.Flammability telemetry',
   '3.Flame behavior',
-  '4.Interpretation',
-  '5.Suppression',
-  '6.Terrestrial applications',
-  '7.Limitations and data grounding',
+  '4.Flammability regime map',
+  '5.Empirical context',
+  '6.Interpretation',
+  '7.Suppression',
+  '8.Terrestrial applications',
+  '9.Limitations and data grounding',
   'References',
 ]
 
@@ -68,10 +70,10 @@ describe('Full report', () => {
   })
 
   it.each([
-    ['quiescent', 'scenario_01_iss_quiescent_0g_blue_sphere', 'Spherical flame'],
-    ['lunar', 'scenario_02_lunar_ventilated_elongated_soot', 'Elongated flame'],
+    ['quiescent', 'scenario_01_iss_quiescent_0g_blue_sphere', 'Molecular diffusion'],
+    ['lunar', 'scenario_02_lunar_ventilated_elongated_soot', 'Advective transport'],
     ['low-oxygen', 'scenario_03_hypoxia_extinguished_below_loi', 'No sustained flame'],
-  ] as const)('%s: opens the detailed report built from the payload', async (preset, scenarioId, figureLabel) => {
+  ] as const)('%s: opens the detailed report built from the payload', async (preset, scenarioId, mechanism) => {
     renderSimulator()
     await run(preset)
     const header = screen.getByRole('button', { name: 'Full report' })
@@ -83,26 +85,44 @@ describe('Full report', () => {
     const d = within(dialog)
     expect(d.getByText(scenarioId)).toBeInTheDocument()
     expect(d.getByText('Mock')).toBeInTheDocument()
-    expect(d.getByTestId('report-grounding')).toBeInTheDocument()
+    expect(d.getByTestId('report-mock-note')).toHaveTextContent('Sample text written with Gemini')
+    expect(d.getByTestId('report-provenance')).toHaveTextContent('Experimental reference data: PSI-25 / BASS-II dataset')
+    // AstroFire 3D report, not NASA's: no NASA in the header or the KPI strip.
+    expect(dialog.querySelector('header')!.textContent).not.toMatch(/NASA/)
+    expect(d.getByTestId('report-kpis').textContent).not.toMatch(/NASA/)
+
     expect(d.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(SECTIONS)
-    expect(d.getByText('Figure 1. Illustrative visualization of the simulated flame. ' + figureLabel + '.')).toBeInTheDocument()
-    expect(d.getByText('Minimum oxygen needed to sustain the flame')).toBeInTheDocument()
+    const kpis = within(d.getByTestId('report-kpis'))
+    for (const label of ['Flammability score', 'Burn rate', 'Oxygen margin (ΔO₂)', 'Data grounding']) {
+      expect(kpis.getByText(label)).toBeInTheDocument()
+    }
+    expect(kpis.getByText('derived')).toBeInTheDocument()
+
+    // Figures: risk bar, flame schematic and regime map, each with a numbered caption.
+    expect(d.getByRole('img', { name: /Flammability score \d+ of 100/ })).toBeInTheDocument()
+    expect(d.getByRole('img', { name: `Illustrative schematic: ${mechanism.toLowerCase()}` })).toBeInTheDocument()
+    expect(d.getByRole('img', { name: /Flammability regime map/ })).toBeInTheDocument()
+    for (const n of [1, 2, 3]) expect(d.getByText(new RegExp(`^Figure ${n}\\.`))).toBeInTheDocument()
+
+    expect(d.getByText('Minimum oxygen needed to sustain the flame at this flow and gravity')).toBeInTheDocument()
     expect(d.getByText('Research guidance, not an operational procedure.')).toBeInTheDocument()
     // The sample payloads have no suppression estimate yet.
-    expect(d.getByTestId('report-sizing-unavailable')).toHaveTextContent('Suppression sizing: Not available.')
-    expect(d.getByText('Diagnosis text from templates drafted with SI and reviewed by the team.')).toBeInTheDocument()
-    expect(d.getByTestId('report-mock-note')).toHaveTextContent('Sample text written with Gemini')
-    // Sections 4, 5 and 7 cite the sources; the abstract ends with the same citation.
+    expect(d.getByTestId('report-sizing-awaiting')).toHaveTextContent('Suppression sizing is awaiting the engine estimate for this scenario.')
+    expect(d.getByText('Diagnosis and guidance texts come from templates drafted with SI and reviewed by the team.')).toBeInTheDocument()
+    expect(d.getByText('Research tool. Not a certified safety assessment or operational procedure.')).toBeInTheDocument()
+    // No loose "Not available", code names or hex colours anywhere in the report body.
+    expect(d.getByTestId('report-body').textContent).not.toMatch(/Not available|gravity_g|airflow_cm_s|#[0-9A-Fa-f]{6}/)
+    // Sections 6, 7 and 9 cite the payload sources; the abstract ends with the same citation.
     expect(d.getAllByText('[1, 2]').length).toBe(3)
     expect(d.getByText(/^This report analyzes .* \[1, 2\]$/)).toBeInTheDocument()
     expect(d.getByRole('button', { name: 'Close report' })).toHaveFocus()
   })
 
-  it('scenario_03 explains that there is no sustained flame', async () => {
+  it('scenario_03 explains physically why there is no sustained flame', async () => {
     renderSimulator()
     await run('low-oxygen')
     fireEvent.click(screen.getByRole('button', { name: 'Open full report' }))
-    expect(within(screen.getByRole('dialog')).getByText(/^No sustained flame\. The simulation reports a burn rate of 0\.00 mm\/s/)).toBeInTheDocument()
+    expect(within(screen.getByRole('dialog')).getByText(/is below the oxygen limit \(17\.5% O₂\): heat losses exceed the heat released/)).toBeInTheDocument()
   })
 
   it('closes with Esc, the X button and the backdrop', async () => {

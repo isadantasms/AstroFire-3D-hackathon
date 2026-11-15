@@ -315,7 +315,7 @@ describe('site structure', () => {
     await screen.findByRole('heading', { level: 2, name: 'Credits & licenses' })
     const credits = within(container.querySelector('#credits') as HTMLElement)
     expect(credits.queryByText(/BASS-II \(PSI-25\)|NASA\/TM-20210011385|NTRS-|Saffire|SoFIE|FLEX|SPICE/)).toBeNull()
-    expect(credits.getByText(/IBM Plex Sans, IBM Plex Serif & IBM Plex Mono/)).toBeInTheDocument()
+    expect(credits.getByText(/IBM Plex Sans & IBM Plex Mono/)).toBeInTheDocument()
     expect(credits.getByText('MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher')).toBeInTheDocument()
     expect(
       credits.getByText(

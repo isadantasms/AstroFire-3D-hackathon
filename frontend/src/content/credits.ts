@@ -34,7 +34,7 @@ export const CREDITS_LEDGER: CreditRow[] = [
     url: 'https://fastapi.tiangolo.com',
   },
   {
-    resource: 'Ajv, Lucide Icons, IBM Plex Sans, IBM Plex Serif & IBM Plex Mono (@fontsource)',
+    resource: 'Ajv, Lucide Icons, IBM Plex Sans & IBM Plex Mono (@fontsource)',
     type: 'UI & Validation Assets',
     license: 'MIT / ISC / SIL OFL 1.1',
     url: 'https://ajv.js.org',
