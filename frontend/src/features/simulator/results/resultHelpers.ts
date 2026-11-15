@@ -2,7 +2,7 @@
 import type { NasaCitation } from '../../../types/contract'
 
 export const MOCK_TOOLTIP =
-  'MOCK DATA. Mock mode returns the closest of three sample payloads (src/mocks/sample_3d_payloads.json), validated against contracts/simulation_schema.json. The values are not computed from your controls and are not live engine output.'
+  'MOCK DATA. Mock mode returns the closest of three sample payloads (src/mocks/sample_3d_payloads.json), validated against contracts/simulation_schema.json. The values are not computed from your controls and are not live engine output. Sample text written with Gemini.'
 
 /** "PSI-25 (DOI: 10.60555/4qc4-de67)" -> "PSI-25"; ids without a parenthesis stay as they are. */
 export function shortCitationId(id: string): string {

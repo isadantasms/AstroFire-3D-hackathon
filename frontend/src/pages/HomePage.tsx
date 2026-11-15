@@ -1,5 +1,5 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { useRef, type CSSProperties } from 'react'
+import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ArrowRight, Play } from 'lucide-react'
 import { RocketHeroBackdrop } from '../components/RocketHeroBackdrop'
@@ -8,7 +8,9 @@ import { PlanetHorizon } from '../components/home/PlanetHorizon'
 import { useReveal } from '../components/home/useReveal'
 import { usePrefersReducedMotion } from '../components/hero/useMotionPreferences'
 import { LINKS, TECHNICAL_DOCS_PDF_URL } from '../app/routes'
-import { DEV_TOOLS } from '../content/project'
+import { EXPERIMENTS_SNAPSHOT } from '../data/experimentsSnapshot'
+import { INVESTIGATIONS } from '../content/investigations'
+import { DEV_TOOLS, HUMAN_REVIEW, LOGO_CREDIT, SI_IN_PRODUCT, SI_TERM_NOTE, VOICE_CREDIT } from '../content/project'
 
 // TODO(pitch): replace with the public URL of the 30-second pitch video once it is published.
 const PITCH_VIDEO_URL = '#'
@@ -33,6 +35,7 @@ export function HomePage() {
       <Hero />
       <HelpsSection />
       <SiUsageSection />
+      <EvidenceSection />
       <ClosingSection />
     </div>
   )
@@ -188,7 +191,7 @@ const STEPS: Step[] = [
     items: [
       { text: 'NASA combustion experiments', badge: 'PSI · BASS-II' },
       { text: 'NASA technical reports', badge: 'NTRS' },
-      { text: 'SI that reads, compares and cites these sources' },
+      { text: 'A rule-based engine that matches each scenario to these records' },
     ],
   },
   {
@@ -202,7 +205,8 @@ const STEPS: Step[] = [
       { text: 'Set material, gravity, oxygen and airflow' },
       { text: 'See the flame in 3D and its fire risk' },
       { text: 'Size the ISS water-mist extinguisher for that fire' },
-      { text: 'Check the source behind every number' },
+      { text: 'Open a detailed report and download it as PDF' },
+      { text: 'See the sources behind each result' },
     ],
   },
 ]
@@ -275,57 +279,50 @@ function HelpsSection() {
   )
 }
 
-const SI_BLOCKS = [
-  {
-    name: 'In the product',
-    text: 'SI interprets the experimental data for each scenario and writes the diagnosis and suppression guidance. These texts are labeled as SI-generated in the results and in the PDF report, and always come with their sources.',
-  },
-  {
-    name: 'In development',
-    tools: DEV_TOOLS,
-    note: 'Logo concept explored with SI image tools; final vector artwork recreated by the team.',
-  },
-  {
-    name: 'Human review',
-    text: 'The team reviewed every SI-assisted file, checked all references against their original sources and validated the results before publishing.',
-  },
-] as const
-
 /** How SI is used (NASA Space Apps disclosure); the footer "SI Usage" link lands here. */
 function SiUsageSection() {
   return (
     <section id="si-usage" className="relative scroll-mt-16" aria-labelledby="si-usage-title">
       <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
-        <SectionHeader id="si-usage" label="SI usage" title="How we use SI" />
-        <div data-reveal style={stagger(2)} className={`reveal mt-12 p-6 sm:p-8 lg:p-10 ${PANEL}`}>
-          <div className="grid gap-8 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-subtle">
-            {SI_BLOCKS.map((block, i) => (
-              <div key={block.name} data-reveal style={stagger(3 + i)} className="reveal lg:px-8 lg:first:pl-0 lg:last:pr-0">
-                <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">{block.name}</h3>
-                {'tools' in block ? (
-                  <ul className="mt-4 space-y-3" data-testid="dev-tools">
-                    {block.tools.map((t) => (
-                      <li key={t.tool} className="flex gap-3 text-sm leading-relaxed text-secondary">
-                        <span className="shrink-0 text-[#F28C28]" aria-hidden="true">
-                          —
-                        </span>
-                        <span>
-                          <span className="font-medium text-primary">{t.tool}:</span> {t.use}
-                        </span>
-                      </li>
-                    ))}
-                    <li className="flex gap-3 text-sm leading-relaxed text-secondary">
-                      <span className="shrink-0 text-[#F28C28]" aria-hidden="true">
-                        —
-                      </span>
-                      <span>{block.note}</span>
-                    </li>
-                  </ul>
-                ) : (
-                  <p className="mt-4 text-sm leading-relaxed text-secondary">{block.text}</p>
-                )}
-              </div>
+        <SectionHeader id="si-usage" label="Transparency & scientific integrity" title="Human-led science. AI-assisted development." />
+
+        {/* Featured: what SI does (and does not do) inside the product. */}
+        <div data-reveal style={stagger(2)} className={`reveal mt-12 p-6 sm:p-8 lg:p-10 ${PANEL}`} data-testid="si-in-product">
+          <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">SI inside AstroFire</h3>
+          <ol className="mt-5 flex flex-wrap items-center gap-2" aria-label="How a result is produced">
+            {SI_IN_PRODUCT.flow.map((step, i) => (
+              <li key={step} className="flex items-center gap-2">
+                <span className="rounded-lg border border-subtle bg-void/60 px-3 py-1.5 text-sm font-medium text-primary">{step}</span>
+                {i < SI_IN_PRODUCT.flow.length - 1 ? (
+                  <ArrowRight className="size-4 text-label" aria-label="then" />
+                ) : null}
+              </li>
             ))}
+          </ol>
+          <p className="mt-5 max-w-3xl text-base leading-relaxed text-secondary">{SI_IN_PRODUCT.text}</p>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+            <ChecklistBlock title="What it does" items={SI_IN_PRODUCT.does} tone="text-nominal" mark="✓" />
+            <ChecklistBlock title="What it does not do" items={SI_IN_PRODUCT.doesNot} tone="text-muted" mark="×" />
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+          <div data-reveal style={stagger(3)} className={`reveal p-6 sm:p-8 ${PANEL}`}>
+            <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">AI-assisted development</h3>
+            <ul className="mt-4 space-y-3" data-testid="dev-tools">
+              {DEV_TOOLS.map((t) => (
+                <DashItem key={t.tool}>
+                  <span className="font-medium text-primary">{t.tool}:</span> {t.use}
+                </DashItem>
+              ))}
+              <DashItem>{LOGO_CREDIT}</DashItem>
+              <DashItem>{VOICE_CREDIT}</DashItem>
+            </ul>
+          </div>
+          <div data-reveal style={stagger(4)} className={`reveal p-6 sm:p-8 ${PANEL}`}>
+            <h3 className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">Human review &amp; responsibility</h3>
+            <p className="mt-4 text-sm leading-relaxed text-primary">{HUMAN_REVIEW}</p>
+            <p className="mt-4 border-t border-subtle pt-4 text-xs leading-relaxed text-muted">{SI_TERM_NOTE}</p>
           </div>
         </div>
       </div>
@@ -333,25 +330,113 @@ function SiUsageSection() {
   )
 }
 
+function DashItem({ children }: { children: ReactNode }) {
+  return (
+    <li className="flex gap-3 text-sm leading-relaxed text-secondary">
+      <span className="shrink-0 text-[#F28C28]" aria-hidden="true">
+        —
+      </span>
+      <span>{children}</span>
+    </li>
+  )
+}
+
+function ChecklistBlock({ title, items, tone, mark }: { title: string; items: readonly string[]; tone: string; mark: string }) {
+  return (
+    <div>
+      <h4 className="text-sm font-medium text-primary">{title}</h4>
+      <ul className="mt-3 space-y-2">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-secondary">
+            <span className={`shrink-0 font-mono ${tone}`} aria-hidden="true">
+              {mark}
+            </span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** Short evidence strip before the final call to action. Counts come from the site data, not typed by hand. */
+function EvidenceSection() {
+  const facts = [
+    `${EXPERIMENTS_SNAPSHOT.length} BASS-II tests from NASA PSI`,
+    `${INVESTIGATIONS.length} NASA investigations compared by habitat`,
+    'Every source cited',
+  ]
+  return (
+    <section className="relative" aria-labelledby="evidence-title" data-testid="evidence-strip">
+      <div className="mx-auto max-w-6xl px-4 pt-4 pb-10 sm:px-6">
+        <div data-reveal className="reveal flex flex-col gap-5 border-y border-subtle py-6 lg:flex-row lg:items-center lg:justify-between">
+          <p className="flex items-center gap-2 font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
+            <span className="text-brand" aria-hidden>
+              ●
+            </span>
+            <span id="evidence-title" role="heading" aria-level={2}>
+              Built on real research
+            </span>
+          </p>
+          <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-primary">
+            {facts.map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+          </ul>
+          <Link to={LINKS.research} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-focus hover:underline">
+            Explore the research
+            <ArrowRight className="size-3.5" aria-hidden />
+          </Link>
+        </div>
+        {/* The three labels used in the Simulator results. */}
+        <p data-testid="badge-legend" className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted">
+          <span>In the Simulator:</span>
+          <LegendBadge tone="border-focus text-focus">NASA experimental data</LegendBadge>
+          <span>measured in a BASS-II test ·</span>
+          <LegendBadge tone="border-secondary text-secondary">Estimate</LegendBadge>
+          <span>interpolated or estimated ·</span>
+          <LegendBadge tone="border-subtle text-label">Illustrative</LegendBadge>
+          <span>visualization, not measured data</span>
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function LegendBadge({ tone, children }: { tone: string; children: ReactNode }) {
+  return <span className={`rounded-md border px-1.5 py-0.5 text-[0.6875rem] ${tone}`}>{children}</span>
+}
+
+function ExploreResearchButton() {
+  return (
+    <Link
+      to={LINKS.research}
+      className="inline-flex items-center gap-2 rounded-[10px] border border-subtle bg-hero/60 px-5 py-3 text-sm text-primary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:border-label"
+    >
+      Explore Research
+    </Link>
+  )
+}
+
 function ClosingSection() {
   return (
     <section className="relative" aria-labelledby="closing-title">
-      <div className="mx-auto max-w-6xl px-4 pt-4 pb-24 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 pt-6 pb-24 sm:px-6">
         <div
           data-reveal
           className={`reveal flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:p-10 ${PANEL}`}
         >
           <div data-rocket-avoid className="max-w-2xl">
             <h2 id="closing-title" className="text-[30px] leading-tight font-semibold tracking-tight text-primary">
-              Ready to test a scenario?
+              Explore combustion beyond Earth.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-secondary">
-              Space fire research also supports safer water-mist extinguishers, smoke detectors and firefighter gear on Earth.
+              Configure a scenario, visualize flame behavior, and examine the evidence behind the analysis.
             </p>
           </div>
           <div data-rocket-avoid className="flex shrink-0 flex-wrap items-center gap-3">
             <LaunchSimulatorButton />
-            <DocumentationButton />
+            <ExploreResearchButton />
           </div>
         </div>
       </div>

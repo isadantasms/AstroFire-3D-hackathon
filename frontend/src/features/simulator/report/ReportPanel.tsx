@@ -64,6 +64,7 @@ export function ReportPanel({ report, onClose, onDownload, downloading, download
                 <span className="font-mono tabular-nums">{formatDateTime(report.generatedAt)}</span>
                 <span aria-hidden>·</span>
                 <span className={report.mock ? 'text-warning' : 'text-secondary'}>{report.mode}</span>
+                {report.mockNote ? <span data-testid="report-mock-note">· {report.mockNote}</span> : null}
                 <span
                   data-testid="report-grounding"
                   title={report.grounding.summary}

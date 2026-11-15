@@ -90,11 +90,12 @@ describe('site structure', () => {
       'Without gravity, flames turn round, slow and hard to see.',
       'Cabin airflow and oxygen-richer habitats change how materials burn.',
       'Decades of experiments are spread across reports and raw tables.',
-      'SI that reads, compares and cites these sources',
+      'A rule-based engine that matches each scenario to these records',
       'Set material, gravity, oxygen and airflow',
       'See the flame in 3D and its fire risk',
       'Size the ISS water-mist extinguisher for that fire',
-      'Check the source behind every number',
+      'Open a detailed report and download it as PDF',
+      'See the sources behind each result',
     ]) {
       expect(steps.getByText(item)).toBeInTheDocument()
     }
@@ -103,9 +104,10 @@ describe('site structure', () => {
     // The UFSC (VSB-30) item stays hidden until its reference is in docs/references.md.
     expect(screen.queryByText(/UFSC|VSB-30|Brazilian/)).toBeNull()
 
-    const closing = within(screen.getByRole('heading', { level: 2, name: 'Ready to test a scenario?' }).closest('section')!)
+    const closing = within(screen.getByRole('heading', { level: 2, name: 'Explore combustion beyond Earth.' }).closest('section')!)
+    expect(closing.getByText('Configure a scenario, visualize flame behavior, and examine the evidence behind the analysis.')).toBeInTheDocument()
     expect(closing.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
-    expect(closing.getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/research')
+    expect(closing.getByRole('link', { name: 'Explore Research' })).toHaveAttribute('href', '/research')
 
     // Old sections are gone.
     for (const old of ['The science', 'How it works', 'What makes AstroFire different', 'Back on Earth']) {
@@ -147,18 +149,47 @@ describe('site structure', () => {
     renderAt('/')
     expect(screen.queryByRole('link', { name: 'About & SI Usage' })).toBeNull()
     const h2s = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
-    expect(h2s).toEqual(['How AstroFire helps', 'How we use SI', 'Ready to test a scenario?'])
+    expect(h2s).toEqual([
+      'How AstroFire helps',
+      'Human-led science. AI-assisted development.',
+      'Built on real research',
+      'Explore combustion beyond Earth.',
+    ])
 
     const si = within(document.getElementById('si-usage')!)
-    for (const name of ['In the product', 'In development', 'Human review']) {
+    expect(si.getByText('Transparency & scientific integrity', { selector: 'p' })).toBeInTheDocument()
+    for (const name of ['SI inside AstroFire', 'AI-assisted development', 'Human review & responsibility']) {
       expect(si.getByRole('heading', { level: 3, name })).toBeInTheDocument()
     }
-    expect(si.getByText(/labeled as SI-generated in the results/)).toBeInTheDocument()
+    const product = within(si.getByTestId('si-in-product'))
+    expect(product.getAllByRole('listitem').slice(0, 3).map((li) => li.textContent)).toEqual(['NASA data', 'Rule-based engine', 'Results'])
+    expect(product.getByText(/does not run an AI model when you simulate/)).toBeInTheDocument()
+    expect(product.getByText(/three sample payloads written with Gemini/)).toBeInTheDocument()
+    expect(product.getByRole('heading', { level: 4, name: 'What it does' })).toBeInTheDocument()
+    expect(product.getByRole('heading', { level: 4, name: 'What it does not do' })).toBeInTheDocument()
+    expect(product.getByText('Run a live AI model')).toBeInTheDocument()
     const tools = si.getByTestId('dev-tools')
-    expect(tools).toHaveTextContent('Claude: code, interface design and website copy')
-    expect(tools).toHaveTextContent('Gemini: code assistance and test data generation')
-    expect(tools).toHaveTextContent('[VOICE TOOL]: narration of the demo video')
-    expect(tools).toHaveTextContent('Logo concept explored with SI image tools; final vector artwork recreated by the team.')
+    for (const line of [
+      'ChatGPT (OpenAI): planning, development support and 3D modeling support',
+      'Codex (OpenAI): Unity scripts and shaders for the 3D chamber',
+      "Gemini (Google): refining the team's business rules, backend integration and test data",
+      'Claude / Claude Code (Anthropic): front-end code and interface',
+      'AstroFire logo created with Claude Code (SI-assisted) and reviewed by the team.',
+      'Demo video narration generated with [VOICE TOOL].',
+    ]) {
+      expect(tools).toHaveTextContent(line)
+    }
+    expect(si.getByText(/The team conceived the solution/)).toBeInTheDocument()
+    expect(si.getByText(/term used by the Space Apps challenge/)).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/recreated by the team|SI interprets the experimental data/)
+
+    // Evidence strip: counts come from the data, plus the badge legend.
+    const evidence = within(screen.getByTestId('evidence-strip'))
+    expect(evidence.getByText('79 BASS-II tests from NASA PSI')).toBeInTheDocument()
+    expect(evidence.getByText('6 NASA investigations compared by habitat')).toBeInTheDocument()
+    expect(evidence.getByText('Every source cited')).toBeInTheDocument()
+    expect(evidence.getByRole('link', { name: /Explore the research/ })).toHaveAttribute('href', '/research')
+    expect(evidence.getByTestId('badge-legend')).toHaveTextContent(/NASA experimental data.*Estimate.*Illustrative/)
 
     // The team section was removed.
     expect(document.getElementById('team')).toBeNull()
@@ -167,7 +198,7 @@ describe('site structure', () => {
 
   it('/about redirects to the SI usage section of the Home', async () => {
     renderAt('/about')
-    expect(await screen.findByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'Human-led science. AI-assisted development.' })).toBeInTheDocument()
   })
 
   it('Data & credits now live at the end of Research & Data', async () => {

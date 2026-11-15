@@ -8,6 +8,7 @@ import type { SimulationResponse } from '../../../types/contract'
 import { isCitationShown, MOCK_TOOLTIP, riskBand, shortCitationId } from './resultHelpers'
 import type { SimulationState } from '../state/simulationReducer'
 import { buildReport } from '../report/reportModel'
+import { TEMPLATE_TEXT_NOTE } from '../../../content/project'
 import { ReportPanel } from '../report/ReportPanel'
 
 const NEEDS_RUN = 'Run a simulation first'
@@ -197,15 +198,11 @@ function ResultPanels({ result }: { result: SimulationResponse }) {
         {estimate ? <p className="mt-3 text-xs leading-relaxed text-muted">{estimate.confined_rack_note}</p> : null}
       </Card>
 
-      <Card
-        title="SI copilot"
-        aside={
-          <span data-testid="si-generated" className="rounded-md border border-subtle px-1.5 py-0.5 text-[0.6875rem] text-label">
-            SI-generated
-          </span>
-        }
-      >
+      <Card title="SI copilot">
         <Diagnosis text={copilot.diagnosis} />
+        <p data-testid="template-note" className="mt-2 text-[0.6875rem] text-muted">
+          {TEMPLATE_TEXT_NOTE}
+        </p>
         <div className="mt-4 rounded-lg border-l-2 border-warning/80 bg-void/60 px-3 py-2.5" data-testid="suppression-guidance">
           <p className="text-[0.6875rem] text-warning">Research guidance, not an operational procedure</p>
           <p className="mt-1.5 text-sm leading-relaxed text-primary">{copilot.suppression_action}</p>

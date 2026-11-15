@@ -224,7 +224,7 @@ export function ReportDocument({ report }: { report: ReportModel }) {
   const meta: [string, string, boolean?][] = [
     ['Scenario ID', report.scenarioId, true],
     ['Generated on', formatDateTime(report.generatedAt), true],
-    ['Mode', report.mode === 'Mock' ? 'Mock (sample payload, not live engine output)' : 'Live'],
+    ['Mode', report.mockNote ? `Mock (sample payload, not live engine output). ${report.mockNote}.` : 'Live'],
     ['Grounding status', `${report.grounding.label} (${report.grounding.status})`],
     ['Data sources', report.dataSources],
   ]

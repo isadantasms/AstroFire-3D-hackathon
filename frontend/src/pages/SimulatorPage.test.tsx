@@ -90,7 +90,8 @@ describe('SimulatorPage', () => {
     )
     expect(screen.getByTestId('suppression-guidance')).toHaveTextContent('Research guidance, not an operational procedure')
     expect(screen.getByText('Scientific limitations')).toBeInTheDocument()
-    expect(screen.getByTestId('si-generated')).toHaveTextContent('SI-generated')
+    expect(screen.getByTestId('template-note')).toHaveTextContent('Diagnosis text from templates drafted with SI and reviewed by the team.')
+    expect(screen.queryByText('SI-generated')).toBeNull()
     expect(screen.getByTestId('on-earth')).toHaveTextContent(/Optical sensor calibration/)
 
     const link = screen.getByRole('link', { name: /Burning and Suppression of Solids - II \(BASS-II\)\s*\(opens/ })
