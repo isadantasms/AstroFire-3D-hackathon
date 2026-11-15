@@ -17,11 +17,10 @@ export const LINKS = {
 
 /**
  * Full technical documentation (PDF).
- * TODO(docs): set to the published PDF (e.g. a file in frontend/public/docs/). While it is null, the
- * Documentation page shows its download button and SI link as disabled ("Coming soon"), and the Home
- * links open the Documentation page instead.
+ * Published on Google Drive by 21 PyroRangers.
  */
-export const DOCUMENTATION_PDF_URL: string | null = null
+export const DOCUMENTATION_PDF_URL: string | null =
+  'https://drive.google.com/file/d/1I76fUH7d-4MW_0Z12umlQFeijdn4akI0/view'
 
 /**
  * Fragment that opens the SI section of the PDF.

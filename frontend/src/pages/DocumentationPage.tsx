@@ -9,13 +9,11 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ChevronDown, Download, ExternalLink, FileText } from 'lucide-react'
-import { Tag } from '../components/ConsolePanel'
 import { CreditsLedger } from '../components/CreditsLedger'
 import { Tooltip } from '../components/Tooltip'
 import { DOCUMENTATION_PDF_URL, DOCUMENTATION_SI_URL, LINKS } from '../app/routes'
 import { FIRE_SAFETY_USES, INVESTIGATIONS, type FireSafetyUse } from '../content/investigations'
 import { REFERENCES } from '../content/references'
-import { SHOW_UNVERIFIED } from '../content/project'
 // Lazy: keeps the BASS-II snapshot and API client out of the main bundle.
 const BassExperimentsSection = lazy(() =>
   import('../features/simulator/experiments/BassExperimentsSection').then((m) => ({ default: m.BassExperimentsSection })),
@@ -32,17 +30,18 @@ const SI_CHAPTER = 'Use of Super Intelligence (SI)'
 
 /** Table of contents of the technical PDF (shown on the documentation card). */
 const DOC_CONTENTS = [
-  'Problem and challenge alignment',
-  'Product overview',
-  'Using the simulator',
-  'Science and calculations',
-  'Data and curation',
-  'Model and validation',
-  'Architecture and data contract',
+  'Problem and Challenge Alignment',
+  'Product Overview',
+  'Using the Simulator',
+  'Science and Calculations',
+  'Data and Curation',
+  'Hybrid Physics-Informed Neural Network (PINN) & Dual-Layer Verification',
+  'Architecture and Data Contract',
   SI_CHAPTER,
-  'Limitations',
-  'Team and credits',
+  'Operational Scope and Physical Domain',
+  'Authors and Credits',
   'References',
+  'Appendices',
 ] as const
 
 const PANEL = 'rounded-2xl border border-subtle bg-panel'
@@ -128,8 +127,10 @@ function FullDocumentationCard() {
             AstroFire 3D · Technical Documentation
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-secondary sm:text-[0.9375rem]">
-            Everything about the project in one document: the science and calculations behind the simulator, the data and
-            how it was curated, the model and its validation, the architecture, and how we used Super Intelligence.
+            Everything about the project in one 50-page technical reference by 21 PyroRangers: the deterministic
+            microgravity-combustion physics engine, the 79 verified and 150 curated NASA BASS-II records, the hybrid
+            PINN model and validation, ISS FWM PFE & Brazilian VSB-30 water-mist suppression sizing, the system
+            architecture, and our Super Intelligence disclosure.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
             <DocAction
@@ -139,13 +140,6 @@ function FullDocumentationCard() {
             >
               <Download className="size-4" aria-hidden />
               Download full documentation (PDF)
-            </DocAction>
-            <DocAction
-              href={DOCUMENTATION_SI_URL}
-              className="inline-flex items-center gap-1.5 text-sm text-focus hover:underline"
-              disabledClassName="inline-flex cursor-not-allowed items-center gap-1.5 text-sm text-muted"
-            >
-              Read the SI disclosure
             </DocAction>
           </div>
         </div>
@@ -315,13 +309,6 @@ function ResearchSection() {
         </ol>
         <p className="mt-3 text-xs text-muted">
           NASA data is CC0-1.0 and NASA technical reports are U.S. Government public domain.
-          {/* Pending items show in development builds only, until the team confirms them. */}
-          {SHOW_UNVERIFIED ? (
-            <>
-              {' '}
-              <Tag>To verify</Tag> Full references for FLEX and SPICE, and the license of the SoFIE web page.
-            </>
-          ) : null}
         </p>
       </details>
     </Section>

@@ -226,16 +226,17 @@ describe('site structure', () => {
     ])
 
     const card = within(document.getElementById('full-documentation')!)
-    expect(card.getByText(/Everything about the project in one document/)).toBeInTheDocument()
+    expect(card.getByText(/Everything about the project in one 50-page technical reference/)).toBeInTheDocument()
     const contents = card.getByTestId('doc-contents')
     expect(contents.className).toMatch(/sm:columns-2/)
-    expect(within(contents).getAllByRole('listitem')).toHaveLength(11)
-    expect(within(contents).getByRole('link', { name: 'Use of Super Intelligence (SI)' })).toHaveAttribute('href', '/#si-usage')
-    for (const name of ['Download full documentation (PDF)', 'Read the SI disclosure']) {
-      const action = card.getByRole('button', { name })
-      expect(action).toBeDisabled()
-      expect(action).toHaveAccessibleDescription('Coming soon')
-    }
+    expect(within(contents).getAllByRole('listitem')).toHaveLength(12)
+    expect(within(contents).getByRole('link', { name: /Use of Super Intelligence \(SI\)/ })).toHaveAttribute(
+      'href',
+      'https://drive.google.com/file/d/1I76fUH7d-4MW_0Z12umlQFeijdn4akI0/view#nameddest=si-disclosure',
+    )
+    const downloadLink = card.getByRole('link', { name: /Download full documentation \(PDF\)/ })
+    expect(downloadLink).toHaveAttribute('href', 'https://drive.google.com/file/d/1I76fUH7d-4MW_0Z12umlQFeijdn4akI0/view')
+    expect(card.queryByText('Read the SI disclosure')).toBeNull()
 
     // Data notes are one line inside the data section.
     expect(screen.getByTestId('data-notes')).toHaveTextContent(/PSI-10 has no license listed and is not used/)
@@ -270,8 +271,8 @@ describe('site structure', () => {
     const refs = container.querySelector('#references') as HTMLDetailsElement
     expect(refs.tagName).toBe('DETAILS')
     expect(refs.open).toBe(false)
-    expect(within(refs).getByText('Full references (8)')).toBeInTheDocument()
-    for (let n = 1; n <= 7; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
+    expect(within(refs).getByText('Full references (14)')).toBeInTheDocument()
+    for (let n = 1; n <= 14; n++) expect(container.querySelector(`#ref-${n}`)).not.toBeNull()
     expect(within(refs).getByText(/NASA data is CC0-1\.0/)).toBeInTheDocument()
     expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
   })
@@ -333,10 +334,7 @@ describe('site structure', () => {
       expect(within(row).getByRole('link')).toHaveAttribute('href', 'https://policies.google.com/terms')
     }
     expect(within(credits.getByText('Unity (3D chamber engine and WebGL template)').closest('tr')!).getByText('Unity Terms of Service')).toBeInTheDocument()
-    // "To verify" stays only on the items the team still has to resolve (shown in development builds only).
-    // The narration row is hidden until VOICE_TOOL is set.
-    const toVerify = credits.getAllByText('To verify').map((cell) => cell.closest('tr')!.querySelector('td')!.textContent)
-    expect(toVerify).toEqual(['UFSC/INPE · VSB-30 sounding-rocket study'])
+    expect(credits.getByText(/UFSC \/ LEPTEN · VSB-30 suborbital microgravity boiling study/)).toBeInTheDocument()
     expect(credits.queryByText(/VOICE TOOL|demo video narration/)).toBeNull()
   })
 

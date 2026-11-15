@@ -180,8 +180,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     prevention: 'Consider low-temperature (cool-flame) re-ignition pathways in hydrocarbon vapor leaks.',
     detection: 'Consider UV and infrared sensing for dim spherical diffusion flames.',
     suppression: 'Expect different suppressant requirements in microgravity than in 1g because of the spherical flame shape.',
-    // TODO(references): no full FLEX reference in docs/references.md yet.
-    refs: [],
+    refs: [12],
     url: 'https://psi.nasa.gov/physci/repo/search?q=FLEX',
     scores: { iss: 87, lunar_base: 82, martian_habitat: 81, crew_cabin_rover: 85 },
   },
@@ -202,8 +201,7 @@ export const INVESTIGATIONS: readonly Investigation[] = [
     prevention: 'Consider ventilation velocity to avoid sooting, high-radiation flame conditions.',
     detection: 'Adjust detector sensitivity between soot-free blue flames and luminous sooting flames.',
     suppression: 'Cut fuel and flow early, before radiant soot heats nearby surfaces.',
-    // TODO(references): no full SPICE reference in docs/references.md yet.
-    refs: [],
+    refs: [13],
     url: 'https://psi.nasa.gov/physci/repo/search?q=SPICE',
     scores: { iss: 84, lunar_base: 80, martian_habitat: 80, crew_cabin_rover: 82 },
   },

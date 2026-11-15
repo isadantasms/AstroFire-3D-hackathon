@@ -94,17 +94,34 @@ const ALL_CREDITS: (CreditRow | false)[] = [
     license: 'Provider terms',
     url: 'https://claude.com/product/claude-code',
   },
+  {
+    resource: '21 PyroRangers group emblem: generated with Google Imagen via Gemini (SI)',
+    type: 'Emblem (SI Tool)',
+    license: 'Provider terms',
+    url: 'https://gemini.google.com',
+  },
+  {
+    resource: 'Matplotlib, ReportLab & svglib (scientific vector figures and technical documentation PDF)',
+    type: 'Open-Source Libraries',
+    license: 'PSF / BSD / LGPL-3.0',
+    url: 'https://www.reportlab.com',
+  },
+  {
+    resource: 'Vercel (unified hosting: React SPA, Unity WebGL with Brotli headers & FastAPI Serverless API)',
+    type: 'Hosting Service',
+    license: 'Vercel Service Terms',
+    url: 'https://vercel.com',
+  },
+  {
+    resource: 'UFSC / LEPTEN · VSB-30 suborbital microgravity boiling study (Souza, Passos & Cardoso, AEB / INPE)',
+    type: 'Research Study',
+    license: 'Academic Paper (COBEM 2011)',
+    url: 'https://lepten.ufsc.br/publicacoes/boiling/eventos/2011/COBEM/souza_passos.pdf',
+  },
   // TODO(voice-tool): license and link of the narration tool (the name comes from VOICE_TOOL).
   Boolean(VOICE_TOOL) && {
     resource: `${VOICE_TOOL}: demo video narration`,
     type: 'SI Tool',
-    license: 'To verify',
-    url: null,
-  },
-  // TODO(references): the UFSC/INPE VSB-30 study is listed by name only until the team confirms the reference.
-  SHOW_UNVERIFIED && {
-    resource: 'UFSC/INPE · VSB-30 sounding-rocket study',
-    type: 'Research Study',
     license: 'To verify',
     url: null,
   },
