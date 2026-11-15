@@ -25,7 +25,7 @@
 
 | Resource | Type | License | Link | Used in |
 | --- | --- | --- | --- | --- |
-| Unity (game engine and WebGL template) | Engine | Unity Terms of Service (proprietary; edition to verify) | https://unity.com/legal/terms-of-service | `unity-fire-simulation/` (3D chamber, WebGL build) |
+| Unity (game engine and WebGL template) | Engine | Unity Terms of Service | https://unity.com/legal/terms-of-service | `unity-fire-simulation/` (3D chamber, WebGL build) |
 | MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher | 3D models | To verify (TODO: author and license) | https://ephtracy.github.io/ (MagicaVoxel editor) | `unity-fire-simulation/Assets/MagicaVoxelModels/`, `Assets/TravelModels/` |
 | FastAPI | Library | MIT License | https://fastapi.tiangolo.com | `backend/` |
 | Pydantic V2 | Library | MIT License | https://docs.pydantic.dev | `backend/`, `contracts/simulation_schema.json` |
@@ -48,6 +48,6 @@
 | Codex (OpenAI) | SI tool | Provider terms | https://developers.openai.com/codex | Unity scripts and shaders for the 3D chamber (`unity-fire-simulation/`, `SI-assisted` headers) |
 | Gemini (Google) | SI tool | Provider terms | https://gemini.google.com | Refining the team's business rules, backend integration and test data (`backend/`, `contracts/`, sample payloads) |
 | Claude / Claude Code (Anthropic) | SI tool | Provider terms | https://claude.com/product/claude-code | Front-end code and interface, planning, visual design, documentation, pitch script, reference review; vector logo recreated from the ChatGPT concept (SI-assisted) and reviewed by the team |
-| Antigravity | Coding environment (used with Gemini) | To verify | To verify | To verify (TODO: confirm use, license and link) |
-| Google Colab | Notebook environment | To verify | To verify | Model training and validation (TODO: confirm notebooks, license and link) |
+| Antigravity | Coding environment (used with Gemini) | Google Terms of Service | https://policies.google.com/terms | Coding environment used with Gemini |
+| Google Colab | Notebook environment | Google Terms of Service | https://policies.google.com/terms | Model training and validation |
 | [VOICE TOOL] | SI tool | To verify | To verify | Demo video narration (TODO: tool name, license and link) |

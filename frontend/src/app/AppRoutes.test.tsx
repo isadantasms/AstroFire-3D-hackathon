@@ -240,7 +240,7 @@ describe('site structure', () => {
     expect(document.getElementById('data')!.contains(screen.getByTestId('data-notes'))).toBe(true)
 
     // Moved to the PDF (docs/technical-notes.md): ranking by habitat, relevance, card details, model, method.
-    expect(screen.queryByRole('radio')).toBeNull()
+    expect(screen.queryByRole('radio', { name: /Lunar base|ISS orbital lab/ })).toBeNull()
     expect(screen.queryByTestId('relevance')).toBeNull()
     expect(screen.queryByText('Details')).toBeNull()
     expect(screen.queryByText(/Team-assigned relevance|Which experiments matter/)).toBeNull()
@@ -274,6 +274,36 @@ describe('site structure', () => {
     expect(screen.queryByText(/SAME \/ SoFIE \/ FLEX \/ SPICE/)).toBeNull()
   })
 
+  it('NASA research: study tags and the Prevention / Detection / Suppression filter', async () => {
+    renderAt('/documentation')
+    const research = within(await screen.findByRole('region', { name: 'The NASA research behind AstroFire 3D' }))
+    expect(research.getByText('Tags summarize what each investigation studied, based on its published objectives.')).toBeInTheDocument()
+    const names = () => research.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
+    const bass = research.getByText('Burning and Suppression of Solids–II (BASS-II)').closest('li')!
+    expect(within(within(bass).getByTestId('tags')).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'Material flammability',
+      'Cabin airflow',
+      'Extinction limits',
+    ])
+    const filter = within(research.getByRole('radiogroup', { name: 'Filter by fire-safety area' }))
+    expect(filter.getAllByRole('radio').map((r) => r.textContent)).toEqual(['All', 'Prevention', 'Detection', 'Suppression'])
+    expect(filter.getByRole('radio', { name: 'All' })).toHaveAttribute('aria-checked', 'true')
+    expect(names()).toHaveLength(6)
+
+    fireEvent.click(filter.getByRole('radio', { name: 'Prevention' }))
+    expect(names().map((n) => n?.match(/\((BASS-II|Saffire|SoFIE|SAME|FLEX|SPICE)/)?.[1] ?? n)).toEqual(['BASS-II', 'Saffire', 'Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)', 'SPICE'])
+    fireEvent.click(filter.getByRole('radio', { name: 'Detection' }))
+    expect(names()).toEqual([
+      'Spacecraft Fire Safety Demonstration Project (Saffire I–VI)',
+      'Smoke Aerosol Measurement Experiment (SAME)',
+      'Smoke Point In Co-flow Experiment (SPICE)',
+    ])
+    fireEvent.click(filter.getByRole('radio', { name: 'Suppression' }))
+    expect(names()).toEqual(['Burning and Suppression of Solids–II (BASS-II)', 'Flame Extinguishment Experiment (FLEX)'])
+    // No scores or relevance levels.
+    expect(screen.queryByText(/High|Medium|\/100/)).toBeNull()
+  })
+
   it('a link to #references opens the full references', async () => {
     const { container } = renderAt('/documentation#references')
     await screen.findByRole('heading', { level: 1, name: 'Documentation' })
@@ -295,14 +325,19 @@ describe('site structure', () => {
     expect(credits.getByText('Unity (3D chamber engine and WebGL template)')).toBeInTheDocument()
     expect(credits.getByText(/^ChatGPT \(OpenAI\).*logo concept/)).toBeInTheDocument()
     expect(credits.getByText(/^Codex \(OpenAI\)/)).toBeInTheDocument()
-    for (const name of [
-      'Antigravity: coding environment used with Gemini',
-      'Google Colab: model training and validation',
-      'UFSC/INPE · VSB-30 sounding-rocket study',
-    ]) {
+    for (const name of ['Antigravity: coding environment used with Gemini', 'Google Colab: model training and validation']) {
       const row = credits.getByText(name).closest('tr')!
-      expect(within(row).getByText('To verify')).toBeInTheDocument()
+      expect(within(row).getByText('Google Terms of Service')).toBeInTheDocument()
+      expect(within(row).getByRole('link')).toHaveAttribute('href', 'https://policies.google.com/terms')
     }
+    expect(within(credits.getByText('Unity (3D chamber engine and WebGL template)').closest('tr')!).getByText('Unity Terms of Service')).toBeInTheDocument()
+    // "To verify" stays only on the items the team still has to resolve.
+    const toVerify = credits.getAllByText('To verify').map((cell) => cell.closest('tr')!.querySelector('td')!.textContent)
+    expect(toVerify).toEqual([
+      'MagicaVoxel 3D models: Earth, ISS, Mars, Moon, RocketShip, Extinguisher',
+      '[VOICE TOOL]: demo video narration',
+      'UFSC/INPE · VSB-30 sounding-rocket study',
+    ])
   })
 
   it('the BASS-II table starts collapsed, then shows 10 rows until "Show all"', async () => {

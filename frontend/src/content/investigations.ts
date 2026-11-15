@@ -33,6 +33,18 @@ export function relevanceOf(inv: Investigation, habitat: HabitatKey): Relevance 
 export const RELEVANCE_EXPLANATION =
   'Team-assigned relevance (High / Medium) for each habitat. The criteria behind it are not documented yet (to verify).'
 
+/*
+ * TODO(team): confirm the tags and the Prevention / Detection / Suppression mapping against each
+ * investigation's published objectives (NASA PSI / NTRS sources) before the final submission.
+ */
+export type FireSafetyUse = 'prevention' | 'detection' | 'suppression'
+
+export const FIRE_SAFETY_USES: readonly { key: FireSafetyUse; label: string }[] = [
+  { key: 'prevention', label: 'Prevention' },
+  { key: 'detection', label: 'Detection' },
+  { key: 'suppression', label: 'Suppression' },
+]
+
 export interface Investigation {
   id: string
   code: string
@@ -45,6 +57,10 @@ export interface Investigation {
   why: string
   /** One plain-language sentence for the Documentation page (from the why/difference texts). */
   plain: string
+  /** Short tags of what the investigation studied (Documentation page). */
+  tags: string[]
+  /** Fire-safety areas the investigation informs (Documentation page filter). */
+  uses: FireSafetyUse[]
   materials: string
   similarity: string
   difference: string
@@ -64,6 +80,8 @@ const air = BASS2_RANGES.airflowCmS
 export const INVESTIGATIONS: readonly Investigation[] = [
   {
     id: 'BASS-II',
+    tags: ['Material flammability', 'Cabin airflow', 'Extinction limits'],
+    uses: ['prevention', 'suppression'],
     plain: 'How flames spread and go out on solid materials aboard the ISS. The simulator data comes from these tests.',
     code: 'PSI-25 · NASA/TM-20210011385',
     name: 'Burning and Suppression of Solids–II (BASS-II)',
@@ -83,6 +101,8 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SAFFIRE',
+    tags: ['Large-scale fire', 'Exploration atmospheres', 'Gas toxicity'],
+    uses: ['prevention', 'detection'],
     plain: 'Large fires on real spacecraft materials, burned inside an uncrewed cargo vehicle.',
     code: 'Saffire I–VI · NTRS-20170000230 & NTRS-20240002981',
     name: 'Spacecraft Fire Safety Demonstration Project (Saffire I–VI)',
@@ -102,6 +122,8 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SOFIE',
+    tags: ['Ignition', 'Material flammability', 'Pressure & oxygen'],
+    uses: ['prevention'],
     plain: 'How solid spacecraft materials catch fire and go out under different airflow, oxygen and pressure.',
     code: 'SoFIE · ISS Combustion Integrated Rack (CIR)',
     name: 'Solid Fuel Ignition and Extinction (RTDFS, NCA, GEL, MIST, SMuRF)',
@@ -122,6 +144,8 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SAME',
+    tags: ['Smoke detection'],
+    uses: ['detection'],
     plain: 'The smoke that overheated materials give off before flames appear, to improve smoke detection.',
     code: 'SAME · NTRS-20170007283',
     name: 'Smoke Aerosol Measurement Experiment (SAME)',
@@ -141,6 +165,8 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'FLEX',
+    tags: ['Suppression', 'Fire extinguishment'],
+    uses: ['suppression'],
     plain: 'How burning fuel droplets go out in microgravity.',
     code: 'FLEX & FLEX-2 · ISS CIR',
     name: 'Flame Extinguishment Experiment (FLEX)',
@@ -161,6 +187,8 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
   {
     id: 'SPICE',
+    tags: ['Soot', 'Flame radiation'],
+    uses: ['prevention', 'detection'],
     plain: 'When gas flames start to produce soot in microgravity.',
     code: 'SPICE · ISS MSG',
     name: 'Smoke Point In Co-flow Experiment (SPICE)',

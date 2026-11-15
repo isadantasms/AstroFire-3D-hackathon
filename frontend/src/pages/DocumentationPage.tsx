@@ -13,7 +13,7 @@ import { Tag } from '../components/ConsolePanel'
 import { CreditsLedger } from '../components/CreditsLedger'
 import { Tooltip } from '../components/Tooltip'
 import { DOCUMENTATION_PDF_URL, DOCUMENTATION_SI_URL, LINKS } from '../app/routes'
-import { INVESTIGATIONS } from '../content/investigations'
+import { FIRE_SAFETY_USES, INVESTIGATIONS, type FireSafetyUse } from '../content/investigations'
 import { REFERENCES } from '../content/references'
 // Lazy: keeps the BASS-II snapshot and API client out of the main bundle.
 const BassExperimentsSection = lazy(() =>
@@ -227,18 +227,52 @@ function DocAction({
 function ResearchSection() {
   const { hash } = useLocation()
   const [refsOpen, setRefsOpen] = useState(false)
+  const [use, setUse] = useState<FireSafetyUse | 'all'>('all')
   useEffect(() => {
     if (hash === '#references' || hash.startsWith('#ref-')) setRefsOpen(true)
   }, [hash])
+  const shown = use === 'all' ? INVESTIGATIONS : INVESTIGATIONS.filter((inv) => inv.uses.includes(use))
+  const filters = [{ key: 'all' as const, label: 'All' }, ...FIRE_SAFETY_USES]
 
   return (
     <Section id="research" label="NASA research" title="The NASA research behind AstroFire 3D">
-      <ul className={`${PANEL} divide-y divide-subtle`}>
-        {INVESTIGATIONS.map((inv) => (
+      <div className="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label="Filter by fire-safety area">
+        {filters.map((f) => {
+          const active = use === f.key
+          return (
+            <button
+              key={f.key}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setUse(f.key)}
+              className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
+                active ? 'border-focus bg-elevated font-medium text-primary' : 'border-subtle bg-panel text-secondary hover:text-primary'
+              }`}
+            >
+              {f.label}
+            </button>
+          )
+        })}
+      </div>
+      <p className="mt-3 mb-4 text-xs text-muted">Tags summarize what each investigation studied, based on its published objectives.</p>
+
+      <ul className={`${PANEL} divide-y divide-subtle`} aria-live="polite">
+        {shown.map((inv) => (
           <li key={inv.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-6 sm:px-5">
             <div className="min-w-0 flex-1">
               <h3 className="text-sm font-semibold text-primary">{inv.name}</h3>
               <p className="mt-0.5 text-sm leading-relaxed text-secondary">{inv.plain}</p>
+              <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={`What ${inv.id} studied`} data-testid="tags">
+                {inv.tags.map((tag) => (
+                  <li
+                    key={tag}
+                    className="rounded-full border border-subtle bg-void/60 px-2 py-0.5 font-mono text-[0.625rem] tracking-[0.04em] text-label"
+                  >
+                    {tag}
+                  </li>
+                ))}
+              </ul>
             </div>
             <a
               href={inv.url}

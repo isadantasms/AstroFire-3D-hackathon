@@ -42,7 +42,7 @@ export const CREDITS_LEDGER: CreditRow[] = [
   {
     resource: 'Unity (3D chamber engine and WebGL template)',
     type: 'Engine',
-    license: 'Unity Terms of Service (edition to verify)',
+    license: 'Unity Terms of Service',
     url: 'https://unity.com/legal/terms-of-service',
   },
   // TODO(credits): author and license of the MagicaVoxel models are not confirmed yet.
@@ -76,18 +76,17 @@ export const CREDITS_LEDGER: CreditRow[] = [
     license: 'Provider terms',
     url: 'https://gemini.google.com',
   },
-  // TODO(credits): confirm the use, license and link of Antigravity and Google Colab.
   {
     resource: 'Antigravity: coding environment used with Gemini',
     type: 'Development Tool',
-    license: 'To verify',
-    url: null,
+    license: 'Google Terms of Service',
+    url: 'https://policies.google.com/terms',
   },
   {
     resource: 'Google Colab: model training and validation',
     type: 'Development Tool',
-    license: 'To verify',
-    url: null,
+    license: 'Google Terms of Service',
+    url: 'https://policies.google.com/terms',
   },
   {
     resource: 'Claude / Claude Code (Anthropic): front-end code, interface, documentation and vector logo',
