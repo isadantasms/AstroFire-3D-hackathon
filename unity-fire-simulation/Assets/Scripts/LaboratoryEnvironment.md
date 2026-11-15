@@ -17,3 +17,8 @@ The window blends destinations over Travel Seconds (default 3) with animated tra
 The views are procedural illustrations, not photographs, orbital navigation, or scientific terrain reconstructions. The visual travel does not model spacecraft trajectory. No external images, logos or network calls are used. The serialized window shader reference ensures it is included in a WebGL build. Rebuild the WebGL export to include these changes.
 
 Fire Simulation > Validate destination mapping checks all four gravity presets in the Unity Editor. Play Mode and shader rendering still require review in Unity.
+
+### Airflow fan
+The interior generates a voxel fan with housing, stationary safety grilles, four blades, and a floor-mounted stand. It appears in scene preview as well and sits 1.15 units upstream of the sample, aligned with `FireSimulationController.airflowDirection` transformed into world space. Gravity continues to influence the flame independently.
+
+During Play, visual rotor speed tracks `payload.inputs.airflow_cm_s` with smooth acceleration/deceleration; zero airflow stops the rotor. A logarithmic curve keeps rotation readable and does not represent calibrated physical RPM. Changes via Inspector or payload are read every frame without additional UI. The fan continues running when the flame is extinguished since it represents cabin ventilation. It reuses existing laboratory materials and the cabin layer, remaining excluded from the exterior travel camera.
