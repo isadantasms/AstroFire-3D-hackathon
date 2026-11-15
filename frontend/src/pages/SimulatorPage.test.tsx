@@ -39,13 +39,12 @@ async function runPreset(name: 'ISS · quiescent' | 'Lunar habitat · ventilated
   return screen.findByTestId('results')
 }
 
-const currentStep = () => within(screen.getByTestId('cycle-bar')).getByRole('listitem', { current: 'step' })
-
 describe('SimulatorPage', () => {
-  it('starts clean: cycle bar, MOCK DATA badge, empty state, no banner, table or dev controls', async () => {
+  it('starts clean: MOCK DATA badge, empty state, no step bar, banner, table or dev controls', async () => {
     renderSimulator()
     expect(await screen.findByRole('button', { name: 'Run Simulation' })).toBeInTheDocument()
-    expect(currentStep()).toHaveTextContent('Simulate')
+    expect(screen.queryByTestId('cycle-bar')).toBeNull()
+    expect(screen.queryByText('Measure risk')).toBeNull()
     expect(screen.getByTestId('mock-badge')).toHaveTextContent('MOCK DATA')
     expect(screen.getByTestId('mock-badge')).toHaveAccessibleDescription(/closest of three sample payloads/)
     expect(screen.queryByTestId('mock-mode-banner')).toBeNull()
@@ -72,7 +71,6 @@ describe('SimulatorPage', () => {
   it('runs the ISS quiescent scenario and renders the results in order', async () => {
     renderSimulator()
     await runPreset('ISS · quiescent')
-    expect(currentStep()).toHaveTextContent('Measure risk')
 
     const results = screen.getByTestId('results')
     const titles = within(results).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
@@ -136,7 +134,6 @@ describe('SimulatorPage', () => {
     expect(screen.queryByTestId('stale-banner')).not.toBeInTheDocument()
     fireEvent.change(screen.getByRole('spinbutton', { name: /Oxygen value/ }), { target: { value: '18' } })
     expect(screen.getByTestId('stale-banner')).toHaveTextContent('reflect the previous run')
-    expect(currentStep()).toHaveTextContent('Simulate')
   })
 
   it('runs the simulate -> suppress cycle when the engine provides an estimate', async () => {
@@ -158,7 +155,6 @@ describe('SimulatorPage', () => {
     try {
       fireEvent.click(discharge)
       expect(screen.getByTestId('chamber-state')).toHaveTextContent('Suppressing')
-      expect(currentStep()).toHaveTextContent('Suppress')
       expect(discharge).toBeDisabled()
       act(() => vi.advanceTimersByTime(2900))
       expect(screen.getByTestId('chamber-state')).toHaveTextContent('Suppressing')

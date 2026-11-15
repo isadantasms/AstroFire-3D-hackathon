@@ -23,36 +23,31 @@ async function renderHome(docsUrl: string | null) {
 }
 
 describe('Home SI disclosure', () => {
-  it('shows the short block with a Learn more disclosure; without the PDF the link goes to Research & Data', async () => {
+  it('shows three short rows and a direct documentation link (Research & Data until the PDF exists)', async () => {
     await renderHome(null)
-    const si = within(screen.getByTestId('si-compact'))
-    expect(si.getByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
-    expect(si.getAllByRole('term').map((dt) => dt.textContent)).toEqual(['In the product', 'In development', 'Human responsibility'])
-
-    const more = screen.getByTestId('si-learn-more')
-    expect(more.tagName).toBe('DETAILS')
-    expect(more).not.toHaveAttribute('open')
-    expect(within(more).getByText('Learn more')).toBeInTheDocument()
-    expect(within(more).getByRole('heading', { level: 3, name: 'What SI does in AstroFire' })).toBeInTheDocument()
-    expect(within(more).getByText('Run a live AI model')).toBeInTheDocument()
-    expect(within(more).getByRole('link', { name: /Read the documentation/ })).toHaveAttribute('href', '/research')
-  })
-
-  it('the Learn more link opens the technical PDF once it is set', async () => {
-    await renderHome('https://example.org/astrofire-technical-docs.pdf')
-    const si = within(screen.getByTestId('si-compact'))
-    expect(screen.getByTestId('si-compact')).toHaveAttribute('id', 'si-usage')
+    const section = screen.getByTestId('si-compact')
+    const si = within(section)
+    expect(section).toHaveAttribute('id', 'si-usage')
     expect(si.getByText('Transparency', { selector: 'p' })).toBeInTheDocument()
     expect(si.getByRole('heading', { level: 2, name: 'How we use SI' })).toBeInTheDocument()
+    expect(si.getAllByRole('term').map((dt) => dt.textContent)).toEqual(['In the product', 'In development', 'Human responsibility'])
     expect(si.getByText('In the product').nextSibling).toHaveTextContent(
-      'When you run a simulation, a rule-based engine matches your scenario to NASA BASS-II data and technical reports. The diagnosis and guidance texts were drafted with SI and reviewed by the team.',
+      'A rule-based engine matches each scenario to NASA data. Its diagnosis texts were drafted with SI and reviewed by the team.',
     )
     expect(si.getByText('In development').nextSibling).toHaveTextContent(
-      'AI tools supported specific tasks: ChatGPT, Codex, Gemini and Claude / Claude Code (code, 3D, data and interface), the AstroFire logo (created with Claude Code) and the demo video narration ([VOICE TOOL]).',
+      'ChatGPT, Codex, Gemini and Claude Code supported code, 3D, data and interface. Claude Code created the logo; [VOICE TOOL] narrates the demo.',
     )
     expect(si.getByText('Human responsibility').nextSibling).toHaveTextContent(
-      'The team conceived the solution, made the design and science decisions, and reviewed all code, data and results.',
+      'The team conceived the solution, made every decision and reviewed all code, data and results.',
     )
+    expect(si.queryByText('Learn more')).toBeNull()
+    expect(section.querySelector('details')).toBeNull()
+    expect(si.getByRole('link', { name: /Read the documentation/ })).toHaveAttribute('href', '/research')
+  })
+
+  it('the documentation link opens the technical PDF once it is set', async () => {
+    await renderHome('https://example.org/astrofire-technical-docs.pdf')
+    const si = within(screen.getByTestId('si-compact'))
     expect(si.getByRole('link', { name: /Full SI disclosure in the documentation/ })).toHaveAttribute(
       'href',
       'https://example.org/astrofire-technical-docs.pdf',

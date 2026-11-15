@@ -4,7 +4,6 @@ import { mockSimulate } from '../../../services/api/mockClient'
 import { EXPERIMENTS_SNAPSHOT } from '../../../data/experimentsSnapshot'
 import type { SimulationResponse } from '../../../types/contract'
 import {
-  cycleStep,
   dischargeBlockedReason,
   initialSimulationState,
   isResultStale,
@@ -62,12 +61,10 @@ describe('simulationReducer', () => {
   it('chamber cycle: burning after a run, suppressing for the backend duration, then extinguished', () => {
     let state = runToSuccess(initialSimulationState(), (r) => withTestEstimate(r))
     expect(state.chamber.phase).toBe('burning')
-    expect(cycleStep(state)).toBe(2)
     expect(dischargeBlockedReason(state)).toBeNull()
 
     state = simulationReducer(state, { type: 'dischargeStarted', at: 1000 })
     expect(state.chamber).toMatchObject({ phase: 'suppressing', dischargeMs: 3000, dischargeStartedAt: 1000 })
-    expect(cycleStep(state)).toBe(3)
 
     // A timer from an older cycle must not end the current discharge.
     const stale = simulationReducer(state, { type: 'dischargeCompleted', cycle: state.chamber.cycle - 1 })
@@ -78,7 +75,6 @@ describe('simulationReducer', () => {
 
     state = simulationReducer(state, { type: 'runStarted', request: toRequest(state.draft) })
     expect(state.chamber.phase).toBe('idle')
-    expect(cycleStep(state)).toBe(1)
   })
 
   it('the low-oxygen scenario (oxygen_factor 0) is extinguished and cannot be discharged', () => {
@@ -91,7 +87,6 @@ describe('simulationReducer', () => {
     state = runToSuccess(state, (r) => withTestEstimate(r))
     expect(state.result?.simulation_3d.oxygen_factor).toBe(0)
     expect(state.chamber).toMatchObject({ phase: 'extinguished', extinguishedBy: 'no_sustained_flame' })
-    expect(cycleStep(state)).toBe(2)
     expect(dischargeBlockedReason(state)).toBe('No active flame to suppress.')
     expect(simulationReducer(state, { type: 'dischargeStarted', at: 0 }).chamber.phase).toBe('extinguished')
   })
@@ -115,7 +110,6 @@ describe('simulationReducer', () => {
     let state = runToSuccess(initialSimulationState(), (r) => withTestEstimate(r))
     state = simulationReducer(state, { type: 'setAirflow', airflow_cm_s: 20 })
     expect(dischargeBlockedReason(state)).toMatch(/Re-run/)
-    expect(cycleStep(state)).toBe(1)
   })
 
   it('omits thickness when it is pending (null)', () => {

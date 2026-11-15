@@ -13,23 +13,15 @@ export const LOGO_CREDIT = 'AstroFire logo created with Claude Code (SI-assisted
 
 /**
  * Short "How we use SI" block on the Home.
- * TODO(logo): when the team redesigns the logo, update "the AstroFire logo (created with Claude Code)".
+ * TODO(logo): when the team redesigns the logo, update "Claude Code created the logo".
  * TODO(voice-tool): replace [VOICE TOOL] with the name of the narration tool.
  */
 export const SI_COMPACT = {
-  product:
-    'When you run a simulation, a rule-based engine matches your scenario to NASA BASS-II data and technical reports. The diagnosis and guidance texts were drafted with SI and reviewed by the team.',
+  product: 'A rule-based engine matches each scenario to NASA data. Its diagnosis texts were drafted with SI and reviewed by the team.',
   development:
-    'AI tools supported specific tasks: ChatGPT, Codex, Gemini and Claude / Claude Code (code, 3D, data and interface), the AstroFire logo (created with Claude Code) and the demo video narration ([VOICE TOOL]).',
-  human: 'The team conceived the solution, made the design and science decisions, and reviewed all code, data and results.',
+    'ChatGPT, Codex, Gemini and Claude Code supported code, 3D, data and interface. Claude Code created the logo; [VOICE TOOL] narrates the demo.',
+  human: 'The team conceived the solution, made every decision and reviewed all code, data and results.',
   linkLabel: 'Full SI disclosure in the documentation',
-  /** "Learn more" disclosure (same wording as docs/technical-notes.md, section 3.1). */
-  does: [
-    'Computes telemetry from the BASS-II records or NASA-bounded formulas',
-    'Explains the flame regime and suppression options with template text',
-    'Cites the NASA sources behind each result',
-  ],
-  doesNot: ['Run a live AI model', 'Measure Moon or Mars fires', 'Provide a certified safety assessment'],
 } as const
 
 /**

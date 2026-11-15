@@ -79,13 +79,27 @@ describe('site structure', () => {
     for (const name of ['The problem', 'Our approach', 'The solution']) {
       expect(steps.getAllByText(name).length).toBeGreaterThan(0)
     }
-    for (const title of [
+    // Step selector: one panel visible at a time.
+    const tabs = steps.getAllByRole('tab')
+    expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false'])
+    const titles = [
       'Fire behaves differently in space, and the data to understand it is scattered.',
       'We bring the research together.',
       'Explore fire behavior, backed by science.',
-    ]) {
-      expect(steps.getByRole('heading', { level: 3, name: title })).toBeInTheDocument()
-    }
+    ]
+    expect(steps.getByRole('heading', { level: 3, name: titles[0] })).toBeInTheDocument()
+    expect(steps.queryByRole('heading', { level: 3, name: titles[1] })).toBeNull()
+    fireEvent.click(steps.getByRole('button', { name: /Next: our approach/ }))
+    expect(steps.getByRole('heading', { level: 3, name: titles[1] })).toBeInTheDocument()
+    expect(tabs[1]).toHaveFocus()
+    fireEvent.keyDown(tabs[1], { key: 'ArrowDown' })
+    expect(steps.getByRole('heading', { level: 3, name: titles[2] })).toBeInTheDocument()
+    expect(tabs[2]).toHaveAttribute('aria-selected', 'true')
+    expect(steps.queryByRole('link', { name: /Try it in the Simulator/ })).toBeNull()
+    // Launch Simulator button under the steps.
+    expect(steps.getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
+    fireEvent.keyDown(tabs[2], { key: 'Home' })
+    expect(steps.getByRole('heading', { level: 3, name: titles[0] })).toBeInTheDocument()
     for (const item of [
       'Without gravity, hot gases don’t rise, so flames can become slow, round and hard to see.',
       'Oxygen concentration and cabin airflow change how materials burn.',
@@ -168,8 +182,8 @@ describe('site structure', () => {
     const si = within(screen.getByTestId('si-compact'))
     expect(screen.getByTestId('si-compact')).toHaveAttribute('id', 'si-usage')
     expect(si.getByText('Transparency', { selector: 'p' })).toBeInTheDocument()
-    expect(si.getByText(/a rule-based engine matches your scenario to NASA BASS-II data/)).toBeInTheDocument()
-    expect(si.getByText(/ChatGPT, Codex, Gemini and Claude \/ Claude Code/)).toBeInTheDocument()
+    expect(si.getByText(/A rule-based engine matches each scenario to NASA data/)).toBeInTheDocument()
+    expect(si.getByText(/ChatGPT, Codex, Gemini and Claude Code/)).toBeInTheDocument()
     expect(si.getByText(/\[VOICE TOOL\]/)).toBeInTheDocument()
     expect(si.getByText(/The team conceived the solution/)).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/recreated by the team|SI interprets the experimental data/)

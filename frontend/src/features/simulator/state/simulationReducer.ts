@@ -246,14 +246,6 @@ export function dischargeBlockedReason(state: SimulationState): string | null {
   return null
 }
 
-/** Current step of the Simulate -> Measure risk -> Suppress cycle (1-based). */
-export function cycleStep(state: SimulationState): 1 | 2 | 3 {
-  if (!state.result || state.status === 'loading' || isResultStale(state)) return 1
-  const { phase, extinguishedBy } = state.chamber
-  if (phase === 'suppressing' || (phase === 'extinguished' && extinguishedBy === 'suppression')) return 3
-  return 2
-}
-
 /** True when a result is on screen but the controls no longer match the run that produced it. */
 export function isResultStale(state: SimulationState): boolean {
   if (!state.result || !state.lastRunRequest) return false

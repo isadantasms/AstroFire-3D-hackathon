@@ -314,3 +314,13 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Home "How AstroFire helps": content of the selected step eases in. */
+.step-in {
+  animation: hero-rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-in {
+    animation: none !important;
+  }
+}

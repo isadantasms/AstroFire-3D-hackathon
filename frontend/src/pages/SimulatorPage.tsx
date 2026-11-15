@@ -5,9 +5,7 @@ import { defaultApiClient, type ApiClient, type Catalog } from '../services/api/
 import { MissionControls } from '../features/simulator/controls/MissionControls'
 import { FlameChamberPlaceholder } from '../features/simulator/chamber/FlameChamberPlaceholder'
 import { toChamberSuppression } from '../features/simulator/chamber/types'
-import { CycleBar } from '../features/simulator/CycleBar'
 import { ResultsColumn } from '../features/simulator/results/ResultsColumn'
-import { cycleStep } from '../features/simulator/state/simulationReducer'
 import { useCatalog, useSimulation } from '../features/simulator/state/useSimulation'
 
 export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClient }) {
@@ -35,7 +33,6 @@ export function SimulatorPage({ client = defaultApiClient }: { client?: ApiClien
   return (
     <div className="flex flex-col bg-void lg:h-[calc(100dvh-3.5rem)]">
       <h1 className="sr-only">Simulator</h1>
-      <CycleBar current={cycleStep(state)} />
 
       <div className="grid min-h-0 flex-1 gap-5 p-4 lg:grid-cols-[300px_minmax(0,1fr)_360px] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:px-6 xl:grid-cols-[300px_minmax(0,1fr)_400px]">
         {/* Left: Mission controls */}

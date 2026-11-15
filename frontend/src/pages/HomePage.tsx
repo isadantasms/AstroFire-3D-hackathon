@@ -1,7 +1,7 @@
 // SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha
-import { useRef, type CSSProperties, type ReactNode } from 'react'
+import { useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, ChevronDown, Play } from 'lucide-react'
+import { ArrowRight, Play, UserCheck, Workflow, Wrench } from 'lucide-react'
 import { RocketHeroBackdrop } from '../components/RocketHeroBackdrop'
 import { SkyLayer } from '../components/home/SkyLayer'
 import { PlanetHorizon } from '../components/home/PlanetHorizon'
@@ -129,28 +129,6 @@ function Hero() {
 
 /* ------------------------------------------------------------------ */
 
-/** Section header in the hero pattern: mono label and centered title (rocket keeps away). */
-function SectionHeader({ id, label, title }: { id: string; label: string; title: string }) {
-  return (
-    <div data-rocket-avoid className="text-center">
-      <p data-reveal className="reveal font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
-        <span className="text-brand" aria-hidden>
-          ●
-        </span>{' '}
-        {label}
-      </p>
-      <h2
-        id={`${id}-title`}
-        data-reveal
-        style={stagger(1)}
-        className="reveal mx-auto mt-4 max-w-2xl text-2xl font-semibold tracking-tight text-primary sm:text-3xl"
-      >
-        {title}
-      </h2>
-    </div>
-  )
-}
-
 interface Step {
   n: number
   name: string
@@ -158,6 +136,9 @@ interface Step {
   marker: string
   nameColor: string
   dashColor: string
+  /** Top-edge rule and numeral outline colour of the step panel. */
+  rule: string
+  accent: string
   title: string
   items: { id: string; content: ReactNode }[]
 }
@@ -193,6 +174,8 @@ const STEPS: Step[] = [
     marker: 'border-2 border-[#4C8DFF] bg-panel text-[#8CB4FF]',
     nameColor: 'text-[#8CB4FF]',
     dashColor: 'text-[#8CB4FF]',
+    rule: 'bg-[#4C8DFF]',
+    accent: '#8CB4FF',
     title: 'Fire behaves differently in space, and the data to understand it is scattered.',
     items: [
       { id: 'gravity', content: 'Without gravity, hot gases don’t rise, so flames can become slow, round and hard to see.' },
@@ -206,6 +189,8 @@ const STEPS: Step[] = [
     marker: 'border-2 border-[#B98A5A] bg-panel text-[#E6C9A8]',
     nameColor: 'text-[#E6C9A8]',
     dashColor: 'text-[#B98A5A]',
+    rule: 'bg-[#B98A5A]',
+    accent: '#E6C9A8',
     title: 'We bring the research together.',
     items: [
       {
@@ -235,6 +220,8 @@ const STEPS: Step[] = [
     marker: 'border-2 border-[#F28C28] bg-[#F28C28] text-[#0A101C]',
     nameColor: 'text-[#F28C28]',
     dashColor: 'text-[#F28C28]',
+    rule: 'bg-[#F28C28]',
+    accent: '#F28C28',
     title: 'Explore fire behavior, backed by science.',
     items: [
       { id: 'configure', content: 'Configure material, gravity, oxygen and airflow.' },
@@ -246,61 +233,179 @@ const STEPS: Step[] = [
   },
 ]
 
-/** Vertical connector colors between stacked steps (narrow screens). */
-const VERTICAL_SEGMENTS = ['from-[#33456A] to-[#B98A5A]', 'from-[#B98A5A] to-[#F28C28]']
+/** Left-aligned section heading (mono label + title), used by the asymmetric sections below. */
+function SideHeader({ id, label, title }: { id: string; label: string; title: string }) {
+  return (
+    <div data-rocket-avoid>
+      <p data-reveal className="reveal font-mono text-[0.75rem] tracking-[0.18em] text-label uppercase">
+        <span className="text-brand" aria-hidden>
+          ●
+        </span>{' '}
+        {label}
+      </p>
+      <h2
+        id={`${id}-title`}
+        data-reveal
+        style={stagger(1)}
+        className="reveal mt-4 text-2xl font-semibold tracking-tight text-primary sm:text-3xl"
+      >
+        {title}
+      </h2>
+    </div>
+  )
+}
 
+/**
+ * "How AstroFire helps" as a step selector: the three steps on the left (joined by a vertical
+ * connector), one panel on the right with the selected step. Keyboard: arrow keys move between steps.
+ */
 function HelpsSection() {
+  const [active, setActive] = useState(0)
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const baseId = useId()
+
+  const select = (i: number, focus = false) => {
+    const next = (i + STEPS.length) % STEPS.length
+    setActive(next)
+    if (focus) tabRefs.current[next]?.focus()
+  }
+
+  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
+    const keys: Record<string, number> = {
+      ArrowDown: i + 1,
+      ArrowRight: i + 1,
+      ArrowUp: i - 1,
+      ArrowLeft: i - 1,
+      Home: 0,
+      End: STEPS.length - 1,
+    }
+    if (e.key in keys) {
+      e.preventDefault()
+      select(keys[e.key], true)
+    }
+  }
+
   return (
     <section className="relative" aria-labelledby="helps-title">
-      {/* First section under the planet arc: ~96px of breathing room from the arc. */}
-      <div className="mx-auto max-w-6xl px-4 pt-12 pb-20 sm:px-6 min-[1400px]:pt-6">
-        <SectionHeader id="helps" label="From research to answers" title="How AstroFire helps" />
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_1fr] lg:gap-x-14 lg:gap-y-8 min-[1400px]:pt-6">
+        <div>
+          <SideHeader id="helps" label="From research to answers" title="How AstroFire helps" />
 
-        <div data-reveal style={stagger(2)} className={`reveal relative mt-12 p-6 text-left sm:p-8 lg:p-10 ${PANEL}`}>
-          {/* Horizontal connector through the three markers (desktop). */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute top-[calc(2.5rem+13px)] left-[calc(2.5rem+14px)] hidden h-[2px] w-[calc((100%-5rem+2.5rem)*2/3)] bg-linear-to-r from-[#33456A] to-[#F28C28] lg:block"
-          />
-          <ol className="grid gap-10 lg:grid-cols-3 lg:gap-10">
-            {STEPS.map((step, i) => (
-              <li key={step.n} data-reveal style={stagger(3 + i)} className="reveal relative pl-12 lg:pl-0">
-                {/* Vertical connector to the next step (narrow screens). */}
-                {i < STEPS.length - 1 ? (
+          <div
+            role="tablist"
+            aria-label="How AstroFire helps"
+            aria-orientation="vertical"
+            data-reveal
+            style={stagger(2)}
+            className="reveal relative mt-8 grid grid-cols-3 gap-2 lg:mt-10 lg:grid-cols-1 lg:gap-0"
+          >
+            {/* Vertical connector through the markers (desktop). */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute top-8 bottom-8 left-[27px] hidden w-[2px] bg-linear-to-b from-[#4C8DFF]/60 via-[#B98A5A]/60 to-[#F28C28]/70 lg:block"
+            />
+            {STEPS.map((s, i) => {
+              const selected = i === active
+              return (
+                <button
+                  key={s.n}
+                  ref={(el) => {
+                    tabRefs.current[i] = el
+                  }}
+                  type="button"
+                  role="tab"
+                  id={`${baseId}-tab-${i}`}
+                  aria-selected={selected}
+                  aria-controls={`${baseId}-panel-${i}`}
+                  tabIndex={selected ? 0 : -1}
+                  onClick={() => select(i)}
+                  onKeyDown={(e) => onKeyDown(e, i)}
+                  className={`group relative flex flex-col items-center gap-2 rounded-xl border px-2 py-3 text-center transition-colors lg:flex-row lg:items-center lg:gap-4 lg:border-transparent lg:px-3 lg:py-4 lg:text-left ${
+                    selected ? 'border-subtle bg-panel/80 lg:bg-panel/60' : 'border-transparent hover:bg-panel/40'
+                  }`}
+                >
                   <span
-                    aria-hidden="true"
-                    className={`pointer-events-none absolute top-7 -bottom-10 left-[13px] w-[2px] bg-linear-to-b lg:hidden ${VERTICAL_SEGMENTS[i]}`}
-                  />
-                ) : null}
-                <div className="absolute top-0 left-0 flex items-center lg:relative">
-                  <span
-                    className={`relative z-10 inline-flex size-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold ${step.marker}`}
+                    className={`relative z-10 inline-flex size-8 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold transition-transform duration-300 ${s.marker} ${
+                      selected ? 'scale-110' : 'opacity-70 group-hover:opacity-100'
+                    }`}
                     aria-hidden="true"
                   >
-                    {step.n}
+                    {s.n}
                   </span>
-                  <span className={`hidden bg-panel px-3 font-mono text-[0.75rem] tracking-[0.14em] uppercase lg:inline ${step.nameColor}`}>
-                    {step.name}
+                  <span className="min-w-0">
+                    <span className={`block font-mono text-[0.6875rem] tracking-[0.14em] uppercase sm:text-[0.75rem] ${s.nameColor}`}>
+                      {s.name}
+                    </span>
+                    <span
+                      className={`mt-1 hidden text-sm leading-snug transition-colors lg:block ${
+                        selected ? 'text-primary' : 'text-muted group-hover:text-secondary'
+                      }`}
+                    >
+                      {s.title}
+                    </span>
                   </span>
-                </div>
-                <p className={`font-mono text-[0.75rem] tracking-[0.14em] uppercase lg:hidden ${step.nameColor}`}>
-                  <span className="sr-only">Step {step.n}: </span>
-                  {step.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div data-reveal style={stagger(3)} className="reveal lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:pt-14">
+          {STEPS.map((s, i) => (
+            <div
+              key={s.n}
+              role="tabpanel"
+              id={`${baseId}-panel-${i}`}
+              aria-labelledby={`${baseId}-tab-${i}`}
+              hidden={i !== active}
+              tabIndex={0}
+              className={`relative overflow-hidden p-6 sm:p-8 lg:min-h-[25.5rem] ${PANEL}`}
+            >
+              {/* Step colour on the top edge and an outlined numeral as a quiet marker. */}
+              <span aria-hidden="true" className={`absolute inset-x-0 top-0 h-[3px] ${s.rule}`} />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute right-4 -bottom-5 font-mono text-[7.5rem] leading-none font-semibold text-transparent select-none sm:right-6"
+                style={{ WebkitTextStroke: `1px ${s.accent}`, opacity: 0.35 }}
+              >
+                0{s.n}
+              </span>
+
+              <div key={active} className="step-in relative">
+                <p className={`font-mono text-[0.75rem] tracking-[0.14em] uppercase ${s.nameColor}`}>
+                  <span className="sr-only">Step {s.n}: </span>
+                  {s.name}
                 </p>
-                <h3 className="mt-3 text-[22px] leading-snug font-semibold text-primary lg:mt-6">{step.title}</h3>
-                <ul className="mt-5 space-y-3">
-                  {step.items.map((item) => (
-                    <li key={item.id} className="flex gap-3 text-sm leading-relaxed text-secondary">
-                      <span className={`shrink-0 ${step.dashColor}`} aria-hidden="true">
+                <h3 className="mt-3 max-w-md text-[22px] leading-snug font-semibold text-primary sm:text-2xl">{s.title}</h3>
+                <ul className="mt-6 space-y-3">
+                  {s.items.map((item) => (
+                    <li key={item.id} className="flex gap-3 text-sm leading-relaxed text-secondary sm:text-[0.9375rem]">
+                      <span className={`shrink-0 ${s.dashColor}`} aria-hidden="true">
                         —
                       </span>
                       <span>{item.content}</span>
                     </li>
                   ))}
                 </ul>
-              </li>
-            ))}
-          </ol>
+              </div>
+
+              {i < STEPS.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => select(i + 1, true)}
+                  className="relative mt-8 inline-flex items-center gap-1.5 text-sm text-secondary transition-colors hover:text-primary"
+                >
+                  Next: {STEPS[i + 1].name.toLowerCase()}
+                  <ArrowRight className="size-3.5" aria-hidden />
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </div>
+
+        {/* Under the steps on desktop; after the panel on small screens (grid order). */}
+        <div data-reveal style={stagger(4)} className="reveal lg:col-start-1 lg:row-start-2">
+          <LaunchSimulatorButton />
         </div>
       </div>
     </section>
@@ -309,62 +414,49 @@ function HelpsSection() {
 
 /**
  * How SI is used (NASA Space Apps disclosure); the footer "SI Usage" link lands here (#si-usage).
+ * Editorial layout (no card): heading on the left, three typographic rows on the right.
  * Short on purpose: the full disclosure lives in docs/technical-notes.md (for the technical PDF).
- * "Learn more" opens what SI does / does not do and the documentation link.
+ * The documentation link sits right below the rows.
  */
 function SiUsageSection() {
   const rows = [
-    { name: 'In the product', text: SI_COMPACT.product },
-    { name: 'In development', text: SI_COMPACT.development },
-    { name: 'Human responsibility', text: SI_COMPACT.human },
+    { name: 'In the product', text: SI_COMPACT.product, Icon: Workflow },
+    { name: 'In development', text: SI_COMPACT.development, Icon: Wrench },
+    { name: 'Human responsibility', text: SI_COMPACT.human, Icon: UserCheck },
   ]
   return (
     <section id="si-usage" className="relative scroll-mt-16" aria-labelledby="si-usage-title" data-testid="si-compact">
-      <div className="mx-auto max-w-6xl px-4 pt-4 pb-20 sm:px-6">
-        <SectionHeader id="si-usage" label="Transparency" title="How we use SI" />
-        <div data-reveal style={stagger(2)} className={`reveal mx-auto mt-10 max-w-3xl p-6 sm:p-8 ${PANEL}`}>
-          <dl className="space-y-4">
-            {rows.map((r) => (
-              <div key={r.name} className="grid gap-1 sm:grid-cols-[11rem_1fr] sm:gap-6">
-                <dt className="font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">{r.name}</dt>
-                <dd className="text-sm leading-relaxed text-secondary">{r.text}</dd>
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 pt-4 pb-20 sm:px-6 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-14">
+        <div>
+          <SideHeader id="si-usage" label="Transparency" title="How we use SI" />
+          <p data-reveal style={stagger(2)} className="reveal mt-4 max-w-xs text-sm leading-relaxed text-muted">
+            Where SI is used in AstroFire, and where the team is responsible.
+          </p>
+        </div>
+
+        <div data-reveal style={stagger(2)} className="reveal">
+          <dl className="divide-y divide-subtle border-y border-subtle">
+            {rows.map(({ name, text, Icon }) => (
+              <div key={name} className="grid items-start gap-x-6 gap-y-2 py-5 sm:grid-cols-[14.5rem_1fr]">
+                <dt className="flex items-center gap-3 font-mono text-[0.75rem] tracking-[0.14em] text-[#F28C28] uppercase">
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-subtle text-label"
+                  >
+                    <Icon className="size-4" strokeWidth={1.75} />
+                  </span>
+                  {name}
+                </dt>
+                {/* pt aligns the first text line with the centre of the icon. */}
+                <dd className="text-sm leading-relaxed text-secondary sm:pt-1.5">{text}</dd>
               </div>
             ))}
           </dl>
 
-          {/* "Learn more": what SI does / does not do, plus the documentation link. */}
-          <details className="group mt-6 border-t border-subtle pt-4" data-testid="si-learn-more">
-            <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-primary hover:text-[#F28C28] [&::-webkit-details-marker]:hidden">
-              <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
-              Learn more
-            </summary>
-            <div className="mt-4 grid gap-6 sm:grid-cols-2">
-              <SiList title="What SI does in AstroFire" items={SI_COMPACT.does} mark="✓" tone="text-nominal" />
-              <SiList title="What it does not do" items={SI_COMPACT.doesNot} mark="×" tone="text-muted" />
-            </div>
-            <SiDocsLink />
-          </details>
+          <SiDocsLink />
         </div>
       </div>
     </section>
-  )
-}
-
-function SiList({ title, items, mark, tone }: { title: string; items: readonly string[]; mark: string; tone: string }) {
-  return (
-    <div>
-      <h3 className="text-sm font-medium text-primary">{title}</h3>
-      <ul className="mt-2 space-y-1.5">
-        {items.map((item) => (
-          <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-secondary">
-            <span className={`shrink-0 font-mono ${tone}`} aria-hidden="true">
-              {mark}
-            </span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
   )
 }
 
