@@ -2,7 +2,7 @@
 # Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
 # Reference: Olson et al., NASA/TM-20210011385 (2021)
 """
-FastAPI entrypoint for [PROJECT_NAME] (NASA Space Apps Challenge 2026 - Flame in Freefall).
+FastAPI entrypoint for AstroFire 3D (NASA Space Apps Challenge 2026 - Flame in Freefall).
 Exposes deterministic < 5ms endpoints synchronized strictly with contracts/simulation_schema.json.
 Includes a zero-dependency stdlib HTTP server fallback if FastAPI/Uvicorn is not yet installed.
 """
@@ -66,7 +66,7 @@ def get_model_metrics() -> dict[str, object]:
 
 if HAS_FASTAPI:
     app = FastAPI(
-        title="[PROJECT_NAME] — Microgravity Combustion & Fire Safety API",
+        title="AstroFire 3D — Microgravity Combustion & Fire Safety API",
         description=(
             "Deterministic physical-empirical engine grounded on NASA PSI BASS-II (PSI-25, DOI: 10.60555/4qc4-de67) "
             "and NASA/TM-20210011385. Strictly excludes unlicensed dataset PSI-10."
@@ -180,5 +180,5 @@ class FallbackHTTPHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = ThreadingHTTPServer(("0.0.0.0", 8000), FallbackHTTPHandler)
-    print("[PROJECT_NAME] API listening on http://0.0.0.0:8000")
+    print("AstroFire 3D API listening on http://0.0.0.0:8000")
     server.serve_forever()

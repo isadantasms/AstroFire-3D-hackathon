@@ -232,6 +232,7 @@ describe('simulator helpers', () => {
     expect(shortCitationId('PSI-25 (DOI: 10.60555/4qc4-de67)')).toBe('PSI-25')
     expect(shortCitationId('NASA/TM-20210011385')).toBe('NASA/TM-20210011385')
     expect(isCitationShown({ id: 'NTRS-20170000230', title: 'Saffire', url: '', finding: '' })).toBe(true)
+    expect(isCitationShown({ id: 'UFSC-LEPTEN-VSB30', title: 'VSB-30 study', url: '', finding: '' })).toBe(true)
     expect(isCitationShown({ id: 'UFSC VSB-30', title: 'Sounding rocket study', url: '', finding: '' })).toBe(false)
   })
 })

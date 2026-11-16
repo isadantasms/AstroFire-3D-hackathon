@@ -1,4 +1,4 @@
-# DESIGN.md — [PROJECT_NAME] Visual System
+# DESIGN.md — AstroFire 3D Visual System
 **Archetype:** NASA ISS Microgravity Science Glovebox (MSG) & Mission Control Telemetry Console.
 **Anti-Slop Mandate:** Strictly forbid generic SaaS landing pages, purple/magenta neon gradients, empty decorative glassmorphism, stock photos, or unaligned numbers.
 

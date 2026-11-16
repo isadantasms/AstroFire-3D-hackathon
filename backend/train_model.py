@@ -25,7 +25,7 @@ def main() -> None:
     cm = clf["confusion_matrix"]
 
     print("=" * 78)
-    print("[PROJECT_NAME] — NASA BASS-II (PSI-25) PINN TRAINING & VALIDATION PIPELINE")
+    print("AstroFire 3D — NASA BASS-II (PSI-25) PINN TRAINING & VALIDATION PIPELINE")
     print("=" * 78)
     print(f"Dataset Grounding : {metrics['grounding_sources']['psi_dataset']} (DOI: {metrics['grounding_sources']['doi']})")
     print(f"Physical Equations: {metrics['grounding_sources']['ntrs_report']} (Olson Eq. 6.1 & Bhattacharjee Eq. 2.2-2.5)")

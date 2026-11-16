@@ -1,6 +1,6 @@
 # Standalone WebGL preview
 
-SI-assisted: generated with Codex; pending human review.
+SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 
 Requires Python 3, not the Unity Editor. Copy StartWebGL.cmd and serve_webgl.py into the export folder, beside index.html (with Build and TemplateData preserved). Double-click StartWebGL.cmd: it automatically serves that index.html and opens the browser, with no file picker. Brotli/gzip files are served with the required Content-Encoding and WebAssembly MIME headers. Leave the terminal open while using the app; Ctrl+C stops it.
 

@@ -1,6 +1,6 @@
 # Laboratory observation window
 
-SI-assisted: generated with Codex; pending human review.
+SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 
 The observation window is a voxel-style circular porthole: glass, metal rim and surrounding wall use the same 0.12-unit grid, producing a stepped round silhouette rather than smooth curves. Rim cells have solid thickness and axis-aligned flat faces; fasteners are snapped to the grid. The three regions partition the opening without gaps. A square 768x768 render target preserves image proportions. Generated window meshes are released with the room.
 

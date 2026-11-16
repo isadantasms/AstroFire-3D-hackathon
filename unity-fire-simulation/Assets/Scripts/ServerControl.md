@@ -1,6 +1,6 @@
 # Runtime control without UI
 
-SI-assisted: generated with Codex; pending human review.
+SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 
 The only in-game UI is the small hold-E-to-skip progress indicator in the bottom-right during destination travel. Test panels, destination/material selectors and extinguisher buttons have been removed. The cinematic black fade remains a transition effect. Inspector fields, public control methods and full-viewport mouse/keyboard camera controls remain available.
 

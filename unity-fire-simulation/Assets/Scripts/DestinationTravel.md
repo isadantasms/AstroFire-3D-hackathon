@@ -1,6 +1,6 @@
 # Destination travel cinematic
 
-SI-assisted: generated with Codex; pending human review.
+SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 
 Atmosphere WebGL compatibility: the GLES browser variant uses six fixed scattering samples and an explicit light-direction vector, without the URP lighting-feature include or camera-depth sampling/reconstruction. Desktop retains depth occlusion. The browser uses the analytic planet intersection for occlusion, so haze over nearby foreground details is approximate. The shader/pass remains explicitly referenced by the scene and marked SRPDefaultUnlit. If the device reports the shader unsupported, the component logs the graphics backend and disables the atmosphere shell rather than displaying a magenta sphere. The actual shader was present and compiled for gles3 in the inspected build log; stripping was not confirmed as the cause. A fresh WebGL build and browser-console verification are required after this change.
 

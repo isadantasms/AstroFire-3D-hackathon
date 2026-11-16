@@ -184,8 +184,7 @@ describe('site structure', () => {
     expect(si.getByText('Transparency', { selector: 'p' })).toBeInTheDocument()
     expect(si.getByText(/A rule-based engine matches each scenario to NASA data/)).toBeInTheDocument()
     expect(si.getByText(/ChatGPT, Codex, Gemini and Claude Code/)).toBeInTheDocument()
-    // The narration sentence stays hidden until VOICE_TOOL is set in content/project.ts.
-    expect(screen.getByTestId('si-compact').textContent).not.toMatch(/VOICE TOOL|narrates the demo/)
+    expect(screen.getByTestId('si-compact').textContent).toMatch(/ElevenLabs narrates the demo/)
     expect(si.getByText(/The team conceived the solution/)).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/recreated by the team|SI interprets the experimental data/)
 
@@ -335,7 +334,7 @@ describe('site structure', () => {
     }
     expect(within(credits.getByText('Unity (3D chamber engine and WebGL template)').closest('tr')!).getByText('Unity Terms of Service')).toBeInTheDocument()
     expect(credits.getByText(/UFSC \/ LEPTEN · VSB-30 suborbital microgravity boiling study/)).toBeInTheDocument()
-    expect(credits.queryByText(/VOICE TOOL|demo video narration/)).toBeNull()
+    expect(credits.getByText('ElevenLabs: demo video narration')).toBeInTheDocument()
   })
 
   it('the BASS-II table starts collapsed, then shows 10 rows until "Show all"', async () => {

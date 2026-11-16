@@ -14,11 +14,9 @@
 export const PITCH_VIDEO_URL: string = '#'
 
 /**
- * Name of the SI tool that narrates the demo video. While empty, the narration sentence (Home SI block)
- * and its credits row are hidden.
- * TODO(voice-tool): fill in the tool name, and its license and link in content/credits.ts.
+ * Name of the SI tool that narrates the demo video.
  */
-export const VOICE_TOOL: string = ''
+export const VOICE_TOOL: string = 'ElevenLabs'
 
 /**
  * Items still waiting for a confirmed reference or license ("To verify") show only in development builds.

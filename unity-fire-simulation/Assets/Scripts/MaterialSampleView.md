@@ -1,6 +1,6 @@
 # Material specimens
 
-SI-assisted: generated with Codex; pending human review.
+SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 
 SampleScene uses MaterialSampleView to replace the original sample cube. The component updates in Edit and Play modes from inputs.material_id and thickness_mm. The seven material buttons in the telemetry panel provide manual previews without changing the received burn rate, oxygen or flame color.
 
