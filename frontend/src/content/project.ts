@@ -9,9 +9,8 @@
 
 /**
  * Public URL of the 30-second pitch video (YouTube), opened by "Watch the 30s pitch" on the Home.
- * TODO(pitch): replace '#' with the published URL before submission.
  */
-export const PITCH_VIDEO_URL: string = '#'
+export const PITCH_VIDEO_URL: string = 'https://www.youtube.com/watch?v=3-Wds9D6F1w'
 
 /**
  * Name of the SI tool that narrates the demo video.

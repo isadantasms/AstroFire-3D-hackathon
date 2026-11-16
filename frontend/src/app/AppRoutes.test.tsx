@@ -65,7 +65,10 @@ describe('site structure', () => {
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
     expect(within(hero).getByRole('link', { name: /Launch Simulator/ })).toHaveAttribute('href', '/simulator')
     expect(within(hero).getByRole('link', { name: 'Documentation' })).toHaveAttribute('href', '/documentation')
-    expect(within(hero).getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute('href', '#')
+    expect(within(hero).getByRole('link', { name: /Watch the 30s pitch/ })).toHaveAttribute(
+      'href',
+      'https://www.youtube.com/watch?v=3-Wds9D6F1w',
+    )
     expect(within(hero).queryByText(/Not a certified safety assessment/)).toBeNull()
   })
 
