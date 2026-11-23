@@ -1,6 +1,6 @@
 {
-  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina, Celina & Esquivel — [PROJECT_NAME] | 3D test payloads validating strictly against contracts/simulation_schema.json. Grounded on NASA PSI BASS-II (PSI-25, DOI: 10.60555/4qc4-de67, CC0-1.0) and NASA/TM-20210011385 (PSI-10 excluded).",
-  "project": "[PROJECT_NAME]",
+  "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina, Celina & Esquivel — AstroFire 3D | 3D test payloads validating strictly against contracts/simulation_schema.json. Grounded on NASA PSI BASS-II (PSI-25, DOI: 10.60555/4qc4-de67, CC0-1.0) and NASA/TM-20210011385 (PSI-10 excluded).",
+  "project": "AstroFire 3D",
   "schema_ref": "../../../contracts/simulation_schema.json",
   "scenarios": [
     {

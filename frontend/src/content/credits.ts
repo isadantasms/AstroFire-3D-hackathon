@@ -118,12 +118,11 @@ const ALL_CREDITS: (CreditRow | false)[] = [
     license: 'Academic Paper (COBEM 2011)',
     url: 'https://lepten.ufsc.br/publicacoes/boiling/eventos/2011/COBEM/souza_passos.pdf',
   },
-  // TODO(voice-tool): license and link of the narration tool (the name comes from VOICE_TOOL).
   Boolean(VOICE_TOOL) && {
     resource: `${VOICE_TOOL}: demo video narration`,
     type: 'SI Tool',
-    license: 'To verify',
-    url: null,
+    license: 'Provider terms',
+    url: 'https://elevenlabs.io',
   },
 ]
 

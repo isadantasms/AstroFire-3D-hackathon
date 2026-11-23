@@ -1,4 +1,4 @@
-// SI-assisted: generated with Codex; pending human review.
+// SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 Shader "FireSimulation/MaterialSpecimen"
 {
     Properties { _BaseColor("Color", Color)=(.5,.8,1,.4) _Weave("Weave", Float)=0 }

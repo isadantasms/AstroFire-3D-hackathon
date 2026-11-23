@@ -1,6 +1,6 @@
 {
   "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina & Celina",
-  "project": "[PROJECT_NAME]",
+  "project": "AstroFire 3D",
   "model_architecture": "Hybrid Physics-Informed Neural Network (PINN) + Stratified 5-Fold Cross-Validation Ensemble",
   "grounding_sources": {
     "psi_dataset": "BASS-II (PSI-25)",

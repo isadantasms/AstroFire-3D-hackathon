@@ -1,6 +1,6 @@
 # Fire controls
 
-SI-assisted: generated with Codex; pending human review.
+SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 
 Open SampleScene and select FireSimulation during Play. Edit Payload in the Inspector. Changes stay in this scene and affect the same particle system; new particles adopt color/size changes while existing particles finish their lifetime.
 

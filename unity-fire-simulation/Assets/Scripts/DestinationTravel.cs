@@ -1,4 +1,4 @@
-// SI-assisted: generated with Codex; pending human review.
+// SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

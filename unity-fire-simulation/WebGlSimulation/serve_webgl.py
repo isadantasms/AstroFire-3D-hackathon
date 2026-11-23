@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SI-assisted: generated with Codex, reviewed and aligned by Esquivel & Elias — [PROJECT_NAME]
+# SI-assisted: generated with Codex, reviewed and aligned by Esquivel & Elias — AstroFire 3D
 import argparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer

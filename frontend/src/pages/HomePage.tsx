@@ -106,6 +106,8 @@ function Hero() {
           <DocumentationButton />
           <a
             href={PITCH_VIDEO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center gap-2 rounded-[10px] px-3 text-sm text-secondary transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:text-primary"
           >
             <Play className="size-3.5 fill-current" aria-hidden />

@@ -10,10 +10,9 @@ export function shortCitationId(id: string): string {
 }
 
 /**
- * Brazilian sources (UFSC / VSB-30) are shown only once they are registered in docs/references.md.
- * TODO(references): add the registered citation id here when the UFSC (VSB-30) study is in the ledger.
+ * Brazilian sources (UFSC / VSB-30) registered in docs/references.md and content/references.ts.
  */
-const REGISTERED_BRAZILIAN_SOURCES: readonly string[] = []
+const REGISTERED_BRAZILIAN_SOURCES: readonly string[] = ['UFSC-LEPTEN-VSB30']
 
 export function isCitationShown(c: NasaCitation): boolean {
   if (!/UFSC|VSB-30/i.test(`${c.id} ${c.title}`)) return true

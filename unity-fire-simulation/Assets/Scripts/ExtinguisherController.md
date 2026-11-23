@@ -1,6 +1,6 @@
 # Extinguisher interaction
 
-SI-assisted: generated with Codex; pending human review.
+SI-assisted: generated with Codex, reviewed and edited by Esquivel & Elias (21 PyroRangers).
 
 Withdrawal first lifts the extinguisher 0.65 units without rotation, then pulls it 0.55 units away from the wall before aiming at the specimen. Return reverses these stages: align above and outside the bracket, slide inward, then lower into the cradle. Storage Lift Height and Storage Release Distance are editable for changes to the mount geometry.
 

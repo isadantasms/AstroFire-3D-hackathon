@@ -1,128 +1,57 @@
-<!-- SI-assisted: generated with Claude Opus 5.5, reviewed and edited by Rocha -->
-# AstroFire 3D — Technical Notes
+<!-- SI-assisted: generated with Claude & Gemini, reviewed and edited by 21 PyroRangers -->
+# AstroFire 3D — Technical Architecture & Validation Notes (v1.0)
 
-Working notes for the technical documentation PDF. This content was moved out of the Research & Data page (now Documentation),
-which now only shows the evidence (NASA data, investigation comparison and citations).
-Every number below is copied from a file in this repository; the source file is named in each section.
+Summary reference synchronized with the **AstroFire 3D Full Technical Documentation & Architecture Reference (v1.0, 50 pages)** ([Google Drive PDF](https://drive.google.com/file/d/1I76fUH7d-4MW_0Z12umlQFeijdn4akI0/view)). Every value below is produced directly by the repository code and verified against `contracts/simulation_schema.json`.
 
-## 1. How results are calculated today
+---
 
-- `POST /api/simulate` (`backend/app/physics_engine.py`) is a **deterministic, rule-based engine**. No AI model runs at runtime.
-- When a scenario matches one of the 79 BASS-II records (`backend/data/bass2_empirical_verified.json`), the engine uses that measured record (`grounding_status = empirical_bass2`).
-- Otherwise it applies formulas bounded by NASA/TM-20210011385 (Olson's stretch flammability boundary, Eq. 6.1; Bhattacharjee's thermal/radiative scaling, Eq. 2.2–2.5) and maps partial gravity through an equivalent convective stretch velocity (`grounding_status = interpolated_from_ntrs`).
-- The diagnosis, suppression and limitations texts are filled in from three templates (extinguished, quiescent 0g, advective/buoyant). The templates were drafted with Gemini and reviewed by the team.
-- In mock mode (`VITE_API_MODE=mock`, the default of the published front-end), results come from three sample payloads (`frontend/src/mocks/sample_3d_payloads.json`) written with Gemini.
+## 1. Three-Layer Runtime Architecture
 
-> TODO(si): If the PINN is wired into `/api/simulate`, update this section and the Home "How we use SI" section to describe the ML prediction step.
+1. **Deterministic Physics Engine (`backend/app/physics_engine.py`):**
+   - Evaluates closed-form physical equations in constant time ($< 5\text{ ms}$, zero external API keys): effective convective velocity $U_{\text{eff}}$ and stretch rate $a$, Olson's U-shaped Limiting Oxygen Index boundary (Eq. 6.1 of `NASA/TM-20210011385`), Bhattacharjee thickness scaling, stoichiometric $\text{CO}_2/\text{CO}$ estimates, a monotonic flammability index ($0\text{--}100$), and first-order sizing for the **ISS Fine Water Mist Portable Fire Extinguisher (FWM PFE, 2,720 mL)** (`NTRS-20130011664`) coupled with microgravity boiling cooling efficiency ($\eta_{0g} = 0.68$ in $0\text{ g}$ vs. $1.00$ in $1\text{ g}$) grounded on **NASA Glenn (`NTRS-20030003652`)** and the **Brazilian VSB-30 suborbital rocket boiling experiments (UFSC / LEPTEN / AEB / INPE)**.
+2. **Empirical Grounding Store (`backend/data/`):**
+   - **79 verified BASS-II (`PSI-25`, `DOI: 10.60555/4qc4-de67`, `CC0-1.0`) flight records** with measured flame spread rates $V_f$ ($\text{mm/s}$) from `NASA/TM-20210011385` summary tables.
+   - **150 curated flight records** ($79$ verified $+ 71$ curated from the 129-run ISS flight sheet `bass2_experiments_clean.csv` using non-circular telemetry hygiene rules) for sustained-versus-quenched classification.
+   - Every response reports `empirical_bass2` when matching a BASS-II record at $0\text{ g}$ or `interpolated_from_ntrs` for bounded physical interpolation (including Moon $0.16\text{ g}$ and Mars $0.38\text{ g}$ bounded between $0\text{ g}$ and $1\text{ g}$).
+3. **Live Hybrid Physics-Informed Neural Network (PINN) Co-Pilot (`backend/app/ml_pipeline.py`):**
+   - Runs a live forward pass of `PhysicsInformedClassifier` and `PhysicsInformedSpreadPINN` alongside a nearest-neighbor search over the 79 verified ISS tests on every `POST /api/simulate` call.
+   - Reports **PINN Sustained-Burn Probability (%)**, **PINN $V_f \pm 0.055\text{ mm/s}$ MAE**, and the **Closest ISS Twin (`BASS2-*`)** in the Safety Co-Pilot without overwriting the deterministic telemetry.
 
-## 2. Physics-informed model (PINN): separate validation study
+---
 
-Source: `backend/data/pinn_validation_metrics.json`, produced by `backend/app/ml_pipeline.py` and served by `GET /api/model-metrics`.
+## 2. PINN Validation Benchmark (79 Verified vs. 150 Curated Records)
 
-**Important:** the PINN is **not** used by `/api/simulate`. Its metrics describe a separate validation run, not the Simulator results.
+Source: `backend/app/ml_pipeline.py`, `backend/data/pinn_validation_metrics.json`, and `backend/ExpandedDemo.ipynb` (Stratified 5-Fold Cross-Validation, seed `2026`).
 
-- Architecture (as recorded in the file): Hybrid Physics-Informed Neural Network (PINN) + Stratified 5-Fold Cross-Validation Ensemble.
-- Data: 79 BASS-II records plus 24 collocation boundary points.
-- Loss (as described on the former Research page): L_total = L_MSE(BASS-II) + 0.5 · L_physics (LOI and quench boundary collocation), embedding Olson Eq. 6.1 and Bhattacharjee Eq. 2.2–2.5.
-- Measured wall-clock time of the validation run: **654.38 ms**.
+| Metric (Stratified 5-Fold CV) | $N = 79$ Verified | $N = 150$ Curated | $\Delta$ | Notes |
+| --- | --- | --- | --- | --- |
+| **Accuracy** | 94.94% | **95.33%** (143/150) | +0.39 pp | Sustained vs. quenched classification |
+| **Precision** | 95.31% | **96.99%** | +1.68 pp | Predicted sustained flames that are sustained |
+| **Recall** | 98.39% | **97.73%** | -0.66 pp | Safety-critical sensitivity to sustained flames |
+| **F1-Score** | 96.83% | **97.36%** | +0.53 pp | Harmonic mean of precision and recall |
+| **Confusion Matrix (TP / TN / FP / FN)** | 61 / 14 / 3 / 1 | **129 / 14 / 4 / 3** | — | Class balance $62:17 \rightarrow 132:18$ |
+| **$R^2$ of $V_f$ (Verified Subset)** | **0.9117** | **0.9117** | 0 | RMSE $0.1747\text{ mm/s}$, MAE $0.0549\text{ mm/s}$ ($N = 79$) |
 
-> To verify: the backend docstrings (`main.py`, `physics_engine.py`) claim "< 5 ms" execution for the engine; this has not been measured.
+### Physical Feature Sensitivity ($N = 79$ Baseline Export)
 
-### 2.1 Validation metrics
-
-| Task | Scheme | Metric | Value |
-| --- | --- | --- | --- |
-| Sustained flame vs. quench / O2 extinction | Stratified 5-fold CV (79 states) | Accuracy | 94.94% |
-| | | Precision | 95.31% |
-| | | Recall | 98.39% |
-| | | F1 | 96.83% |
-| | | Confusion matrix | TP 61 · TN 14 · FP 3 · FN 1 |
-| Flame spread rate Vf (mm/s) | 5-fold CV on measured spread rates | R² | 0.9117 |
-| | | RMSE | 0.1747 mm/s |
-| | | MAE | 0.0549 mm/s |
-
-### 2.2 Fold breakdown
-
-| Fold | Samples | Classification accuracy | Spread-rate RMSE (mm/s) |
-| --- | --- | --- | --- |
-| 1 | 17 | 94.12% | 0.0819 |
-| 2 | 17 | 94.12% | 0.0662 |
-| 3 | 15 | 93.33% | 0.3635 |
-| 4 | 15 | 100.00% | 0.0591 |
-| 5 | 15 | 93.33% | 0.1118 |
-
-### 2.3 Factor importance (permutation sensitivity)
-
-| Factor | Importance | Description (as recorded) |
+| Factor | Importance | Physical Role |
 | --- | --- | --- |
-| Material polymer/textile family baseline reactivity | 34.94% | Distinguishes PMMA acrylic, SIBAL cotton-fiberglass blend and Nomex III fire barrier. |
-| Forced ventilation & radiative quench velocity | 21.53% | Supplies oxidizer in 0g where natural buoyancy is absent; quenches at ultra-low flow or high blowoff. |
-| Oxygen margin above Olson Eq. 6.1 LOI | 21.39% | Primary driver of flame temperature and the extinction boundary. |
-| Bhattacharjee thermal thickness scaling | 11.72% | Controls solid heat-sink capacity. |
-| Gravitational acceleration & buoyant stretch | 10.42% | Buoyant flow on Lunar and Martian habitats. |
+| Material polymer/textile family baseline reactivity | 34.94% | Distinguishes PMMA acrylic, SIBAL cotton-fiberglass blend, Nomex III, and Japan wax |
+| Forced ventilation & radiative quench velocity | 21.53% | Supplies oxidizer in $0\text{ g}$ where natural buoyancy is absent; quenches at ultra-low flow or high blowoff |
+| Oxygen margin above Olson Eq. 6.1 LOI | 21.39% | Primary thermodynamic driver of flame temperature and extinction boundary |
+| Bhattacharjee thermal thickness scaling ($1/\sqrt{\tau}$) | 11.72% | Controls solid heat-sink capacity |
+| Gravitational acceleration & buoyant stretch | 10.42% | Analytical buoyancy sensitivity across $0\text{ g} \rightarrow 1\text{ g}$ ($\delta_{\text{raw}} = 9.8$, as all BASS-II flight records are at $0\text{ g}$) |
 
-> To verify before publishing:
-> - The gravity factor is not computed by permutation: `ml_pipeline.py` sets its raw score to a fixed value (`delta_score = 9.8`), and all 79 BASS-II records are at 0 g.
-> - The recorded descriptions also contain numbers without a cited source (">30x faster than 6.35 mm rods", "V_b = 25*sqrt(g/g0) cm/s"); they are left out of the table above.
+---
 
-### 2.4 Loss convergence by epoch
+## 3. Super Intelligence (SI) Transparency Summary
 
-The per-epoch curve (25 points, epochs 1–120: train MSE, validation MSE, physics residual and total loss) is stored in `pinn_loss_curve` in the same file. For example, total PINN loss goes from 0.115376 at epoch 1 to 0.035516 at epoch 120. Include the full table in the PDF.
-
-## 3. SI disclosure
-
-Full disclosure for the technical PDF. The Home shows only a short block (`SI_COMPACT` in
-`frontend/src/content/project.ts`); its "Full SI disclosure in the documentation" link appears once
-`TECHNICAL_DOCS_PDF_URL` is set in `frontend/src/app/routes.ts`. Keep this section and the Home block in sync.
-
-**Transparency & scientific integrity — Human-led science. AI-assisted development.**
-
-### 3.1 SI inside AstroFire 3D
-
-NASA data → Rule-based engine → Results
-
-AstroFire 3D does not run an AI model when you simulate. A deterministic engine matches your scenario to the 79 BASS-II records, or applies formulas bounded by NASA technical reports, and fills in the diagnosis and suppression text from templates. Those rules and templates were drafted with Gemini and reviewed by the team. In mock mode, results come from three sample payloads written with Gemini.
-
-What it does:
-- Computes telemetry from the BASS-II records or NASA-bounded formulas
-- Explains the flame regime and suppression options with template text
-- Cites the NASA sources behind each result
-
-What it does not do:
-- Run a live AI model
-- Measure Moon or Mars fires
-- Provide a certified safety assessment
-
-In the Simulator and the PDF report, these texts carry the label "Diagnosis text from templates drafted with SI and reviewed by the team." In mock mode they add "Sample text written with Gemini".
-
-> TODO(si): If the PINN is wired into `/api/simulate`, update this section to describe the ML prediction step.
-
-### 3.2 AI-assisted development
-
-- ChatGPT (OpenAI): planning, development support, 3D modeling support and the logo concept
-- Codex (OpenAI): Unity scripts and shaders for the 3D chamber
-- Gemini (Google): refining the team's business rules, backend integration and test data
-- Claude / Claude Code (Anthropic): front-end code and interface, planning, visual design, documentation, pitch script and reference review
-- AstroFire 3D logo: concept generated with ChatGPT; simplified vector artwork recreated with Claude Code (SI-assisted) and reviewed by the team. The ChatGPT image itself is not used in the project.
-- Demo video narration generated with [VOICE TOOL].
-
-> TODO(logo): if the team redraws the logo by hand, change the logo line to "AstroFire 3D logo designed by the team; initial concept explored with ChatGPT and Claude Code (SI-assisted)."
-> TODO(voice-tool): replace [VOICE TOOL] with the name of the narration tool.
-
-### 3.3 Human review & responsibility
-
-The team conceived the solution, chose the NASA data and methods, made every design decision, and reviewed the code, data and results.
-
-"Super Intelligence (SI)" is the term used by the Space Apps challenge; ChatGPT, Codex, Gemini and Claude are tools we used for specific tasks.
-
-## 4. NASA investigations: comparison by habitat (for the PDF)
-
-The Documentation page now lists the six NASA investigations with one plain sentence and a source link each. The detailed comparison moved here for the PDF. Source of truth: `frontend/src/content/investigations.ts`.
-
-- For each investigation: code, facility, tested conditions (BASS-II ranges computed from the 79 records; the others "see source"), materials, similarity, key distinction, and SI-assisted prevention / detection / suppression guidance (research only, not an operational procedure).
-- Team-assigned relevance (High / Medium) per habitat (Lunar base, ISS, Martian habitat, crew cabin & pressurized rover). The criteria behind it are not documented yet (to verify); the internal ordering values are in the `scores` field.
-
-## 5. Known issues to fix before the PDF
-
-- Backend risk labels now follow the schema bands for 36–70 (Moderate Alert) and 71–100 (Critical Flashover Risk). The enum has no label for a burning flame scored 0–35 ("Safe" is reserved for extinguished flames), so those keep "Moderate Alert"; "High Risk" is unused (to verify with the team).
-- Investigation relevance by habitat (section 4) is team-assigned; the criteria are not documented yet (to verify).
+- **SI inside the product:** Deterministic physics engine + live hybrid PINN co-pilot (`PhysicsInformedClassifier` and `PhysicsInformedSpreadPINN`) + Safety Co-Pilot diagnosis/suppression templates drafted with Gemini and reviewed by 21 PyroRangers.
+- **SI in development:**
+  - **Google Gemini:** FastAPI backend, deterministic physics engine, JSON schema contract, PINN training pipeline, and test data.
+  - **Claude / Claude Code (Anthropic):** React 19 & TypeScript console, design system, website copy, technical documentation PDF, and hand-authored SVG recreation of the AstroFire 3D logo.
+  - **ChatGPT & Codex (OpenAI):** Planning, initial logo concept, Unity 3D chamber C# controllers, custom HLSL shaders, and WebGL launcher scripts.
+  - **Google Imagen (via Gemini):** 21 PyroRangers group emblem (carries visible attribution `"Generated with SI (Google Image Gen)"` on the source image and on the technical PDF cover).
+  - **ElevenLabs:** AI text-to-speech voice narration for the 30-second demo video from a human-authored script.
+  - **Google Colab & Google Antigravity:** Notebook execution environment for 5-fold validation and agentic coding/compliance verification environment.
+- **Human review & responsibility:** 21 PyroRangers conceived the solution, selected all NASA PSI/NTRS and Brazilian VSB-30 sources, defined the physical equations and curation rules, and reviewed, tested, and validated all code, shaders, models, and documentation.

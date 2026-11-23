@@ -2,7 +2,7 @@
 # Source: NASA PSI, BASS-II (PSI-25), DOI 10.60555/4qc4-de67, CC0-1.0
 # Reference: Olson et al., NASA/TM-20210011385 (2021)
 """
-Physics-Informed Neural Network (PINN) & Tabular Cross-Validation Pipeline for [PROJECT_NAME].
+Physics-Informed Neural Network (PINN) & Tabular Cross-Validation Pipeline for AstroFire 3D.
 
 Why this architecture succeeds on 79 empirical ISS microgravity records:
   1. Small-Data Regime (N=79 empirical BASS-II test points): Purely unconstrained deep neural
@@ -615,7 +615,7 @@ def run_training_pipeline() -> dict[str, Any]:
 
     metrics_payload: dict[str, Any] = {
         "$comment": "SI-assisted: generated with Gemini, reviewed and edited by Elias, Pina & Celina",
-        "project": "[PROJECT_NAME]",
+        "project": "AstroFire 3D",
         "model_architecture": "Hybrid Physics-Informed Neural Network (PINN) + Stratified 5-Fold Cross-Validation Ensemble",
         "grounding_sources": {
             "psi_dataset": "BASS-II (PSI-25)",

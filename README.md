@@ -1,4 +1,4 @@
-# AstroFire 3D
+# AstroFire 3D — Microgravity Combustion Simulator & Fire-Safety Decision Console
 
 **2026 NASA Space Apps Challenge** — *Challenge: Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data*
 

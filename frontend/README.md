@@ -1,6 +1,6 @@
-# [PROJECT_NAME] — Frontend
+# AstroFire 3D — Frontend
 
-React + TypeScript + Vite + Tailwind CSS client for [PROJECT_NAME]. Visual rules live in [`../DESIGN.md`](../DESIGN.md); data shapes come from [`../contracts/simulation_schema.json`](../contracts/simulation_schema.json).
+React + TypeScript + Vite + Tailwind CSS client for AstroFire 3D. Visual rules live in [`../DESIGN.md`](../DESIGN.md); data shapes come from [`../contracts/simulation_schema.json`](../contracts/simulation_schema.json).
 
 ## Scripts
 
